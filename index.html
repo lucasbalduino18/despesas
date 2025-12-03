@@ -147,19 +147,97 @@
         }
         .stat-label { font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px; }
         .stat-value { font-size: 1.5rem; font-weight: 700; }
+        .month-group { margin-bottom: 25px; }
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            backdrop-filter: blur(5px);
+        }
+        .gauge-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .gauge {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+        .gauge-circle {
+            transform: rotate(-90deg);
+        }
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.2);
+            stroke-width: 12;
+        }
+        .gauge-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+        .gauge-fill.low { stroke: #4ade80; }
+        .gauge-fill.medium { stroke: #fbbf24; }
+        .gauge-fill.high { stroke: #ef4444; }
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .gauge-percent {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .gauge-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        .gauge-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+        }
+        .gauge-info-item {
+            text-align: center;
+        }
+        .gauge-info-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+        .gauge-info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💰 Minhas Despesas</h1>
-        <div class="subtitle">Controle financeiro simples</div>
+        <div class="subtitle"></div>
 
         <div id="app"></div>
     </div>
 
     <script>
         const state = {
-            tab: 'dash',
+            tab: 'add',
             expenses: JSON.parse(localStorage.getItem('expenses') || '[]'),
             goal: parseFloat(localStorage.getItem('goal') || '20000'),
             sms: ''
@@ -290,11 +368,49 @@
                     </div>
                 `;
             } else if (state.tab === 'add') {
+                const circumference = 2 * Math.PI * 80;
+                const offset = circumference - (percent / 100) * circumference;
+                let gaugeClass = 'low';
+                if (percent > 90) gaugeClass = 'high';
+                else if (percent > 70) gaugeClass = 'medium';
+
                 app.innerHTML = `
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab active" onclick="state.tab='add'; render()">Adicionar</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    </div>
+                    <div class="card">
+                        <div class="gauge-container">
+                            <div class="gauge">
+                                <svg class="gauge-circle" width="180" height="180" viewBox="0 0 180 180">
+                                    <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
+                                    <circle class="gauge-fill ${gaugeClass}" 
+                                            cx="90" cy="90" r="80"
+                                            stroke-dasharray="${circumference}"
+                                            stroke-dashoffset="${offset}">
+                                    </circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    <div class="gauge-percent">${Math.min(percent, 100).toFixed(0)}%</div>
+                                    <div class="gauge-label">da meta</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gauge-info">
+                            <div class="gauge-info-item">
+                                <div class="gauge-info-label">Meta</div>
+                                <div class="gauge-info-value">AED ${state.goal.toFixed(0)}</div>
+                            </div>
+                            <div class="gauge-info-item">
+                                <div class="gauge-info-label">Gasto</div>
+                                <div class="gauge-info-value" style="color: ${percent > 90 ? '#fca5a5' : '#fff'}">AED ${total.toFixed(0)}</div>
+                            </div>
+                            <div class="gauge-info-item">
+                                <div class="gauge-info-label">Restante</div>
+                                <div class="gauge-info-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">AED ${remaining.toFixed(0)}</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card">
                         <div class="input-group">
@@ -316,7 +432,35 @@
                         </div>
                     </div>
                 `;
+                // Colocar foco no campo de SMS automaticamente
+                setTimeout(() => {
+                    const smsInput = document.getElementById('smsInput');
+                    if (smsInput) {
+                        smsInput.focus();
+                        smsInput.select();
+                    }
+                }, 100);
             } else {
+                // Organizar despesas por mês
+                const expensesByMonth = {};
+                state.expenses.forEach(e => {
+                    const parts = e.date.split('/');
+                    const monthYear = `${parts[1]}/${parts[2]}`;
+                    if (!expensesByMonth[monthYear]) {
+                        expensesByMonth[monthYear] = [];
+                    }
+                    expensesByMonth[monthYear].push(e);
+                });
+
+                const months = Object.keys(expensesByMonth).sort((a, b) => {
+                    const [monthA, yearA] = a.split('/').map(Number);
+                    const [monthB, yearB] = b.split('/').map(Number);
+                    if (yearA !== yearB) return yearB - yearA;
+                    return monthB - monthA;
+                });
+
+                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
                 app.innerHTML = `
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
@@ -325,18 +469,32 @@
                     </div>
                     ${state.expenses.length === 0 ? 
                         '<div class="card"><div class="empty">📊<br>Nenhuma despesa ainda</div></div>' :
-                        state.expenses.map(e => `
-                            <div class="expense-item">
-                                <div class="expense-info">
-                                    <div class="expense-merchant">${e.merchant}</div>
-                                    <div class="expense-date">${e.date} às ${e.time}</div>
+                        months.map(monthYear => {
+                            const [month, year] = monthYear.split('/').map(Number);
+                            const expenses = expensesByMonth[monthYear];
+                            const totalMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+                            
+                            return `
+                                <div class="month-group">
+                                    <div class="month-header">
+                                        <span>${monthNames[month - 1]} ${year}</span>
+                                        <span>AED ${totalMonth.toFixed(2)}</span>
+                                    </div>
+                                    ${expenses.map(e => `
+                                        <div class="expense-item">
+                                            <div class="expense-info">
+                                                <div class="expense-merchant">${e.merchant}</div>
+                                                <div class="expense-date">${e.date} às ${e.time}</div>
+                                            </div>
+                                            <div style="display:flex; align-items:center;">
+                                                <div class="expense-amount">AED ${e.amount.toFixed(2)}</div>
+                                                <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
                                 </div>
-                                <div style="display:flex; align-items:center;">
-                                    <div class="expense-amount">AED ${e.amount.toFixed(2)}</div>
-                                    <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')
+                            `;
+                        }).join('')
                     }
                 `;
             }
