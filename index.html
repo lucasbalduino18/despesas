@@ -396,6 +396,8 @@
 
         // Carregar dados do Google Sheets
         async function loadData() {
+            const wasLoading = state.loading;
+            
             try {
                 const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
                 const despesas = await despesasResponse.json();
@@ -406,12 +408,20 @@
                 state.goal = metaData.meta || 5000;
 
                 state.loading = false;
-                render();
+                
+                // Só renderiza se for a primeira carga
+                if (wasLoading) {
+                    render();
+                }
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
-                alert('❌ Erro ao carregar dados. Verifique a configuração da URL do Google Sheets.');
+                if (wasLoading) {
+                    alert('❌ Erro ao carregar dados. Verifique a configuração da URL do Google Sheets.');
+                }
                 state.loading = false;
-                render();
+                if (wasLoading) {
+                    render();
+                }
             }
         }
 
@@ -536,7 +546,8 @@
             const success = await addExpenseToSheets(parsed);
             
             if (success) {
-                state.expenses.unshift(parsed);
+                // Recarregar dados do servidor em vez de adicionar localmente
+                await loadData();
                 state.sms = '';
                 state.obs = '';
                 state.selectedCategory = null;
@@ -557,7 +568,8 @@
                 const success = await deleteExpenseFromSheets(id);
                 
                 if (success) {
-                    state.expenses = state.expenses.filter(e => e.id !== id);
+                    // Recarregar dados do servidor em vez de filtrar localmente
+                    await loadData();
                     render();
                 } else {
                     alert('❌ Erro ao deletar. Tente novamente.');
@@ -584,10 +596,8 @@
             const success = await updateExpenseInSheets(state.editingExpense);
             
             if (success) {
-                const index = state.expenses.findIndex(e => e.id === state.editingExpense.id);
-                if (index !== -1) {
-                    state.expenses[index] = { ...state.editingExpense };
-                }
+                // Recarregar dados do servidor em vez de atualizar localmente
+                await loadData();
                 state.editingExpense = null;
                 alert('✅ Despesa atualizada com sucesso!');
                 render();
