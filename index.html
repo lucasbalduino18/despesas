@@ -1070,6 +1070,7 @@
             } else if (state.tab === 'add') {
                 const circumference = 2 * Math.PI * 80;
                 const offset = circumference - (percent / 100) * circumference;
+                const ritmo = getRitmoGastos();
                 let gaugeClass = 'low';
                 if (percent > 90) gaugeClass = 'high';
                 else if (percent > 70) gaugeClass = 'medium';
@@ -1117,6 +1118,29 @@
                                 <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
                                     📅 ${monthDays.remaining}d restante${monthDays.remaining === 1 ? '' : 's'}
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- NOVO: Termômetro de Ritmo Compacto -->
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="font-size: 0.85rem; opacity: 0.9;">
+                                    🌡️ Ritmo: <strong style="color: ${ritmo.cor}">${ritmo.ritmo.toFixed(1)}%</strong>
+                                </div>
+                                <div style="font-size: 0.75rem; opacity: 0.8;">
+                                    ${ritmo.emoji} ${ritmo.status}
+                                </div>
+                            </div>
+                            <div class="ritmo-bar">
+                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo, 150)}%; background: ${ritmo.cor}">
+                                </div>
+                            </div>
+                            <div class="ritmo-markers">
+                                <span>0%</span>
+                                <span>80%</span>
+                                <span>100%</span>
+                                <span>120%</span>
+                                <span>150%</span>
                             </div>
                         </div>
                     </div>
