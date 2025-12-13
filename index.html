@@ -99,6 +99,10 @@
             margin-top: 10px;
         }
         .btn:active { transform: scale(0.98); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         .expense-item {
             background: rgba(255,255,255,0.15);
             border-radius: 12px;
@@ -225,27 +229,104 @@
             font-size: 1.1rem;
             font-weight: 700;
         }
+        .sync-status {
+            text-align: center;
+            padding: 10px;
+            background: rgba(74, 222, 128, 0.2);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💰 Minhas Despesas</h1>
-        <div class="subtitle"></div>
+        <div class="subtitle">🔄 Sincronizado automaticamente</div>
 
         <div id="app"></div>
     </div>
 
     <script>
+        // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
+        const SHEETS_URL = 'COLE_SUA_URL_AQUI';
+
         const state = {
             tab: 'add',
-            expenses: JSON.parse(localStorage.getItem('expenses') || '[]'),
-            goal: parseFloat(localStorage.getItem('goal') || '20000'),
-            sms: ''
+            expenses: [],
+            goal: 5000,
+            sms: '',
+            loading: true
         };
 
-        function save() {
-            localStorage.setItem('expenses', JSON.stringify(state.expenses));
-            localStorage.setItem('goal', state.goal);
+        // Carregar dados do Google Sheets
+        async function loadData() {
+            try {
+                // Carregar despesas
+                const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
+                const despesas = await despesasResponse.json();
+                state.expenses = despesas;
+
+                // Carregar meta
+                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
+                const metaData = await metaResponse.json();
+                state.goal = metaData.meta || 5000;
+
+                state.loading = false;
+                render();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('❌ Erro ao carregar dados. Verifique a configuração da URL do Google Sheets.');
+                state.loading = false;
+                render();
+            }
+        }
+
+        // Adicionar despesa no Google Sheets
+        async function addExpenseToSheets(expense) {
+            const url = `${SHEETS_URL}?action=addDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao adicionar despesa:', error);
+                return false;
+            }
+        }
+
+        // Deletar despesa do Google Sheets
+        async function deleteExpenseFromSheets(id) {
+            const url = `${SHEETS_URL}?action=deleteDespesa&id=${id}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao deletar despesa:', error);
+                return false;
+            }
+        }
+
+        // Atualizar meta no Google Sheets
+        async function updateGoalInSheets(valor) {
+            const url = `${SHEETS_URL}?action=setMeta&valor=${valor}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao atualizar meta:', error);
+                return false;
+            }
         }
 
         function parseSMS(text) {
@@ -268,31 +349,54 @@
             return null;
         }
 
-        function addExpense() {
+        async function addExpense() {
             const parsed = parseSMS(state.sms);
             if (parsed) {
-                state.expenses.unshift(parsed);
-                save();
-                state.sms = '';
-                state.tab = 'dash';
-                alert('✅ Despesa adicionada!');
-                render();
+                const btn = document.querySelector('.btn');
+                btn.disabled = true;
+                btn.textContent = 'Salvando...';
+
+                const success = await addExpenseToSheets(parsed);
+                
+                if (success) {
+                    state.expenses.unshift(parsed);
+                    state.sms = '';
+                    state.tab = 'dash';
+                    alert('✅ Despesa salva automaticamente no Google Sheets!');
+                    render();
+                } else {
+                    alert('❌ Erro ao salvar. Tente novamente.');
+                    btn.disabled = false;
+                    btn.textContent = 'Extrair e Adicionar';
+                }
             } else {
                 alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
             }
         }
 
-        function deleteExpense(id) {
+        async function deleteExpense(id) {
             if (confirm('Excluir esta despesa?')) {
-                state.expenses = state.expenses.filter(e => e.id !== id);
-                save();
-                render();
+                const success = await deleteExpenseFromSheets(id);
+                
+                if (success) {
+                    state.expenses = state.expenses.filter(e => e.id !== id);
+                    render();
+                } else {
+                    alert('❌ Erro ao deletar. Tente novamente.');
+                }
             }
         }
 
-        function updateGoal(value) {
-            state.goal = parseFloat(value) || 0;
-            save();
+        async function updateGoal(value) {
+            const newGoal = parseFloat(value) || 0;
+            const success = await updateGoalInSheets(newGoal);
+            
+            if (success) {
+                state.goal = newGoal;
+                render();
+            } else {
+                alert('❌ Erro ao atualizar meta. Tente novamente.');
+            }
         }
 
         function getMonthExpenses() {
@@ -306,6 +410,33 @@
         }
 
         function render() {
+            const app = document.getElementById('app');
+
+            if (state.loading) {
+                app.innerHTML = '<div class="loading">⏳ Carregando dados...</div>';
+                return;
+            }
+
+            if (SHEETS_URL === 'COLE_SUA_URL_AQUI') {
+                app.innerHTML = `
+                    <div class="card">
+                        <h3 style="color: #fbbf24; margin-bottom: 15px;">⚠️ Configuração Necessária</h3>
+                        <p style="line-height: 1.6;">
+                            Para usar o app, você precisa configurar a URL do Google Sheets.
+                            <br><br>
+                            <strong>Siga o guia de configuração:</strong>
+                            <br>
+                            1. Configure o Google Sheets<br>
+                            2. Copie a URL do Apps Script<br>
+                            3. Cole no código do index.html<br>
+                            <br>
+                            Veja o arquivo GUIA-GOOGLE-SHEETS.md para instruções detalhadas.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
             const monthExpenses = getMonthExpenses();
             const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
             const remaining = state.goal - total;
@@ -316,11 +447,10 @@
             let progressClass = '';
             if (percent > 90) progressClass = 'danger';
             else if (percent > 70) progressClass = 'warning';
-
-            const app = document.getElementById('app');
             
             if (state.tab === 'dash') {
                 app.innerHTML = `
+                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
@@ -375,6 +505,7 @@
                 else if (percent > 70) gaugeClass = 'medium';
 
                 app.innerHTML = `
+                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab active" onclick="state.tab='add'; render()">Adicionar</button>
@@ -428,11 +559,10 @@
                         <div class="input-group">
                             <label class="label">Meta Mensal (AED):</label>
                             <input type="number" id="goalInput" value="${state.goal}" 
-                                   onchange="updateGoal(this.value); render()">
+                                   onblur="updateGoal(this.value)">
                         </div>
                     </div>
                 `;
-                // Colocar foco no campo de SMS automaticamente
                 setTimeout(() => {
                     const smsInput = document.getElementById('smsInput');
                     if (smsInput) {
@@ -441,7 +571,6 @@
                     }
                 }, 100);
             } else {
-                // Organizar despesas por mês
                 const expensesByMonth = {};
                 state.expenses.forEach(e => {
                     const parts = e.date.split('/');
@@ -462,6 +591,7 @@
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
                 app.innerHTML = `
+                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
@@ -500,7 +630,8 @@
             }
         }
 
-        render();
+        // Inicializar
+        loadData();
     </script>
 </body>
 </html>
