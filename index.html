@@ -335,6 +335,17 @@
         }
         .category-bar {
             margin-bottom: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .category-bar:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(5px);
+        }
+        .category-bar:active {
+            transform: scale(0.98);
         }
         .category-bar-header {
             display: flex;
@@ -410,7 +421,7 @@
 
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzkMSnnmzSR_O3Z1EMgxnOGQ-cAYWxmw14tHZ7Xt01LV8mMJxJ3UCsb44ra8bh42SENlQ/exec';
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx8TuH88p9QO5DasjAdO76RdyDJMBwNl3ozPUdqoive2vRxBwi7ohqm2iEV19avP6dGpg/exec';
 
         // Categorias padrão
         const CATEGORIES = [
@@ -434,7 +445,8 @@
             selectedCategory: null,
             editingExpense: null,
             obs: '',
-            expandedMonths: {}  // Controla quais meses estão expandidos
+            expandedMonths: {},  // Controla quais meses estão expandidos
+            viewingCategoryExpenses: null  // Categoria sendo visualizada
         };
 
         // Carregar dados do Google Sheets
@@ -743,6 +755,16 @@
             render();
         }
 
+        function viewCategoryExpenses(categoryId) {
+            state.viewingCategoryExpenses = categoryId;
+            render();
+        }
+
+        function closeCategoryView() {
+            state.viewingCategoryExpenses = null;
+            render();
+        }
+
         function render() {
             const app = document.getElementById('app');
 
@@ -948,8 +970,12 @@
                             `<div class="category-chart">
                                 ${sortedStats.map(stat => {
                                     const percentage = (stat.total / maxTotal) * 100;
+                                    // Encontrar o ID da categoria
+                                    const catObj = Object.entries(categoryStats).find(([id, s]) => s.name === stat.name);
+                                    const categoryId = catObj ? catObj[0] : 'outros';
+                                    
                                     return `
-                                        <div class="category-bar">
+                                        <div class="category-bar" onclick="viewCategoryExpenses('${categoryId}')">
                                             <div class="category-bar-header">
                                                 <span>${stat.icon} ${stat.name}</span>
                                                 <span><strong>AED ${stat.total.toFixed(2)}</strong> (${stat.count})</span>
@@ -965,6 +991,57 @@
                             </div>`
                         }
                     </div>
+                    
+                    ${state.viewingCategoryExpenses ? (() => {
+                        const catId = state.viewingCategoryExpenses;
+                        const cat = CATEGORIES.find(c => c.id === catId);
+                        const monthExpenses = getMonthExpenses();
+                        const categoryExpenses = monthExpenses.filter(e => (e.category || 'outros') === catId);
+                        const totalCategory = categoryExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                        
+                        return `
+                            <div class="modal" onclick="if(event.target === this) closeCategoryView()">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        ${cat ? cat.icon : '📦'} ${cat ? cat.name : 'Outros'}
+                                        <div style="font-size: 0.9rem; font-weight: 400; margin-top: 5px; opacity: 0.9;">
+                                            Total: AED ${totalCategory.toFixed(2)} • ${categoryExpenses.length} despesas
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="max-height: 400px; overflow-y: auto;">
+                                        ${categoryExpenses.length === 0 ? 
+                                            '<div class="empty" style="padding: 20px;">Nenhuma despesa nesta categoria</div>' :
+                                            categoryExpenses.map(e => {
+                                                const amount = parseFloat(e.amount) || 0;
+                                                const merchant = e.merchant || 'Sem nome';
+                                                const date = e.date || '';
+                                                const time = e.time || '';
+                                                const obs = e.obs || '';
+                                                
+                                                return `
+                                                    <div class="expense-item" style="margin-bottom: 10px;">
+                                                        <div class="expense-info">
+                                                            <div class="expense-merchant">${merchant}</div>
+                                                            <div class="expense-date">${date} às ${time}</div>
+                                                            ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
+                                                        </div>
+                                                        <div style="display:flex; align-items:center;">
+                                                            <div class="expense-amount">AED ${amount.toFixed(2)}</div>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }).join('')
+                                        }
+                                    </div>
+                                    
+                                    <div class="modal-buttons">
+                                        <button class="btn" onclick="closeCategoryView()">Fechar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    })() : ''}
                 `;
             } else {
                 const expensesByMonth = {};
