@@ -492,10 +492,20 @@
 
         function selectCategory(categoryId) {
             state.selectedCategory = categoryId;
-            render();
+            // Atualizar apenas as categorias visualmente sem re-render completo
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.target.closest('.category-item').classList.add('selected');
         }
 
         async function addExpense() {
+            // Capturar o SMS do campo antes de processar
+            const smsInput = document.getElementById('smsInput');
+            if (smsInput) {
+                state.sms = smsInput.value;
+            }
+            
             const parsed = parseSMS(state.sms);
             if (!parsed) {
                 alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
@@ -778,7 +788,7 @@
                     <div class="card">
                         <div class="input-group">
                             <label class="label">Cole o SMS do banco:</label>
-                            <textarea id="smsInput" placeholder="Cole aqui o SMS...">${state.sms}</textarea>
+                            <textarea id="smsInput" placeholder="Cole aqui o SMS..." oninput="state.sms=this.value">${state.sms}</textarea>
                             <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
                                 Exemplo: Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at ALMAQAM AUTOMATIC BR...
                             </div>
