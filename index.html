@@ -222,6 +222,90 @@
         .expand-controls button:hover {
             background: rgba(255,255,255,0.3);
         }
+        .ritmo-card {
+            background: var(--secondary);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .ritmo-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .ritmo-title {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .ritmo-gauge {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            margin: 20px 0;
+        }
+        .ritmo-bar {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .ritmo-fill {
+            height: 100%;
+            border-radius: 15px;
+            transition: width 0.5s, background-color 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .ritmo-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        .ritmo-status {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .ritmo-status-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        .ritmo-status-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .ritmo-status-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        .ritmo-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .ritmo-detail-item {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .ritmo-detail-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        .ritmo-detail-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
         .gauge-container {
             display: flex;
             justify-content: center;
@@ -743,6 +827,56 @@
             };
         }
 
+        function getRitmoGastos() {
+            const monthExpenses = getMonthExpenses();
+            const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const monthDays = getMonthDays();
+            
+            // Quanto deveria ter gastado até agora (proporcional aos dias)
+            const deveriaGastar = (state.goal * monthDays.passed) / monthDays.total;
+            
+            // Ritmo: gasto real / deveria gastar * 100
+            const ritmo = deveriaGastar > 0 ? (total / deveriaGastar * 100) : 0;
+            
+            // Determinar status e cor
+            let status = '';
+            let cor = '';
+            let emoji = '';
+            
+            if (ritmo < 80) {
+                status = 'Excelente';
+                cor = '#22c55e'; // Verde escuro
+                emoji = '🟢';
+            } else if (ritmo < 100) {
+                status = 'Bom';
+                cor = '#84cc16'; // Verde claro
+                emoji = '🟢';
+            } else if (ritmo < 110) {
+                status = 'Atenção';
+                cor = '#fbbf24'; // Amarelo
+                emoji = '🟡';
+            } else if (ritmo < 120) {
+                status = 'Cuidado';
+                cor = '#fb923c'; // Laranja
+                emoji = '🟠';
+            } else {
+                status = 'Crítico';
+                cor = '#ef4444'; // Vermelho
+                emoji = '🔴';
+            }
+            
+            return {
+                ritmo: ritmo,
+                status: status,
+                cor: cor,
+                emoji: emoji,
+                gastoReal: total,
+                deveriaGastar: deveriaGastar,
+                diferenca: total - deveriaGastar,
+                progressoMes: (monthDays.passed / monthDays.total * 100)
+            };
+        }
+
         function toggleMonth(monthYear) {
             state.expandedMonths[monthYear] = !state.expandedMonths[monthYear];
             render();
@@ -808,12 +942,13 @@
             }
 
             const monthExpenses = getMonthExpenses();
-            const total = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const remaining = state.goal - total;
             const percent = (total / state.goal) * 100;
             const avg = monthExpenses.length ? total / monthExpenses.length : 0;
-            const largest = monthExpenses.length ? Math.max(...monthExpenses.map(e => e.amount)) : 0;
+            const largest = monthExpenses.length ? Math.max(...monthExpenses.map(e => parseFloat(e.amount) || 0)) : 0;
             const monthDays = getMonthDays();
+            const ritmo = getRitmoGastos();
 
             let progressClass = '';
             if (percent > 90) progressClass = 'danger';
@@ -828,6 +963,63 @@
                         <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
+                    
+                    <!-- Card do Termômetro de Ritmo -->
+                    <div class="ritmo-card">
+                        <div class="ritmo-header">
+                            <div class="ritmo-title">🌡️ Termômetro de Gastos</div>
+                        </div>
+                        
+                        <div class="ritmo-gauge">
+                            <div class="ritmo-bar">
+                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo, 150)}%; background: ${ritmo.cor}">
+                                    ${ritmo.ritmo.toFixed(1)}%
+                                </div>
+                            </div>
+                            <div class="ritmo-markers">
+                                <span>0%</span>
+                                <span>80%</span>
+                                <span>100%</span>
+                                <span>120%</span>
+                                <span>150%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ritmo-status">
+                            <div class="ritmo-status-emoji">${ritmo.emoji}</div>
+                            <div class="ritmo-status-text" style="color: ${ritmo.cor}">${ritmo.status}</div>
+                            <div class="ritmo-status-desc">
+                                ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que deveria!' :
+                                  ritmo.ritmo < 100 ? 'Você está no ritmo ideal!' :
+                                  ritmo.ritmo < 110 ? 'Levemente acima do esperado' :
+                                  ritmo.ritmo < 120 ? 'Você está gastando mais que deveria' :
+                                  'Gastos MUITO acima do esperado!'}
+                            </div>
+                        </div>
+                        
+                        <div class="ritmo-details">
+                            <div class="ritmo-detail-item">
+                                <div class="ritmo-detail-label">Gasto Real</div>
+                                <div class="ritmo-detail-value">AED ${ritmo.gastoReal.toFixed(0)}</div>
+                            </div>
+                            <div class="ritmo-detail-item">
+                                <div class="ritmo-detail-label">Deveria Gastar</div>
+                                <div class="ritmo-detail-value">AED ${ritmo.deveriaGastar.toFixed(0)}</div>
+                            </div>
+                            <div class="ritmo-detail-item">
+                                <div class="ritmo-detail-label">Diferença</div>
+                                <div class="ritmo-detail-value" style="color: ${ritmo.diferenca > 0 ? '#ef4444' : '#22c55e'}">
+                                    ${ritmo.diferenca > 0 ? '+' : ''}${ritmo.diferenca.toFixed(0)} AED
+                                </div>
+                            </div>
+                            <div class="ritmo-detail-item">
+                                <div class="ritmo-detail-label">Progresso do Mês</div>
+                                <div class="ritmo-detail-value">${ritmo.progressoMes.toFixed(1)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Card de Meta -->
                     <div class="card">
                         <div style="text-align:center; font-size:0.9rem; opacity:0.9;">Limite Mensal</div>
                         <div class="balance">AED ${state.goal.toFixed(0)}</div>
