@@ -311,6 +311,51 @@
             border-radius: 8px;
             transition: width 0.5s;
         }
+        .edit-btn {
+            background: rgba(59, 130, 246, 0.2);
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--secondary);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .modal-buttons .btn {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -344,7 +389,8 @@
             goal: 5000,
             sms: '',
             loading: true,
-            selectedCategory: null
+            selectedCategory: null,
+            editingExpense: null
         };
 
         // Carregar dados do Google Sheets
@@ -403,6 +449,19 @@
                 return result.success;
             } catch (error) {
                 console.error('Erro ao atualizar meta:', error);
+                return false;
+            }
+        }
+
+        async function updateExpenseInSheets(expense) {
+            const url = `${SHEETS_URL}?action=updateDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao atualizar despesa:', error);
                 return false;
             }
         }
@@ -484,6 +543,37 @@
                 } else {
                     alert('❌ Erro ao deletar. Tente novamente.');
                 }
+            }
+        }
+
+        function startEditExpense(id) {
+            const expense = state.expenses.find(e => e.id === id);
+            if (expense) {
+                state.editingExpense = { ...expense };
+                render();
+            }
+        }
+
+        function cancelEditExpense() {
+            state.editingExpense = null;
+            render();
+        }
+
+        async function saveEditExpense() {
+            if (!state.editingExpense) return;
+
+            const success = await updateExpenseInSheets(state.editingExpense);
+            
+            if (success) {
+                const index = state.expenses.findIndex(e => e.id === state.editingExpense.id);
+                if (index !== -1) {
+                    state.expenses[index] = { ...state.editingExpense };
+                }
+                state.editingExpense = null;
+                alert('✅ Despesa atualizada com sucesso!');
+                render();
+            } else {
+                alert('❌ Erro ao atualizar. Tente novamente.');
             }
         }
 
@@ -819,6 +909,7 @@
                                             </div>
                                             <div style="display:flex; align-items:center;">
                                                 <div class="expense-amount">AED ${e.amount.toFixed(2)}</div>
+                                                <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
                                                 <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
                                             </div>
                                         </div>
@@ -827,6 +918,56 @@
                             `;
                         }).join('')
                     }
+                    
+                    ${state.editingExpense ? `
+                        <div class="modal" onclick="if(event.target === this) cancelEditExpense()">
+                            <div class="modal-content">
+                                <div class="modal-header">✏️ Editar Despesa</div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Estabelecimento:</label>
+                                    <input type="text" class="input-field" value="${state.editingExpense.merchant}" 
+                                           onchange="state.editingExpense.merchant = this.value">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Valor (AED):</label>
+                                    <input type="number" step="0.01" class="input-field" value="${state.editingExpense.amount}" 
+                                           onchange="state.editingExpense.amount = parseFloat(this.value)">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Data (DD/MM/YYYY):</label>
+                                    <input type="text" class="input-field" value="${state.editingExpense.date}" 
+                                           onchange="state.editingExpense.date = this.value">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Hora (HH:MM:SS):</label>
+                                    <input type="text" class="input-field" value="${state.editingExpense.time}" 
+                                           onchange="state.editingExpense.time = this.value">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Categoria:</label>
+                                    <div class="category-list">
+                                        ${CATEGORIES.map(cat => `
+                                            <div class="category-item ${state.editingExpense.category === cat.id ? 'selected' : ''}" 
+                                                 onclick="state.editingExpense.category = '${cat.id}'; render()">
+                                                <div class="category-icon">${cat.icon}</div>
+                                                <div class="category-name">${cat.name}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="modal-buttons">
+                                    <button class="btn btn-secondary" onclick="cancelEditExpense()">Cancelar</button>
+                                    <button class="btn" onclick="saveEditExpense()">Salvar</button>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
                 `;
             }
         }
