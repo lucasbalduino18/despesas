@@ -729,6 +729,20 @@
             return stats;
         }
 
+        function getMonthDays() {
+            const now = new Date();
+            const currentDay = now.getDate();
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const daysPassed = currentDay;
+            const daysRemaining = lastDay - currentDay;
+            
+            return {
+                passed: daysPassed,
+                remaining: daysRemaining,
+                total: lastDay
+            };
+        }
+
         function toggleMonth(monthYear) {
             state.expandedMonths[monthYear] = !state.expandedMonths[monthYear];
             render();
@@ -799,6 +813,7 @@
             const percent = (total / state.goal) * 100;
             const avg = monthExpenses.length ? total / monthExpenses.length : 0;
             const largest = monthExpenses.length ? Math.max(...monthExpenses.map(e => e.amount)) : 0;
+            const monthDays = getMonthDays();
 
             let progressClass = '';
             if (percent > 90) progressClass = 'danger';
@@ -826,11 +841,17 @@
                             <div class="meta-item">
                                 <div class="meta-label">Gasto</div>
                                 <div class="meta-value">AED ${total.toFixed(0)}</div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
+                                    📅 ${monthDays.passed} ${monthDays.passed === 1 ? 'dia' : 'dias'} passado${monthDays.passed === 1 ? '' : 's'}
+                                </div>
                             </div>
                             <div class="meta-item">
                                 <div class="meta-label">Restante</div>
                                 <div class="meta-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">
                                     AED ${remaining.toFixed(0)}
+                                </div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
+                                    📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? 'dia' : 'dias'} restante${monthDays.remaining === 1 ? '' : 's'}
                                 </div>
                             </div>
                         </div>
@@ -894,10 +915,16 @@
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Gasto</div>
                                 <div class="gauge-info-value" style="color: ${percent > 90 ? '#fca5a5' : '#fff'}">AED ${total.toFixed(0)}</div>
+                                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
+                                    📅 ${monthDays.passed}d passado${monthDays.passed === 1 ? '' : 's'}
+                                </div>
                             </div>
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Restante</div>
                                 <div class="gauge-info-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">AED ${remaining.toFixed(0)}</div>
+                                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
+                                    📅 ${monthDays.remaining}d restante${monthDays.remaining === 1 ? '' : 's'}
+                                </div>
                             </div>
                         </div>
                     </div>
