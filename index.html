@@ -621,7 +621,11 @@
         function getMonthExpenses() {
             const now = new Date();
             return state.expenses.filter(e => {
-                const parts = e.date.split('/');
+                if (!e || !e.date) return false;
+                
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return false;
+                
                 const month = parseInt(parts[1]) - 1;
                 const year = parseInt(parts[2]);
                 return month === now.getMonth() && year === now.getFullYear();
@@ -658,9 +662,11 @@
             });
 
             monthExpenses.forEach(e => {
+                if (!e || !e.amount) return;
+                
                 const catId = e.category || 'outros';
                 if (stats[catId]) {
-                    stats[catId].total += e.amount;
+                    stats[catId].total += parseFloat(e.amount) || 0;
                     stats[catId].count++;
                 }
             });
@@ -894,7 +900,18 @@
             } else {
                 const expensesByMonth = {};
                 state.expenses.forEach(e => {
-                    const parts = e.date.split('/');
+                    // Validar se a despesa tem os dados necessários
+                    if (!e || !e.date || !e.amount) {
+                        console.warn('Despesa inválida encontrada:', e);
+                        return;
+                    }
+                    
+                    const parts = e.date.toString().split('/');
+                    if (parts.length < 3) {
+                        console.warn('Data inválida:', e.date);
+                        return;
+                    }
+                    
                     const monthYear = `${parts[1]}/${parts[2]}`;
                     if (!expensesByMonth[monthYear]) {
                         expensesByMonth[monthYear] = [];
@@ -924,7 +941,7 @@
                         months.map(monthYear => {
                             const [month, year] = monthYear.split('/').map(Number);
                             const expenses = expensesByMonth[monthYear];
-                            const totalMonth = expenses.reduce((sum, e) => sum + e.amount, 0);
+                            const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                             
                             return `
                                 <div class="month-group">
@@ -932,23 +949,31 @@
                                         <span>${monthNames[month - 1]} ${year}</span>
                                         <span>AED ${totalMonth.toFixed(2)}</span>
                                     </div>
-                                    ${expenses.map(e => `
+                                    ${expenses.map(e => {
+                                        const amount = parseFloat(e.amount) || 0;
+                                        const merchant = e.merchant || 'Sem nome';
+                                        const date = e.date || '';
+                                        const time = e.time || '';
+                                        const category = e.category || 'outros';
+                                        const obs = e.obs || '';
+                                        
+                                        return `
                                         <div class="expense-item">
                                             <div class="expense-info">
-                                                <div class="expense-merchant">${e.merchant}</div>
-                                                <div class="expense-date">${e.date} às ${e.time}</div>
-                                                ${e.obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${e.obs}</div>` : ''}
-                                                <span class="expense-category" style="background: ${getCategoryColor(e.category)}">
-                                                    ${getCategoryIcon(e.category)} ${getCategoryName(e.category)}
+                                                <div class="expense-merchant">${merchant}</div>
+                                                <div class="expense-date">${date} às ${time}</div>
+                                                ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
+                                                <span class="expense-category" style="background: ${getCategoryColor(category)}">
+                                                    ${getCategoryIcon(category)} ${getCategoryName(category)}
                                                 </span>
                                             </div>
                                             <div style="display:flex; align-items:center;">
-                                                <div class="expense-amount">AED ${e.amount.toFixed(2)}</div>
+                                                <div class="expense-amount">AED ${amount.toFixed(2)}</div>
                                                 <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
                                                 <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `}).join('')}
                                 </div>
                             `;
                         }).join('')
