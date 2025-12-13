@@ -332,7 +332,7 @@
             { id: 'transporte', name: 'Transporte', icon: '🚗', color: '#3b82f6' },
             { id: 'lazer', name: 'Lazer', icon: '🎮', color: '#8b5cf6' },
             { id: 'saude', name: 'Saúde', icon: '💊', color: '#ef4444' },
-            { id: 'educacao', name: 'Educação', icon: '📚', color: '#10b981' },
+            { id: 'educacao', name: 'Educação', icon: '📚', color: '#0ea5e9' },
             { id: 'moradia', name: 'Moradia', icon: '🏠', color: '#6366f1' },
             { id: 'compras', name: 'Compras', icon: '🛍️', color: '#ec4899' },
             { id: 'outros', name: 'Outros', icon: '📦', color: '#6b7280' }
@@ -409,8 +409,12 @@
 
         function parseSMS(text) {
             const patterns = [
+                // Padrão genérico AED - aceita qualquer número de cartão
                 /(?:AED|aed)\s*([\d,\.]+).*?on\s+([\d\/]+)\s+([\d:]+).*?at\s+([^,]+)/i,
+                // Padrão R$/USD/EUR
                 /(?:R\$|USD|EUR)\s*([\d,\.]+).*?(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2}:\d{2}).*?(?:at|em)\s+([^,\.]+)/i,
+                // Padrão alternativo para diferentes formatos
+                /(?:valor|value|amount).*?([\d,\.]+).*?(?:data|date).*?(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2}:\d{2}).*?(?:estabelecimento|merchant).*?([^\n]+)/i,
             ];
             for (let p of patterns) {
                 const m = text.match(p);
@@ -686,7 +690,7 @@
                             <label class="label">Cole o SMS do banco:</label>
                             <textarea id="smsInput" placeholder="Cole aqui o SMS...">${state.sms}</textarea>
                             <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
-                                Exemplo: Your Cr.Card XXX6487 was used for AED34.65 on 03/12/2025...
+                                Exemplo: Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at ALMAQAM AUTOMATIC BR...
                             </div>
                         </div>
                         
