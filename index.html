@@ -1065,6 +1065,26 @@
                     expensesByMonth[monthYear].push(e);
                 });
 
+                // Ordenar despesas dentro de cada mês (mais recente primeiro)
+                Object.keys(expensesByMonth).forEach(monthYear => {
+                    expensesByMonth[monthYear].sort((a, b) => {
+                        // Comparar por data
+                        const dateA = a.date.split('/');
+                        const dateB = b.date.split('/');
+                        const dayA = parseInt(dateA[0]);
+                        const dayB = parseInt(dateB[0]);
+                        
+                        if (dayA !== dayB) {
+                            return dayB - dayA; // Mais recente primeiro
+                        }
+                        
+                        // Se mesmo dia, comparar por hora
+                        const timeA = a.time || '00:00:00';
+                        const timeB = b.time || '00:00:00';
+                        return timeB.localeCompare(timeA); // Mais recente primeiro
+                    });
+                });
+
                 const months = Object.keys(expensesByMonth).sort((a, b) => {
                     const [monthA, yearA] = a.split('/').map(Number);
                     const [monthB, yearB] = b.split('/').map(Number);
