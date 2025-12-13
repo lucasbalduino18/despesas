@@ -371,14 +371,6 @@
             font-size: 1.1rem;
             font-weight: 700;
         }
-        .sync-status {
-            text-align: center;
-            padding: 10px;
-            background: rgba(74, 222, 128, 0.2);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            margin-bottom: 15px;
-        }
         .loading {
             text-align: center;
             padding: 40px;
@@ -956,7 +948,6 @@
             
             if (state.tab === 'dash') {
                 app.innerHTML = `
-                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
@@ -1076,7 +1067,6 @@
                 else if (percent > 70) gaugeClass = 'medium';
 
                 app.innerHTML = `
-                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab active" onclick="state.tab='add'; render()">Adicionar</button>
@@ -1199,7 +1189,6 @@
                 const maxTotal = sortedStats.length > 0 ? sortedStats[0].total : 1;
 
                 app.innerHTML = `
-                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
@@ -1338,7 +1327,6 @@
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
                 app.innerHTML = `
-                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
