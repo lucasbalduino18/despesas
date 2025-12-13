@@ -179,6 +179,48 @@
             font-size: 1.1rem;
             margin-bottom: 12px;
             backdrop-filter: blur(5px);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .month-header:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .month-header:active {
+            transform: scale(0.98);
+        }
+        .month-toggle {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        .month-toggle.expanded {
+            transform: rotate(180deg);
+        }
+        .month-expenses {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .month-expenses.expanded {
+            max-height: 10000px;
+        }
+        .expand-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .expand-controls button {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .expand-controls button:hover {
+            background: rgba(255,255,255,0.3);
         }
         .gauge-container {
             display: flex;
@@ -391,7 +433,8 @@
             loading: true,
             selectedCategory: null,
             editingExpense: null,
-            obs: ''
+            obs: '',
+            expandedMonths: {}  // Controla quais meses estão expandidos
         };
 
         // Carregar dados do Google Sheets
@@ -674,6 +717,32 @@
             return stats;
         }
 
+        function toggleMonth(monthYear) {
+            state.expandedMonths[monthYear] = !state.expandedMonths[monthYear];
+            render();
+        }
+
+        function expandAllMonths() {
+            const expensesByMonth = {};
+            state.expenses.forEach(e => {
+                if (!e || !e.date) return;
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return;
+                const monthYear = `${parts[1]}/${parts[2]}`;
+                expensesByMonth[monthYear] = true;
+            });
+            
+            Object.keys(expensesByMonth).forEach(monthYear => {
+                state.expandedMonths[monthYear] = true;
+            });
+            render();
+        }
+
+        function collapseAllMonths() {
+            state.expandedMonths = {};
+            render();
+        }
+
         function render() {
             const app = document.getElementById('app');
 
@@ -938,42 +1007,52 @@
                     </div>
                     ${state.expenses.length === 0 ? 
                         '<div class="card"><div class="empty">📊<br>Nenhuma despesa ainda</div></div>' :
+                        `<div class="expand-controls">
+                            <button onclick="expandAllMonths()">📂 Expandir Todos</button>
+                            <button onclick="collapseAllMonths()">📁 Colapsar Todos</button>
+                        </div>` +
                         months.map(monthYear => {
                             const [month, year] = monthYear.split('/').map(Number);
                             const expenses = expensesByMonth[monthYear];
                             const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                            const isExpanded = state.expandedMonths[monthYear];
                             
                             return `
                                 <div class="month-group">
-                                    <div class="month-header">
+                                    <div class="month-header" onclick="toggleMonth('${monthYear}')">
                                         <span>${monthNames[month - 1]} ${year}</span>
-                                        <span>AED ${totalMonth.toFixed(2)}</span>
+                                        <span style="display: flex; align-items: center; gap: 15px;">
+                                            <span>AED ${totalMonth.toFixed(2)}</span>
+                                            <span class="month-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
+                                        </span>
                                     </div>
-                                    ${expenses.map(e => {
-                                        const amount = parseFloat(e.amount) || 0;
-                                        const merchant = e.merchant || 'Sem nome';
-                                        const date = e.date || '';
-                                        const time = e.time || '';
-                                        const category = e.category || 'outros';
-                                        const obs = e.obs || '';
-                                        
-                                        return `
-                                        <div class="expense-item">
-                                            <div class="expense-info">
-                                                <div class="expense-merchant">${merchant}</div>
-                                                <div class="expense-date">${date} às ${time}</div>
-                                                ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
-                                                <span class="expense-category" style="background: ${getCategoryColor(category)}">
-                                                    ${getCategoryIcon(category)} ${getCategoryName(category)}
-                                                </span>
+                                    <div class="month-expenses ${isExpanded ? 'expanded' : ''}">
+                                        ${expenses.map(e => {
+                                            const amount = parseFloat(e.amount) || 0;
+                                            const merchant = e.merchant || 'Sem nome';
+                                            const date = e.date || '';
+                                            const time = e.time || '';
+                                            const category = e.category || 'outros';
+                                            const obs = e.obs || '';
+                                            
+                                            return `
+                                            <div class="expense-item">
+                                                <div class="expense-info">
+                                                    <div class="expense-merchant">${merchant}</div>
+                                                    <div class="expense-date">${date} às ${time}</div>
+                                                    ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
+                                                    <span class="expense-category" style="background: ${getCategoryColor(category)}">
+                                                        ${getCategoryIcon(category)} ${getCategoryName(category)}
+                                                    </span>
+                                                </div>
+                                                <div style="display:flex; align-items:center;">
+                                                    <div class="expense-amount">AED ${amount.toFixed(2)}</div>
+                                                    <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
+                                                    <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
+                                                </div>
                                             </div>
-                                            <div style="display:flex; align-items:center;">
-                                                <div class="expense-amount">AED ${amount.toFixed(2)}</div>
-                                                <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
-                                                <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
-                                            </div>
-                                        </div>
-                                    `}).join('')}
+                                        `}).join('')}
+                                    </div>
                                 </div>
                             `;
                         }).join('')
