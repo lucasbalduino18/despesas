@@ -47,11 +47,13 @@
         .meta-value { font-size: 1.3rem; font-weight: 700; }
         .tabs {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
+            overflow-x: auto;
         }
         .tab {
             flex: 1;
+            min-width: 80px;
             padding: 12px;
             background: rgba(255,255,255,0.2);
             border: none;
@@ -60,6 +62,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.3s;
+            font-size: 0.85rem;
         }
         .tab.active {
             background: rgba(255,255,255,0.95);
@@ -72,7 +75,7 @@
             font-weight: 600;
             font-size: 0.9rem;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 12px;
             background: rgba(255,255,255,0.9);
@@ -103,6 +106,11 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
         .expense-item {
             background: rgba(255,255,255,0.15);
             border-radius: 12px;
@@ -115,6 +123,14 @@
         .expense-info { flex: 1; }
         .expense-merchant { font-weight: 600; margin-bottom: 5px; }
         .expense-date { font-size: 0.85rem; opacity: 0.8; }
+        .expense-category {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
         .expense-amount { font-size: 1.3rem; font-weight: 700; }
         .delete-btn {
             background: rgba(239, 68, 68, 0.2);
@@ -242,6 +258,59 @@
             padding: 40px;
             font-size: 1.2rem;
         }
+        .category-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .category-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid transparent;
+        }
+        .category-item.selected {
+            border-color: rgba(255,255,255,0.8);
+            background: rgba(255,255,255,0.25);
+        }
+        .category-item:active {
+            transform: scale(0.95);
+        }
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        .category-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .category-chart {
+            margin-top: 20px;
+        }
+        .category-bar {
+            margin-bottom: 15px;
+        }
+        .category-bar-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .category-bar-fill {
+            height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .category-bar-progress {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -254,25 +323,36 @@
 
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzkMSnnmzSR_O3Z1EMgxnOGQ-cAYWxmw14tHZ7Xt01LV8mMJxJ3UCsb44ra8bh42SENlQ/exec';
+        const SHEETS_URL = 'COLE_SUA_URL_AQUI';
+
+        // Categorias padrão
+        const CATEGORIES = [
+            { id: 'alimentacao', name: 'Alimentação', icon: '🍔', color: '#f59e0b' },
+            { id: 'transporte', name: 'Transporte', icon: '🚗', color: '#3b82f6' },
+            { id: 'lazer', name: 'Lazer', icon: '🎮', color: '#8b5cf6' },
+            { id: 'saude', name: 'Saúde', icon: '💊', color: '#ef4444' },
+            { id: 'educacao', name: 'Educação', icon: '📚', color: '#10b981' },
+            { id: 'moradia', name: 'Moradia', icon: '🏠', color: '#6366f1' },
+            { id: 'compras', name: 'Compras', icon: '🛍️', color: '#ec4899' },
+            { id: 'outros', name: 'Outros', icon: '📦', color: '#6b7280' }
+        ];
 
         const state = {
             tab: 'add',
             expenses: [],
             goal: 5000,
             sms: '',
-            loading: true
+            loading: true,
+            selectedCategory: null
         };
 
         // Carregar dados do Google Sheets
         async function loadData() {
             try {
-                // Carregar despesas
                 const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
                 const despesas = await despesasResponse.json();
                 state.expenses = despesas;
 
-                // Carregar meta
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
                 state.goal = metaData.meta || 5000;
@@ -287,9 +367,8 @@
             }
         }
 
-        // Adicionar despesa no Google Sheets
         async function addExpenseToSheets(expense) {
-            const url = `${SHEETS_URL}?action=addDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}`;
+            const url = `${SHEETS_URL}?action=addDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}`;
             
             try {
                 const response = await fetch(url);
@@ -301,7 +380,6 @@
             }
         }
 
-        // Deletar despesa do Google Sheets
         async function deleteExpenseFromSheets(id) {
             const url = `${SHEETS_URL}?action=deleteDespesa&id=${id}`;
             
@@ -315,7 +393,6 @@
             }
         }
 
-        // Atualizar meta no Google Sheets
         async function updateGoalInSheets(valor) {
             const url = `${SHEETS_URL}?action=setMeta&valor=${valor}`;
             
@@ -349,28 +426,46 @@
             return null;
         }
 
+        function selectCategory(categoryId) {
+            state.selectedCategory = categoryId;
+            render();
+        }
+
         async function addExpense() {
             const parsed = parseSMS(state.sms);
-            if (parsed) {
-                const btn = document.querySelector('.btn');
+            if (!parsed) {
+                alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
+                return;
+            }
+
+            if (!state.selectedCategory) {
+                alert('❌ Por favor, selecione uma categoria para a despesa.');
+                return;
+            }
+
+            parsed.category = state.selectedCategory;
+
+            const btn = document.querySelector('.btn-add-expense');
+            if (btn) {
                 btn.disabled = true;
                 btn.textContent = 'Salvando...';
+            }
 
-                const success = await addExpenseToSheets(parsed);
-                
-                if (success) {
-                    state.expenses.unshift(parsed);
-                    state.sms = '';
-                    state.tab = 'dash';
-                    alert('✅ Despesa salva automaticamente no Google Sheets!');
-                    render();
-                } else {
-                    alert('❌ Erro ao salvar. Tente novamente.');
+            const success = await addExpenseToSheets(parsed);
+            
+            if (success) {
+                state.expenses.unshift(parsed);
+                state.sms = '';
+                state.selectedCategory = null;
+                state.tab = 'dash';
+                alert('✅ Despesa salva automaticamente no Google Sheets!');
+                render();
+            } else {
+                alert('❌ Erro ao salvar. Tente novamente.');
+                if (btn) {
                     btn.disabled = false;
                     btn.textContent = 'Extrair e Adicionar';
                 }
-            } else {
-                alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
             }
         }
 
@@ -407,6 +502,46 @@
                 const year = parseInt(parts[2]);
                 return month === now.getMonth() && year === now.getFullYear();
             });
+        }
+
+        function getCategoryColor(categoryId) {
+            const cat = CATEGORIES.find(c => c.id === categoryId);
+            return cat ? cat.color : '#6b7280';
+        }
+
+        function getCategoryIcon(categoryId) {
+            const cat = CATEGORIES.find(c => c.id === categoryId);
+            return cat ? cat.icon : '📦';
+        }
+
+        function getCategoryName(categoryId) {
+            const cat = CATEGORIES.find(c => c.id === categoryId);
+            return cat ? cat.name : 'Outros';
+        }
+
+        function getCategoryStats() {
+            const monthExpenses = getMonthExpenses();
+            const stats = {};
+            
+            CATEGORIES.forEach(cat => {
+                stats[cat.id] = {
+                    name: cat.name,
+                    icon: cat.icon,
+                    color: cat.color,
+                    total: 0,
+                    count: 0
+                };
+            });
+
+            monthExpenses.forEach(e => {
+                const catId = e.category || 'outros';
+                if (stats[catId]) {
+                    stats[catId].total += e.amount;
+                    stats[catId].count++;
+                }
+            });
+
+            return stats;
         }
 
         function render() {
@@ -454,6 +589,7 @@
                     <div class="tabs">
                         <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     <div class="card">
@@ -492,8 +628,8 @@
                             <div class="stat-value">AED ${largest.toFixed(0)}</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-label">Dias Ativos</div>
-                            <div class="stat-value">${new Set(monthExpenses.map(e => e.date)).size}</div>
+                            <div class="stat-label">Categorias</div>
+                            <div class="stat-value">${Object.values(getCategoryStats()).filter(s => s.count > 0).length}</div>
                         </div>
                     </div>
                 `;
@@ -509,6 +645,7 @@
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab active" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     <div class="card">
@@ -551,7 +688,21 @@
                                 Exemplo: Your Cr.Card XXX6487 was used for AED34.65 on 03/12/2025...
                             </div>
                         </div>
-                        <button class="btn" onclick="state.sms=document.getElementById('smsInput').value; addExpense()">
+                        
+                        <div class="input-group">
+                            <label class="label">Selecione a categoria:</label>
+                            <div class="category-list">
+                                ${CATEGORIES.map(cat => `
+                                    <div class="category-item ${state.selectedCategory === cat.id ? 'selected' : ''}" 
+                                         onclick="selectCategory('${cat.id}')">
+                                        <div class="category-icon">${cat.icon}</div>
+                                        <div class="category-name">${cat.name}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-add-expense" onclick="addExpense()">
                             Extrair e Adicionar
                         </button>
                     </div>
@@ -570,6 +721,47 @@
                         smsInput.select();
                     }
                 }, 100);
+            } else if (state.tab === 'categories') {
+                const categoryStats = getCategoryStats();
+                const sortedStats = Object.values(categoryStats)
+                    .filter(s => s.count > 0)
+                    .sort((a, b) => b.total - a.total);
+                
+                const maxTotal = sortedStats.length > 0 ? sortedStats[0].total : 1;
+
+                app.innerHTML = `
+                    <div class="sync-status">✅ Sincronizado automaticamente com Google Sheets</div>
+                    <div class="tabs">
+                        <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
+                        <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab active" onclick="state.tab='categories'; render()">Categorias</button>
+                        <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    </div>
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px;">📊 Gastos por Categoria (Este Mês)</h3>
+                        ${sortedStats.length === 0 ? 
+                            '<div class="empty">📦<br>Nenhuma despesa categorizada ainda</div>' :
+                            `<div class="category-chart">
+                                ${sortedStats.map(stat => {
+                                    const percentage = (stat.total / maxTotal) * 100;
+                                    return `
+                                        <div class="category-bar">
+                                            <div class="category-bar-header">
+                                                <span>${stat.icon} ${stat.name}</span>
+                                                <span><strong>AED ${stat.total.toFixed(2)}</strong> (${stat.count})</span>
+                                            </div>
+                                            <div class="category-bar-fill">
+                                                <div class="category-bar-progress" 
+                                                     style="width: ${percentage}%; background: ${stat.color};">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>`
+                        }
+                    </div>
+                `;
             } else {
                 const expensesByMonth = {};
                 state.expenses.forEach(e => {
@@ -595,6 +787,7 @@
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab active" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     ${state.expenses.length === 0 ? 
@@ -615,6 +808,9 @@
                                             <div class="expense-info">
                                                 <div class="expense-merchant">${e.merchant}</div>
                                                 <div class="expense-date">${e.date} às ${e.time}</div>
+                                                <span class="expense-category" style="background: ${getCategoryColor(e.category)}">
+                                                    ${getCategoryIcon(e.category)} ${getCategoryName(e.category)}
+                                                </span>
                                             </div>
                                             <div style="display:flex; align-items:center;">
                                                 <div class="expense-amount">AED ${e.amount.toFixed(2)}</div>
