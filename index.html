@@ -390,7 +390,8 @@
             sms: '',
             loading: true,
             selectedCategory: null,
-            editingExpense: null
+            editingExpense: null,
+            obs: ''
         };
 
         // Carregar dados do Google Sheets
@@ -415,7 +416,7 @@
         }
 
         async function addExpenseToSheets(expense) {
-            const url = `${SHEETS_URL}?action=addDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}`;
+            const url = `${SHEETS_URL}?action=addDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}&obs=${encodeURIComponent(expense.obs || '')}`;
             
             try {
                 const response = await fetch(url);
@@ -454,7 +455,7 @@
         }
 
         async function updateExpenseInSheets(expense) {
-            const url = `${SHEETS_URL}?action=updateDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}`;
+            const url = `${SHEETS_URL}?action=updateDespesa&id=${expense.id}&amount=${expense.amount}&date=${encodeURIComponent(expense.date)}&time=${encodeURIComponent(expense.time)}&merchant=${encodeURIComponent(expense.merchant)}&category=${encodeURIComponent(expense.category || 'outros')}&obs=${encodeURIComponent(expense.obs || '')}`;
             
             try {
                 const response = await fetch(url);
@@ -506,6 +507,12 @@
                 state.sms = smsInput.value;
             }
             
+            // Capturar observação
+            const obsInput = document.getElementById('obsInput');
+            if (obsInput) {
+                state.obs = obsInput.value;
+            }
+            
             const parsed = parseSMS(state.sms);
             if (!parsed) {
                 alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
@@ -518,6 +525,7 @@
             }
 
             parsed.category = state.selectedCategory;
+            parsed.obs = state.obs || '';
 
             const btn = document.querySelector('.btn-add-expense');
             if (btn) {
@@ -530,6 +538,7 @@
             if (success) {
                 state.expenses.unshift(parsed);
                 state.sms = '';
+                state.obs = '';
                 state.selectedCategory = null;
                 state.tab = 'dash';
                 alert('✅ Despesa salva automaticamente no Google Sheets!');
@@ -795,6 +804,11 @@
                         </div>
                         
                         <div class="input-group">
+                            <label class="label">Observação (opcional):</label>
+                            <input type="text" id="obsInput" class="input-field" placeholder="Ex: Presente, Dividido com amigos..." value="${state.obs}" oninput="state.obs=this.value">
+                        </div>
+                        
+                        <div class="input-group">
                             <label class="label">Selecione a categoria:</label>
                             <div class="category-list">
                                 ${CATEGORIES.map(cat => `
@@ -913,6 +927,7 @@
                                             <div class="expense-info">
                                                 <div class="expense-merchant">${e.merchant}</div>
                                                 <div class="expense-date">${e.date} às ${e.time}</div>
+                                                ${e.obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${e.obs}</div>` : ''}
                                                 <span class="expense-category" style="background: ${getCategoryColor(e.category)}">
                                                     ${getCategoryIcon(e.category)} ${getCategoryName(e.category)}
                                                 </span>
@@ -956,6 +971,12 @@
                                     <label class="label">Hora (HH:MM:SS):</label>
                                     <input type="text" class="input-field" value="${state.editingExpense.time}" 
                                            onchange="state.editingExpense.time = this.value">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label class="label">Observação (opcional):</label>
+                                    <input type="text" class="input-field" placeholder="Ex: Presente, Dividido..." value="${state.editingExpense.obs || ''}" 
+                                           onchange="state.editingExpense.obs = this.value">
                                 </div>
                                 
                                 <div class="input-group">
