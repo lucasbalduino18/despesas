@@ -519,7 +519,8 @@
             editingExpense: null,
             obs: '',
             expandedMonths: {},  // Controla quais meses estão expandidos
-            viewingCategoryExpenses: null  // Categoria sendo visualizada
+            viewingCategoryExpenses: null,  // Categoria sendo visualizada
+            selectedCategoryMonth: null  // Mês selecionado na aba categorias (formato MM/YYYY)
         };
 
         // Carregar dados do Google Sheets
@@ -800,6 +801,44 @@
             });
 
             return stats;
+        }
+
+        function getCategoryStatsByMonth(monthYear) {
+            // Filtra despesas do mês específico
+            const [month, year] = monthYear.split('/').map(Number);
+            const monthExpenses = state.expenses.filter(e => {
+                if (!e || !e.date) return false;
+                const parts = e.date.split('/');
+                if (parts.length < 3) return false;
+                return parseInt(parts[1]) === month && parseInt(parts[2]) === year;
+            });
+            
+            const stats = {};
+            CATEGORIES.forEach(cat => {
+                stats[cat.id] = {
+                    name: cat.name,
+                    icon: cat.icon,
+                    color: cat.color,
+                    total: 0,
+                    count: 0
+                };
+            });
+
+            monthExpenses.forEach(e => {
+                if (!e || !e.amount) return;
+                const catId = e.category || 'outros';
+                if (stats[catId]) {
+                    stats[catId].total += parseFloat(e.amount) || 0;
+                    stats[catId].count++;
+                }
+            });
+
+            return stats;
+        }
+
+        function selectCategoryMonth(monthYear) {
+            state.selectedCategoryMonth = monthYear;
+            render();
         }
 
         function getMonthDays() {
@@ -1190,12 +1229,41 @@
                     }
                 }, 100);
             } else if (state.tab === 'categories') {
-                const categoryStats = getCategoryStats();
+                // Obter todos os meses disponíveis
+                const expensesByMonth = {};
+                state.expenses.forEach(e => {
+                    if (!e || !e.date || !e.amount) return;
+                    const parts = e.date.toString().split('/');
+                    if (parts.length < 3) return;
+                    const monthYear = `${parts[1]}/${parts[2]}`;
+                    if (!expensesByMonth[monthYear]) {
+                        expensesByMonth[monthYear] = [];
+                    }
+                    expensesByMonth[monthYear].push(e);
+                });
+
+                const months = Object.keys(expensesByMonth).sort((a, b) => {
+                    const [monthA, yearA] = a.split('/').map(Number);
+                    const [monthB, yearB] = b.split('/').map(Number);
+                    if (yearA !== yearB) return yearB - yearA;
+                    return monthB - monthA;
+                });
+
+                // Mês atual como padrão
+                const now = new Date();
+                const currentMonthYear = `${now.getMonth() + 1}/${now.getFullYear()}`;
+                if (!state.selectedCategoryMonth && months.length > 0) {
+                    state.selectedCategoryMonth = months.includes(currentMonthYear) ? currentMonthYear : months[0];
+                }
+
+                const selectedMonth = state.selectedCategoryMonth || currentMonthYear;
+                const categoryStats = getCategoryStatsByMonth(selectedMonth);
                 const sortedStats = Object.values(categoryStats)
                     .filter(s => s.count > 0)
                     .sort((a, b) => b.total - a.total);
                 
                 const maxTotal = sortedStats.length > 0 ? sortedStats[0].total : 1;
+                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
                 app.innerHTML = `
                     <div class="tabs">
@@ -1204,14 +1272,65 @@
                         <button class="tab active" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
+                    
+                    ${months.length > 0 ? `
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; gap: 8px; overflow-x: auto; padding: 10px 0;">
+                                ${months.map(monthYear => {
+                                    const [month, year] = monthYear.split('/').map(Number);
+                                    const isSelected = monthYear === selectedMonth;
+                                    const isCurrent = monthYear === currentMonthYear;
+                                    const monthTotal = expensesByMonth[monthYear].reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                                    
+                                    // Ícone de status
+                                    let statusIcon = '';
+                                    if (monthTotal > state.goal) {
+                                        statusIcon = '🔴';
+                                    } else if (monthTotal > state.goal * 0.9) {
+                                        statusIcon = '🟡';
+                                    } else {
+                                        statusIcon = '🟢';
+                                    }
+                                    
+                                    return `
+                                        <button 
+                                            onclick="selectCategoryMonth('${monthYear}')"
+                                            style="
+                                                flex-shrink: 0;
+                                                padding: 10px 16px;
+                                                background: ${isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'};
+                                                border: ${isSelected ? '2px solid rgba(255,255,255,0.5)' : '1px solid rgba(255,255,255,0.2)'};
+                                                border-radius: 12px;
+                                                color: white;
+                                                cursor: pointer;
+                                                font-weight: ${isSelected ? '700' : '500'};
+                                                font-size: 0.9rem;
+                                                transition: 0.3s;
+                                                white-space: nowrap;
+                                            "
+                                        >
+                                            ${statusIcon} ${monthNames[month - 1]} ${year}
+                                            ${isCurrent ? '<br><span style="font-size: 0.7rem; opacity: 0.8;">Atual</span>' : ''}
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
                     <div class="card">
-                        <h3 style="margin-bottom: 20px;">📊 Gastos por Categoria (Este Mês)</h3>
+                        <h3 style="margin-bottom: 20px;">
+                            📊 Gastos por Categoria
+                            ${selectedMonth ? (() => {
+                                const [m, y] = selectedMonth.split('/').map(Number);
+                                return `<span style="font-size: 0.85rem; opacity: 0.8; font-weight: 400;"> - ${monthNames[m - 1]} ${y}</span>`;
+                            })() : ''}
+                        </h3>
                         ${sortedStats.length === 0 ? 
-                            '<div class="empty">📦<br>Nenhuma despesa categorizada ainda</div>' :
+                            '<div class="empty">📦<br>Nenhuma despesa categorizada neste mês</div>' :
                             `<div class="category-chart">
                                 ${sortedStats.map(stat => {
                                     const percentage = (stat.total / maxTotal) * 100;
-                                    // Encontrar o ID da categoria
                                     const catObj = Object.entries(categoryStats).find(([id, s]) => s.name === stat.name);
                                     const categoryId = catObj ? catObj[0] : 'outros';
                                     
@@ -1236,8 +1355,19 @@
                     ${state.viewingCategoryExpenses ? (() => {
                         const catId = state.viewingCategoryExpenses;
                         const cat = CATEGORIES.find(c => c.id === catId);
-                        const monthExpenses = getMonthExpenses();
-                        const categoryExpenses = monthExpenses.filter(e => (e.category || 'outros') === catId);
+                        
+                        // Filtrar despesas do mês selecionado e categoria
+                        const [month, year] = selectedMonth.split('/').map(Number);
+                        const categoryExpenses = state.expenses.filter(e => {
+                            if (!e || !e.date) return false;
+                            const parts = e.date.split('/');
+                            if (parts.length < 3) return false;
+                            const expenseMonth = parseInt(parts[1]);
+                            const expenseYear = parseInt(parts[2]);
+                            const expenseCategory = e.category || 'outros';
+                            return expenseMonth === month && expenseYear === year && expenseCategory === catId;
+                        });
+                        
                         const totalCategory = categoryExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                         
                         return `
@@ -1246,7 +1376,7 @@
                                     <div class="modal-header">
                                         ${cat ? cat.icon : '📦'} ${cat ? cat.name : 'Outros'}
                                         <div style="font-size: 0.9rem; font-weight: 400; margin-top: 5px; opacity: 0.9;">
-                                            Total: AED ${totalCategory.toFixed(2)} • ${categoryExpenses.length} despesas
+                                            ${monthNames[month - 1]} ${year} • Total: AED ${totalCategory.toFixed(2)} • ${categoryExpenses.length} despesas
                                         </div>
                                     </div>
                                     
