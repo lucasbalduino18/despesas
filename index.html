@@ -84,6 +84,13 @@
             color: #333;
             font-family: inherit;
         }
+        input[type="date"], input[type="time"] {
+            color-scheme: dark;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
         textarea {
             min-height: 100px;
             resize: vertical;
@@ -520,7 +527,8 @@
             obs: '',
             expandedMonths: {},  // Controla quais meses estão expandidos
             viewingCategoryExpenses: null,  // Categoria sendo visualizada
-            selectedCategoryMonth: null  // Mês selecionado na aba categorias (formato MM/YYYY)
+            selectedCategoryMonth: null,  // Mês selecionado na aba categorias (formato MM/YYYY)
+            manualEntry: false  // Controla se está em modo manual ou SMS
         };
 
         // Carregar dados do Google Sheets
@@ -839,6 +847,61 @@
         function selectCategoryMonth(monthYear) {
             state.selectedCategoryMonth = monthYear;
             render();
+        }
+
+        function toggleManualEntry() {
+            state.manualEntry = !state.manualEntry;
+            render();
+        }
+
+        async function addManualExpense() {
+            const merchant = document.getElementById('manualMerchant').value.trim();
+            const amount = document.getElementById('manualAmount').value.trim();
+            const date = document.getElementById('manualDate').value;
+            const time = document.getElementById('manualTime').value;
+            
+            if (!merchant || !amount || !date || !time) {
+                alert('⚠️ Preencha todos os campos obrigatórios');
+                return;
+            }
+            
+            if (!state.selectedCategory) {
+                alert('⚠️ Selecione uma categoria');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Salvando...';
+            
+            const expense = {
+                id: Date.now(),
+                amount: parseFloat(amount),
+                merchant: merchant,
+                date: date.split('-').reverse().join('/'), // YYYY-MM-DD → DD/MM/YYYY
+                time: time + ':00', // HH:MM → HH:MM:00
+                category: state.selectedCategory,
+                obs: state.obs
+            };
+            
+            const success = await addExpenseToSheets(expense);
+            
+            if (success) {
+                await loadData();
+                // Limpar campos
+                document.getElementById('manualMerchant').value = '';
+                document.getElementById('manualAmount').value = '';
+                document.getElementById('manualDate').value = '';
+                document.getElementById('manualTime').value = '';
+                state.obs = '';
+                state.selectedCategory = null;
+                alert('✅ Despesa salva automaticamente no Google Sheets!');
+                render();
+            } else {
+                alert('❌ Erro ao salvar. Tente novamente.');
+                btn.disabled = false;
+                btn.textContent = 'Adicionar Manualmente';
+            }
         }
 
         function getMonthDays() {
@@ -1183,13 +1246,55 @@
                         </div>
                     </div>
                     <div class="card">
-                        <div class="input-group">
-                            <label class="label">Cole o SMS do banco:</label>
-                            <textarea id="smsInput" placeholder="Cole aqui o SMS..." oninput="state.sms=this.value">${state.sms}</textarea>
-                            <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
-                                Exemplo: Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at ALMAQAM AUTOMATIC BR...
-                            </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <label class="label" style="margin: 0;">${state.manualEntry ? '✏️ Inserção Manual' : '📱 Inserção via SMS'}</label>
+                            <button 
+                                onclick="toggleManualEntry()"
+                                style="
+                                    background: rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(255,255,255,0.2);
+                                    color: white;
+                                    padding: 6px 12px;
+                                    border-radius: 8px;
+                                    cursor: pointer;
+                                    font-size: 0.75rem;
+                                    transition: 0.3s;
+                                "
+                            >
+                                ${state.manualEntry ? '📱 SMS' : '✏️ Manual'}
+                            </button>
                         </div>
+                        
+                        ${!state.manualEntry ? `
+                            <div class="input-group">
+                                <label class="label">Cole o SMS do banco:</label>
+                                <textarea id="smsInput" placeholder="Cole aqui o SMS..." oninput="state.sms=this.value">${state.sms}</textarea>
+                                <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
+                                    Exemplo: Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at ALMAQAM AUTOMATIC BR...
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="input-group">
+                                <label class="label">Estabelecimento:</label>
+                                <input type="text" id="manualMerchant" class="input-field" placeholder="Ex: Carrefour, Subway..." />
+                            </div>
+                            
+                            <div class="input-group">
+                                <label class="label">Valor (AED):</label>
+                                <input type="number" id="manualAmount" class="input-field" placeholder="Ex: 150.50" step="0.01" />
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="input-group">
+                                    <label class="label">Data:</label>
+                                    <input type="date" id="manualDate" class="input-field" />
+                                </div>
+                                <div class="input-group">
+                                    <label class="label">Hora:</label>
+                                    <input type="time" id="manualTime" class="input-field" />
+                                </div>
+                            </div>
+                        `}
                         
                         <div class="input-group">
                             <label class="label">Observação (opcional):</label>
@@ -1209,8 +1314,8 @@
                             </div>
                         </div>
                         
-                        <button class="btn btn-add-expense" onclick="addExpense()">
-                            Extrair e Adicionar
+                        <button class="btn btn-add-expense" onclick="${state.manualEntry ? 'addManualExpense()' : 'addExpense()'}">
+                            ${state.manualEntry ? '✅ Adicionar Manualmente' : '📱 Extrair e Adicionar'}
                         </button>
                     </div>
                     <div class="card">
