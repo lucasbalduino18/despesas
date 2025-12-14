@@ -1105,12 +1105,18 @@
                                 <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
                                     📅 ${monthDays.passed}d passado${monthDays.passed === 1 ? '' : 's'}
                                 </div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
+                                    ${monthDays.passed > 0 ? `💸 ${(total / monthDays.passed).toFixed(0)}/d` : '💸 0/d'}
+                                </div>
                             </div>
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Restante</div>
                                 <div class="gauge-info-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">AED ${remaining.toFixed(0)}</div>
                                 <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
                                     📅 ${monthDays.remaining}d restante${monthDays.remaining === 1 ? '' : 's'}
+                                </div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
+                                    ${monthDays.remaining > 0 ? `💰 ${(remaining / monthDays.remaining).toFixed(0)}/d` : '💰 0/d'}
                                 </div>
                             </div>
                         </div>
