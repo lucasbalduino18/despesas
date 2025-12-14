@@ -1354,10 +1354,32 @@
                             const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                             const isExpanded = state.expandedMonths[monthYear];
                             
+                            // Determinar se ficou acima ou abaixo da meta
+                            let statusIcon = '';
+                            let statusColor = '';
+                            let statusTitle = '';
+                            
+                            if (totalMonth > state.goal) {
+                                statusIcon = '🔴';
+                                statusColor = '#ef4444';
+                                statusTitle = 'Acima da meta';
+                            } else if (totalMonth > state.goal * 0.9) {
+                                statusIcon = '🟡';
+                                statusColor = '#fbbf24';
+                                statusTitle = 'Próximo da meta';
+                            } else {
+                                statusIcon = '🟢';
+                                statusColor = '#22c55e';
+                                statusTitle = 'Abaixo da meta';
+                            }
+                            
                             return `
                                 <div class="month-group">
                                     <div class="month-header" onclick="toggleMonth('${monthYear}')">
-                                        <span>${monthNames[month - 1]} ${year}</span>
+                                        <span style="display: flex; align-items: center; gap: 8px;">
+                                            <span>${monthNames[month - 1]} ${year}</span>
+                                            <span title="${statusTitle}" style="font-size: 0.9rem;">${statusIcon}</span>
+                                        </span>
                                         <span style="display: flex; align-items: center; gap: 15px;">
                                             <span>AED ${totalMonth.toFixed(2)}</span>
                                             <span class="month-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
