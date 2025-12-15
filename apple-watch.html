@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>⌚ Despesas</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            padding: 10px 8px;
+            overflow-x: hidden;
+        }
+        
+        .container { 
+            max-width: 200px; 
+            margin: 0 auto; 
+        }
+        
+        .header {
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.7;
+            letter-spacing: 0.5px;
+        }
+        
+        .gauge-section {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .gauge-wrapper {
+            position: relative;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 8px;
+        }
+        
+        .gauge-circle {
+            transform: rotate(-90deg);
+        }
+        
+        .gauge-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.15);
+            stroke-width: 8;
+        }
+        
+        .gauge-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+        
+        .gauge-fill.low { stroke: #30d158; }
+        .gauge-fill.medium { stroke: #ffd60a; }
+        .gauge-fill.high { stroke: #ff453a; }
+        
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        
+        .gauge-percent {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .gauge-label {
+            font-size: 0.5rem;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        .gauge-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        
+        .info-item {
+            background: rgba(255,255,255,0.08);
+            padding: 6px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .info-label {
+            font-size: 0.5rem;
+            opacity: 0.6;
+            margin-bottom: 2px;
+        }
+        
+        .info-value {
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        
+        .divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 12px 0;
+        }
+        
+        .refresh-btn {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255,255,255,0.12);
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .refresh-btn:active {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 0.5rem;
+            opacity: 0.5;
+            margin-top: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            font-size: 0.7rem;
+            opacity: 0.7;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.65rem;
+            color: #ff453a;
+            background: rgba(255,69,58,0.1);
+            border-radius: 12px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">💰 DESPESAS</div>
+        <div id="app">
+            <div class="loading">⏳ Carregando...</div>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANTE: Substitua pela URL do seu Google Apps Script
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx8TuH88p9QO5DasjAdO76RdyDJMBwNl3ozPUdqoive2vRxBwi7ohqm2iEV19avP6dGpg/exec';
+        
+        let state = {
+            expenses: [],
+            goal: 5000,
+            loading: true
+        };
+
+        function getMonthDays() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const currentDay = now.getDate();
+            const passedDays = currentDay;
+            const remainingDays = totalDays - currentDay;
+            
+            return {
+                total: totalDays,
+                passed: passedDays,
+                remaining: remainingDays
+            };
+        }
+
+        function getMonthExpenses() {
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
+            const currentYear = now.getFullYear();
+            
+            return state.expenses.filter(e => {
+                if (!e || !e.date) return false;
+                const parts = e.date.split('/');
+                if (parts.length < 3) return false;
+                const month = parseInt(parts[1]);
+                const year = parseInt(parts[2]);
+                return month === currentMonth && year === currentYear;
+            });
+        }
+
+        function getTodayExpenses() {
+            const now = new Date();
+            const today = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+            
+            return state.expenses.filter(e => e && e.date === today);
+        }
+
+        function formatAEDShort(value) {
+            if (value >= 1000) {
+                return `${(value / 1000).toFixed(1)}K`;
+            }
+            return Math.round(value).toString();
+        }
+
+        async function loadData() {
+            try {
+                state.loading = true;
+                render();
+
+                // Carregar despesas
+                const expensesResponse = await fetch(`${SHEETS_URL}?action=getExpenses`);
+                const expensesData = await expensesResponse.json();
+                state.expenses = expensesData.expenses || [];
+
+                // Carregar meta/limite
+                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
+                const metaData = await metaResponse.json();
+                state.goal = metaData.meta || 5000;
+
+                state.loading = false;
+                render();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                state.loading = false;
+                document.getElementById('app').innerHTML = `
+                    <div class="error">
+                        ❌ Erro ao carregar dados<br>
+                        <small>Verifique a URL do Google Sheets</small>
+                    </div>
+                    <button class="refresh-btn" onclick="loadData()">🔄 Tentar Novamente</button>
+                `;
+            }
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (state.loading) {
+                app.innerHTML = '<div class="loading">⏳ Carregando...</div>';
+                return;
+            }
+
+            // Calcular dados do mês
+            const monthExpenses = getMonthExpenses();
+            const totalMonth = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const remainingMonth = state.goal - totalMonth;
+            const percentMonth = (totalMonth / state.goal) * 100;
+            const monthDays = getMonthDays();
+
+            // Calcular dados do dia
+            const todayExpenses = getTodayExpenses();
+            const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const dailyLimit = monthDays.remaining > 0 ? remainingMonth / monthDays.remaining : 0;
+            const remainingToday = dailyLimit - totalToday;
+            const percentToday = dailyLimit > 0 ? (totalToday / dailyLimit) * 100 : 0;
+
+            // Classes dos gauges
+            const monthClass = percentMonth > 90 ? 'high' : percentMonth > 70 ? 'medium' : 'low';
+            const todayClass = percentToday > 90 ? 'high' : percentToday > 70 ? 'medium' : 'low';
+
+            // Calcular SVG
+            const circumference = 2 * Math.PI * 40;
+            const monthOffset = circumference - (Math.min(percentMonth, 100) / 100) * circumference;
+            const todayOffset = circumference - (Math.min(percentToday, 100) / 100) * circumference;
+
+            const now = new Date();
+            const lastUpdate = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            app.innerHTML = `
+                <!-- Gauge Mensal -->
+                <div class="gauge-section">
+                    <div class="gauge-title">📅 Limite Mensal</div>
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-circle" width="90" height="90" viewBox="0 0 90 90">
+                            <circle class="gauge-bg" cx="45" cy="45" r="40"></circle>
+                            <circle class="gauge-fill ${monthClass}" 
+                                    cx="45" cy="45" r="40"
+                                    stroke-dasharray="${circumference}"
+                                    stroke-dashoffset="${monthOffset}">
+                            </circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-percent">${Math.min(percentMonth, 100).toFixed(0)}%</div>
+                            <div class="gauge-label">usado</div>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Gasto</div>
+                            <div class="info-value" style="color: ${percentMonth > 90 ? '#ff453a' : '#fff'}">
+                                ${formatAEDShort(totalMonth)}
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Restante</div>
+                            <div class="info-value" style="color: ${remainingMonth < 0 ? '#ff453a' : '#30d158'}">
+                                ${formatAEDShort(remainingMonth)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Gauge Diário -->
+                <div class="gauge-section">
+                    <div class="gauge-title">📆 Limite Diário</div>
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-circle" width="90" height="90" viewBox="0 0 90 90">
+                            <circle class="gauge-bg" cx="45" cy="45" r="40"></circle>
+                            <circle class="gauge-fill ${todayClass}" 
+                                    cx="45" cy="45" r="40"
+                                    stroke-dasharray="${circumference}"
+                                    stroke-dashoffset="${todayOffset}">
+                            </circle>
+                        </svg>
+                        <div class="gauge-text">
+                            <div class="gauge-percent">${Math.min(percentToday, 100).toFixed(0)}%</div>
+                            <div class="gauge-label">usado</div>
+                        </div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Gasto Hoje</div>
+                            <div class="info-value" style="color: ${percentToday > 90 ? '#ff453a' : '#fff'}">
+                                ${formatAEDShort(totalToday)}
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Disponível</div>
+                            <div class="info-value" style="color: ${remainingToday < 0 ? '#ff453a' : '#30d158'}">
+                                ${formatAEDShort(Math.max(0, remainingToday))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="refresh-btn" onclick="loadData()">🔄 Atualizar</button>
+                <div class="last-update">Última atualização: ${lastUpdate}</div>
+            `;
+        }
+
+        // Carregar dados ao iniciar
+        loadData();
+
+        // Auto-refresh a cada 5 minutos
+        setInterval(loadData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
