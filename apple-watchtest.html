@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>⌚ Debug Despesas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 15px;
+        }
+        .container { max-width: 300px; margin: 0 auto; }
+        .section {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #ffd60a;
+        }
+        .info {
+            font-size: 0.7rem;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+        .success { color: #30d158; }
+        .error { color: #ff453a; }
+        .warning { color: #ffd60a; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        pre {
+            font-size: 0.6rem;
+            overflow-x: auto;
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align:center; margin-bottom:20px; font-size:1rem;">🔍 DEBUG MODE</h1>
+        <div id="debug"></div>
+        <button class="btn" onclick="loadData()">🔄 Recarregar</button>
+    </div>
+
+    <script>
+        // IMPORTANTE: Substitua pela URL do seu Google Apps Script
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx8TuH88p9QO5DasjAdO76RdyDJMBwNl3ozPUdqoive2vRxBwi7ohqm2iEV19avP6dGpg/exec';
+        
+        async function loadData() {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML = '<div class="section"><div class="info">⏳ Carregando...</div></div>';
+            
+            try {
+                // 1. Verificar URL
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">1️⃣ URL Configurada</div>
+                        <div class="info ${SHEETS_URL.includes('SUA_URL') ? 'error' : 'success'}">
+                            ${SHEETS_URL.includes('SUA_URL') ? '❌ URL NÃO CONFIGURADA!' : '✅ URL configurada'}
+                            <pre>${SHEETS_URL}</pre>
+                        </div>
+                    </div>
+                `;
+                
+                if (SHEETS_URL.includes('SUA_URL')) {
+                    throw new Error('Configure a URL do Google Sheets primeiro!');
+                }
+                
+                // 2. Buscar despesas
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">2️⃣ Buscando Despesas</div>
+                        <div class="info">📡 Fazendo requisição...</div>
+                    </div>
+                `;
+                
+                const url = `${SHEETS_URL}?action=getExpenses`;
+                const response = await fetch(url);
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">3️⃣ Resposta HTTP</div>
+                        <div class="info ${response.ok ? 'success' : 'error'}">
+                            Status: ${response.status} ${response.statusText}
+                            ${response.ok ? '✅' : '❌'}
+                        </div>
+                    </div>
+                `;
+                
+                const data = await response.json();
+                const expenses = data.expenses || [];
+                
+                // 3. Mostrar total de despesas
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">4️⃣ Total de Despesas</div>
+                        <div class="info ${expenses.length > 0 ? 'success' : 'warning'}">
+                            ${expenses.length > 0 ? '✅' : '⚠️'} ${expenses.length} despesas encontradas
+                        </div>
+                    </div>
+                `;
+                
+                if (expenses.length === 0) {
+                    debugDiv.innerHTML += `
+                        <div class="section">
+                            <div class="title">⚠️ PROBLEMA</div>
+                            <div class="info error">
+                                Nenhuma despesa foi retornada!<br><br>
+                                Possíveis causas:<br>
+                                • Planilha está vazia<br>
+                                • Apps Script não está lendo a planilha<br>
+                                • Nome da aba está errado
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 4. Analisar datas
+                const dateFormats = {};
+                expenses.slice(0, 10).forEach(e => {
+                    if (e.date) {
+                        const format = e.date.match(/\d/) ? 'tem números' : 'sem números';
+                        dateFormats[e.date] = (dateFormats[e.date] || 0) + 1;
+                    }
+                });
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">5️⃣ Formato das Datas</div>
+                        <div class="info">
+                            Primeiras 10 datas:<br>
+                            <pre>${JSON.stringify(Object.keys(dateFormats), null, 2)}</pre>
+                        </div>
+                    </div>
+                `;
+                
+                // 5. Filtrar mês atual
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const currentYear = now.getFullYear();
+                
+                const monthExpenses = expenses.filter(e => {
+                    if (!e || !e.date) return false;
+                    const parts = e.date.split('/');
+                    if (parts.length < 3) return false;
+                    const month = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    return month === currentMonth && year === currentYear;
+                });
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">6️⃣ Despesas do Mês Atual</div>
+                        <div class="info ${monthExpenses.length > 0 ? 'success' : 'warning'}">
+                            Mês atual: ${currentMonth}/${currentYear}<br>
+                            ${monthExpenses.length > 0 ? '✅' : '⚠️'} ${monthExpenses.length} despesas encontradas
+                        </div>
+                    </div>
+                `;
+                
+                if (monthExpenses.length === 0) {
+                    debugDiv.innerHTML += `
+                        <div class="section">
+                            <div class="title">⚠️ PROBLEMA</div>
+                            <div class="info warning">
+                                Não há despesas do mês ${currentMonth}/${currentYear}!<br><br>
+                                Você tem despesas mas são de outros meses.<br><br>
+                                Adicione despesas do mês atual no app principal.
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 6. Filtrar hoje
+                const today = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+                const todayExpenses = expenses.filter(e => e && e.date === today);
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">7️⃣ Despesas de Hoje</div>
+                        <div class="info ${todayExpenses.length > 0 ? 'success' : 'warning'}">
+                            Data de hoje: ${today}<br>
+                            ${todayExpenses.length > 0 ? '✅' : '⚠️'} ${todayExpenses.length} despesas encontradas
+                        </div>
+                    </div>
+                `;
+                
+                // 7. Buscar limite/meta
+                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
+                const metaData = await metaResponse.json();
+                const goal = metaData.meta || 5000;
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">8️⃣ Limite Mensal</div>
+                        <div class="info success">
+                            ✅ AED ${goal}
+                        </div>
+                    </div>
+                `;
+                
+                // 8. Calcular totais
+                const totalMonth = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">9️⃣ RESUMO FINAL</div>
+                        <div class="info success">
+                            📅 Limite Mensal: AED ${goal}<br>
+                            💰 Gasto no Mês: AED ${totalMonth.toFixed(2)}<br>
+                            💸 Gasto Hoje: AED ${totalToday.toFixed(2)}<br>
+                            <br>
+                            ${monthExpenses.length > 0 ? '✅ TUDO OK!' : '⚠️ SEM DESPESAS DO MÊS ATUAL'}
+                        </div>
+                    </div>
+                `;
+                
+                // 9. Mostrar exemplo de despesa
+                if (expenses.length > 0) {
+                    debugDiv.innerHTML += `
+                        <div class="section">
+                            <div class="title">🔍 Exemplo de Despesa</div>
+                            <div class="info">
+                                <pre>${JSON.stringify(expenses[0], null, 2)}</pre>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                debugDiv.innerHTML += `
+                    <div class="section">
+                        <div class="title">❌ ERRO</div>
+                        <div class="info error">
+                            ${error.message}<br><br>
+                            <pre>${error.stack}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Carregar ao iniciar
+        loadData();
+    </script>
+</body>
+</html>
