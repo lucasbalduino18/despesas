@@ -1513,6 +1513,131 @@
                         }
                     </div>
                     
+                    <!-- Gráfico de Pizza - Total Geral -->
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px;">🍕 Distribuição Total por Categoria</h3>
+                        ${(() => {
+                            // Calcular totais de TODAS as despesas (não apenas do mês)
+                            const allCategoryStats = {};
+                            CATEGORIES.forEach(cat => {
+                                allCategoryStats[cat.id] = {
+                                    name: cat.name,
+                                    icon: cat.icon,
+                                    color: cat.color,
+                                    total: 0,
+                                    count: 0
+                                };
+                            });
+                            
+                            state.expenses.forEach(e => {
+                                if (!e || !e.amount) return;
+                                const catId = e.category || 'outros';
+                                if (allCategoryStats[catId]) {
+                                    allCategoryStats[catId].total += parseFloat(e.amount) || 0;
+                                    allCategoryStats[catId].count++;
+                                }
+                            });
+                            
+                            const allSortedStats = Object.values(allCategoryStats)
+                                .filter(s => s.count > 0)
+                                .sort((a, b) => b.total - a.total);
+                            
+                            if (allSortedStats.length === 0) {
+                                return '<div class="empty">📦<br>Nenhuma despesa ainda</div>';
+                            }
+                            
+                            const grandTotal = allSortedStats.reduce((sum, s) => sum + s.total, 0);
+                            
+                            // Criar gráfico de pizza SVG
+                            let currentAngle = -90; // Começar do topo
+                            const centerX = 100;
+                            const centerY = 100;
+                            const radius = 80;
+                            
+                            const slices = allSortedStats.map(stat => {
+                                const percentage = (stat.total / grandTotal) * 100;
+                                const sliceAngle = (percentage / 100) * 360;
+                                
+                                // Calcular pontos do arco
+                                const startAngle = currentAngle;
+                                const endAngle = currentAngle + sliceAngle;
+                                
+                                const startX = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
+                                const startY = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
+                                const endX = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
+                                const endY = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
+                                
+                                const largeArcFlag = sliceAngle > 180 ? 1 : 0;
+                                
+                                const pathData = [
+                                    \`M \${centerX} \${centerY}\`,
+                                    \`L \${startX} \${startY}\`,
+                                    \`A \${radius} \${radius} 0 \${largeArcFlag} 1 \${endX} \${endY}\`,
+                                    'Z'
+                                ].join(' ');
+                                
+                                currentAngle = endAngle;
+                                
+                                return {
+                                    pathData,
+                                    color: stat.color,
+                                    percentage,
+                                    ...stat
+                                };
+                            });
+                            
+                            return \`
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                                    <!-- SVG Pizza -->
+                                    <svg width="200" height="200" viewBox="0 0 200 200">
+                                        \${slices.map(slice => \`
+                                            <path
+                                                d="\${slice.pathData}"
+                                                fill="\${slice.color}"
+                                                stroke="rgba(255,255,255,0.3)"
+                                                stroke-width="1"
+                                                style="cursor: pointer; transition: opacity 0.3s;"
+                                                onmouseover="this.style.opacity='0.8'"
+                                                onmouseout="this.style.opacity='1'"
+                                            >
+                                                <title>\${slice.icon} \${slice.name}: AED \${slice.total.toFixed(2)} (\${slice.percentage.toFixed(1)}%)</title>
+                                            </path>
+                                        \`).join('')}
+                                        <!-- Centro branco -->
+                                        <circle cx="100" cy="100" r="40" fill="rgba(255,255,255,0.15)" />
+                                        <text x="100" y="95" text-anchor="middle" fill="white" font-size="14" font-weight="700">Total</text>
+                                        <text x="100" y="110" text-anchor="middle" fill="white" font-size="12">AED \${grandTotal.toFixed(0)}</text>
+                                    </svg>
+                                    
+                                    <!-- Legenda -->
+                                    <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        \${allSortedStats.map(stat => {
+                                            const percentage = (stat.total / grandTotal) * 100;
+                                            return \`
+                                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                                                    <div style="width: 12px; height: 12px; border-radius: 3px; background: \${stat.color}; flex-shrink: 0;"></div>
+                                                    <div style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        \${stat.icon} \${stat.name}
+                                                    </div>
+                                                    <div style="font-weight: 600; white-space: nowrap;">
+                                                        \${percentage.toFixed(0)}%
+                                                    </div>
+                                                </div>
+                                            \`;
+                                        }).join('')}
+                                    </div>
+                                    
+                                    <!-- Resumo -->
+                                    <div style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px;">Total Geral de Despesas</div>
+                                        <div style="font-size: 1.5rem; font-weight: 700;">AED \${grandTotal.toFixed(2)}</div>
+                                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">\${state.expenses.length} transações</div>
+                                    </div>
+                                </div>
+                            \`;
+                        })()}
+                    </div>
+                    
                     ${state.viewingCategoryExpenses ? (() => {
                         const catId = state.viewingCategoryExpenses;
                         const cat = CATEGORIES.find(c => c.id === catId);
