@@ -535,26 +535,6 @@
                 maximumFractionDigits: 0
             }).format(value);
         }
-        // Função para formatar valores em AED com centavos
-        function formatAEDSemAED(value) {
-            return new Intl.NumberFormat('en-AE', {
-                style: 'currency',
-                currency: '',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
-        }
-        
-        // Função para formatar valores em AED sem centavos
-        function formatAEDShortSemAED(value) {
-            return new Intl.NumberFormat('en-AE', {
-                style: 'currency',
-                currency: '',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(value);
-        }
-
         const state = {
             tab: 'add',
             expenses: [],
@@ -1307,9 +1287,9 @@
                             </div>
                             <div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Hoje</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShortSemAED(Math.max(0, todayRemaining))}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShort(Math.max(0, todayRemaining))}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                    💸 ${formatAEDShortSemAED(todayTotal)} gasto
+                                    💸 ${formatAEDShort(todayTotal)} gasto
                                 </div>
                             </div>
                         </div>
