@@ -1164,12 +1164,36 @@
                     </div>
                 `;
             } else if (state.tab === 'add') {
+                const monthExpenses = getMonthExpenses();
+                const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                const remaining = state.goal - total;
+                const percent = (total / state.goal) * 100;
+                const monthDays = getMonthDays();
+                
+                // Calcular gastos do dia atual
+                const today = new Date();
+                const todayStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+                const todayExpenses = state.expenses.filter(e => e && e.date === todayStr);
+                const todayTotal = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                
+                // Limite diário (restante dividido por dias restantes)
+                const dailyLimit = monthDays.remaining > 0 ? remaining / monthDays.remaining : 0;
+                const todayRemaining = dailyLimit - todayTotal;
+                const todayPercent = dailyLimit > 0 ? (todayTotal / dailyLimit) * 100 : 0;
+                
+                // Gauge da meta mensal
                 const circumference = 2 * Math.PI * 80;
                 const offset = circumference - (percent / 100) * circumference;
                 const ritmo = getRitmoGastos();
                 let gaugeClass = 'low';
                 if (percent > 90) gaugeClass = 'high';
                 else if (percent > 70) gaugeClass = 'medium';
+                
+                // Gauge do dia
+                const todayOffset = circumference - (Math.min(todayPercent, 100) / 100) * circumference;
+                let todayGaugeClass = 'low';
+                if (todayPercent > 90) todayGaugeClass = 'high';
+                else if (todayPercent > 70) todayGaugeClass = 'medium';
 
                 app.innerHTML = `
                     <div class="tabs">
@@ -1179,45 +1203,78 @@
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     <div class="card">
-                        <div class="gauge-container">
-                            <div class="gauge">
-                                <svg class="gauge-circle" width="180" height="180" viewBox="0 0 180 180">
-                                    <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
-                                    <circle class="gauge-fill ${gaugeClass}" 
-                                            cx="90" cy="90" r="80"
-                                            stroke-dasharray="${circumference}"
-                                            stroke-dashoffset="${offset}">
-                                    </circle>
-                                </svg>
-                                <div class="gauge-text">
-                                    <div class="gauge-percent">${Math.min(percent, 100).toFixed(0)}%</div>
-                                    <div class="gauge-label">da meta</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <!-- Gauge Meta Mensal -->
+                            <div>
+                                <div class="gauge-container" style="margin-bottom: 10px;">
+                                    <div class="gauge">
+                                        <svg class="gauge-circle" width="140" height="140" viewBox="0 0 180 180">
+                                            <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
+                                            <circle class="gauge-fill ${gaugeClass}" 
+                                                    cx="90" cy="90" r="80"
+                                                    stroke-dasharray="${circumference}"
+                                                    stroke-dashoffset="${offset}">
+                                            </circle>
+                                        </svg>
+                                        <div class="gauge-text">
+                                            <div class="gauge-percent" style="font-size: 2rem;">${Math.min(percent, 100).toFixed(0)}%</div>
+                                            <div class="gauge-label" style="font-size: 0.7rem;">da meta</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">
+                                    📅 Meta Mensal
+                                </div>
+                            </div>
+                            
+                            <!-- Gauge Hoje -->
+                            <div>
+                                <div class="gauge-container" style="margin-bottom: 10px;">
+                                    <div class="gauge">
+                                        <svg class="gauge-circle" width="140" height="140" viewBox="0 0 180 180">
+                                            <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
+                                            <circle class="gauge-fill ${todayGaugeClass}" 
+                                                    cx="90" cy="90" r="80"
+                                                    stroke-dasharray="${circumference}"
+                                                    stroke-dashoffset="${todayOffset}">
+                                            </circle>
+                                        </svg>
+                                        <div class="gauge-text">
+                                            <div class="gauge-percent" style="font-size: 2rem;">${Math.min(todayPercent, 100).toFixed(0)}%</div>
+                                            <div class="gauge-label" style="font-size: 0.7rem;">de hoje</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 5px;">
+                                    📆 Limite Diário
                                 </div>
                             </div>
                         </div>
-                        <div class="gauge-info">
+                        
+                        <div class="gauge-info" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Meta</div>
-                                <div class="gauge-info-value">AED ${state.goal.toFixed(0)}</div>
+                                <div class="gauge-info-value">${state.goal.toFixed(0)}</div>
                             </div>
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Gasto</div>
-                                <div class="gauge-info-value" style="color: ${percent > 90 ? '#fca5a5' : '#fff'}">AED ${total.toFixed(0)}</div>
-                                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
-                                    📅 ${monthDays.passed}d passado${monthDays.passed === 1 ? '' : 's'}
-                                </div>
+                                <div class="gauge-info-value" style="color: ${percent > 90 ? '#fca5a5' : '#fff'}">${total.toFixed(0)}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
                                     ${monthDays.passed > 0 ? `💸 ${(total / monthDays.passed).toFixed(0)}/d` : '💸 0/d'}
                                 </div>
                             </div>
                             <div class="gauge-info-item">
                                 <div class="gauge-info-label">Restante</div>
-                                <div class="gauge-info-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">AED ${remaining.toFixed(0)}</div>
-                                <div style="font-size: 0.65rem; opacity: 0.8; margin-top: 3px;">
-                                    📅 ${monthDays.remaining}d restante${monthDays.remaining === 1 ? '' : 's'}
-                                </div>
+                                <div class="gauge-info-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">${remaining.toFixed(0)}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
-                                    ${monthDays.remaining > 0 ? `💰 ${(remaining / monthDays.remaining).toFixed(0)}/d` : '💰 0/d'}
+                                    ${monthDays.remaining > 0 ? `💰 ${dailyLimit.toFixed(0)}/d` : '💰 0/d'}
+                                </div>
+                            </div>
+                            <div class="gauge-info-item">
+                                <div class="gauge-info-label">Hoje</div>
+                                <div class="gauge-info-value" style="color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'}">${Math.max(0, todayRemaining).toFixed(0)}</div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
+                                    💸 ${todayTotal.toFixed(0)} gasto
                                 </div>
                             </div>
                         </div>
