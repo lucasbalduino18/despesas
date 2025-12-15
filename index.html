@@ -1206,20 +1206,18 @@
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <!-- Gauge Meta Mensal -->
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <div class="gauge-container" style="margin: 0;">
-                                    <div class="gauge">
-                                        <svg class="gauge-circle" width="140" height="140" viewBox="0 0 180 180">
-                                            <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
-                                            <circle class="gauge-fill ${gaugeClass}" 
-                                                    cx="90" cy="90" r="80"
-                                                    stroke-dasharray="${circumference}"
-                                                    stroke-dashoffset="${offset}">
-                                            </circle>
-                                        </svg>
-                                        <div class="gauge-text">
-                                            <div class="gauge-percent" style="font-size: 2rem;">${Math.min(percent, 100).toFixed(0)}%</div>
-                                            <div class="gauge-label" style="font-size: 0.7rem;">da meta</div>
-                                        </div>
+                                <div style="position: relative; width: 140px; height: 140px;">
+                                    <svg width="140" height="140" viewBox="0 0 180 180">
+                                        <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
+                                        <circle class="gauge-fill ${gaugeClass}" 
+                                                cx="90" cy="90" r="80"
+                                                stroke-dasharray="${circumference}"
+                                                stroke-dashoffset="${offset}">
+                                        </circle>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <div class="gauge-percent" style="font-size: 2rem;">${Math.min(percent, 100).toFixed(0)}%</div>
+                                        <div class="gauge-label" style="font-size: 0.7rem;">da meta</div>
                                     </div>
                                 </div>
                                 <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
@@ -1229,20 +1227,18 @@
                             
                             <!-- Gauge Hoje -->
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <div class="gauge-container" style="margin: 0;">
-                                    <div class="gauge">
-                                        <svg class="gauge-circle" width="140" height="140" viewBox="0 0 180 180">
-                                            <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
-                                            <circle class="gauge-fill ${todayGaugeClass}" 
-                                                    cx="90" cy="90" r="80"
-                                                    stroke-dasharray="${circumference}"
-                                                    stroke-dashoffset="${todayOffset}">
-                                            </circle>
-                                        </svg>
-                                        <div class="gauge-text">
-                                            <div class="gauge-percent" style="font-size: 2rem;">${Math.min(todayPercent, 100).toFixed(0)}%</div>
-                                            <div class="gauge-label" style="font-size: 0.7rem;">de hoje</div>
-                                        </div>
+                                <div style="position: relative; width: 140px; height: 140px;">
+                                    <svg width="140" height="140" viewBox="0 0 180 180">
+                                        <circle class="gauge-bg" cx="90" cy="90" r="80"></circle>
+                                        <circle class="gauge-fill ${todayGaugeClass}" 
+                                                cx="90" cy="90" r="80"
+                                                stroke-dasharray="${circumference}"
+                                                stroke-dashoffset="${todayOffset}">
+                                        </circle>
+                                    </svg>
+                                    <div class="gauge-text">
+                                        <div class="gauge-percent" style="font-size: 2rem;">${Math.min(todayPercent, 100).toFixed(0)}%</div>
+                                        <div class="gauge-label" style="font-size: 0.7rem;">de hoje</div>
                                     </div>
                                 </div>
                                 <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
