@@ -516,6 +516,26 @@
             { id: 'outros', name: 'Outros', icon: '📦', color: '#6b7280' }
         ];
 
+        // Função para formatar valores em AED com centavos
+        function formatAED(value) {
+            return new Intl.NumberFormat('en-AE', {
+                style: 'currency',
+                currency: 'AED',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Função para formatar valores em AED sem centavos
+        function formatAEDShort(value) {
+            return new Intl.NumberFormat('en-AE', {
+                style: 'currency',
+                currency: 'AED',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
         const state = {
             tab: 'add',
             expenses: [],
@@ -1112,7 +1132,7 @@
                     <!-- Card de Meta -->
                     <div class="card">
                         <div style="text-align:center; font-size:0.9rem; opacity:0.9;">Limite Mensal</div>
-                        <div class="balance">AED ${state.goal.toFixed(0)}</div>
+                        <div class="balance">${formatAEDShort(state.goal)}</div>
                         <div class="progress-bar">
                             <div class="progress-fill ${progressClass}" style="width: ${Math.min(percent, 100)}%"></div>
                         </div>
@@ -1122,24 +1142,24 @@
                         <div class="meta">
                             <div class="meta-item">
                                 <div class="meta-label">Gasto</div>
-                                <div class="meta-value">AED ${total.toFixed(0)}</div>
+                                <div class="meta-value">${formatAEDShort(total)}</div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
                                     📅 ${monthDays.passed} ${monthDays.passed === 1 ? 'dia' : 'dias'} passado${monthDays.passed === 1 ? '' : 's'}
                                 </div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                    ${monthDays.passed > 0 ? `💸 ${(total / monthDays.passed).toFixed(0)} AED/dia` : '💸 0 AED/dia'}
+                                    ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}/dia` : '💸 AED 0/dia'}
                                 </div>
                             </div>
                             <div class="meta-item">
                                 <div class="meta-label">Restante</div>
                                 <div class="meta-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">
-                                    AED ${remaining.toFixed(0)}
+                                    ${formatAEDShort(remaining)}
                                 </div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
                                     📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? 'dia' : 'dias'} restante${monthDays.remaining === 1 ? '' : 's'}
                                 </div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
-                                    ${monthDays.remaining > 0 ? `💰 ${(remaining / monthDays.remaining).toFixed(0)} AED/dia` : '💰 0 AED/dia'}
+                                    ${monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}/dia` : '💰 AED 0/dia'}
                                 </div>
                             </div>
                         </div>
@@ -1151,11 +1171,11 @@
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Média</div>
-                            <div class="stat-value">AED ${avg.toFixed(0)}</div>
+                            <div class="stat-value">${formatAEDShort(avg)}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Maior</div>
-                            <div class="stat-value">AED ${largest.toFixed(0)}</div>
+                            <div class="stat-value">${formatAEDShort(largest)}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-label">Categorias</div>
@@ -1250,27 +1270,27 @@
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
                             <div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Meta</div>
-                                <div style="font-size: 1.1rem; font-weight: 700;">${state.goal.toFixed(0)}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700;">${formatAEDShort(state.goal)}</div>
                             </div>
                             <div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Gasto</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${percent > 90 ? '#fca5a5' : '#fff'};">${total.toFixed(0)}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${percent > 90 ? '#fca5a5' : '#fff'};">${formatAEDShort(total)}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                    ${monthDays.passed > 0 ? `💸 ${(total / monthDays.passed).toFixed(0)}/d` : '💸 0/d'}
+                                    ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}/d` : '💸 0/d'}
                                 </div>
                             </div>
                             <div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Restante</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">${remaining.toFixed(0)}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShort(remaining)}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
-                                    ${monthDays.remaining > 0 ? `💰 ${dailyLimit.toFixed(0)}/d` : '💰 0/d'}
+                                    ${monthDays.remaining > 0 ? `💰 ${formatAEDShort(dailyLimit)}/d` : '💰 0/d'}
                                 </div>
                             </div>
                             <div>
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Hoje</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'};">${Math.max(0, todayRemaining).toFixed(0)}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShort(Math.max(0, todayRemaining))}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                    💸 ${todayTotal.toFixed(0)} gasto
+                                    💸 ${formatAEDShort(todayTotal)} gasto
                                 </div>
                             </div>
                         </div>
