@@ -616,7 +616,7 @@
                 const result = await response.json();
                 return result.success;
             } catch (error) {
-                console.error('Erro ao atualizar meta:', error);
+                console.error('Erro ao atualizar limite:', error);
                 return false;
             }
         }
@@ -771,7 +771,7 @@
                 state.goal = newGoal;
                 render();
             } else {
-                alert('❌ Erro ao atualizar meta. Tente novamente.');
+                alert('❌ Erro ao atualizar limite. Tente novamente.');
             }
         }
 
@@ -1129,7 +1129,7 @@
                         </div>
                     </div>
                     
-                    <!-- Card de Meta -->
+                    <!-- Card de Limite -->
                     <div class="card">
                         <div style="text-align:center; font-size:0.9rem; opacity:0.9;">Limite Mensal</div>
                         <div class="balance">${formatAEDShort(state.goal)}</div>
@@ -1201,7 +1201,7 @@
                 const todayRemaining = dailyLimit - todayTotal;
                 const todayPercent = dailyLimit > 0 ? (todayTotal / dailyLimit) * 100 : 0;
                 
-                // Gauge da meta mensal
+                // Gauge do limite mensal
                 const circumference = 2 * Math.PI * 80;
                 const offset = circumference - (percent / 100) * circumference;
                 const ritmo = getRitmoGastos();
@@ -1224,7 +1224,7 @@
                     </div>
                     <div class="card">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                            <!-- Gauge Meta Mensal -->
+                            <!-- Gauge Limite Mensal -->
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <div style="position: relative; width: 140px; height: 140px;">
                                     <svg width="140" height="140" viewBox="0 0 180 180">
@@ -1237,11 +1237,11 @@
                                     </svg>
                                     <div class="gauge-text">
                                         <div class="gauge-percent" style="font-size: 2rem;">${Math.min(percent, 100).toFixed(0)}%</div>
-                                        <div class="gauge-label" style="font-size: 0.7rem;">da meta</div>
+                                        <div class="gauge-label" style="font-size: 0.7rem;">do limite</div>
                                     </div>
                                 </div>
                                 <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
-                                    📅 Meta Mensal
+                                    📅 Limite Mensal
                                 </div>
                             </div>
                             
@@ -1269,7 +1269,7 @@
                         
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
                             <div>
-                                <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Meta</div>
+                                <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Limite</div>
                                 <div style="font-size: 1.1rem; font-weight: 700;">${formatAEDShort(state.goal)}</div>
                             </div>
                             <div>
@@ -1393,7 +1393,7 @@
                     </div>
                     <div class="card">
                         <div class="input-group">
-                            <label class="label">Meta Mensal (AED):</label>
+                            <label class="label">Limite Mensal (AED):</label>
                             <input type="number" id="goalInput" value="${state.goal}" 
                                    onblur="updateGoal(this.value)">
                         </div>
@@ -1790,7 +1790,7 @@
                             const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                             const isExpanded = state.expandedMonths[monthYear];
                             
-                            // Determinar se ficou acima ou abaixo da meta
+                            // Determinar se ficou acima ou abaixo do limite
                             let statusIcon = '';
                             let statusColor = '';
                             let statusTitle = '';
@@ -1798,15 +1798,15 @@
                             if (totalMonth > state.goal) {
                                 statusIcon = '🔴';
                                 statusColor = '#ef4444';
-                                statusTitle = 'Acima da meta';
+                                statusTitle = 'Acima do limite';
                             } else if (totalMonth > state.goal * 0.9) {
                                 statusIcon = '🟡';
                                 statusColor = '#fbbf24';
-                                statusTitle = 'Próximo da meta';
+                                statusTitle = 'Próximo do limite';
                             } else {
                                 statusIcon = '🟢';
                                 statusColor = '#22c55e';
-                                statusTitle = 'Abaixo da meta';
+                                statusTitle = 'Abaixo do limite';
                             }
                             
                             return `
