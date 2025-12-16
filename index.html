@@ -535,6 +535,7 @@
                 maximumFractionDigits: 0
             }).format(value);
         }
+
         const state = {
             tab: 'add',
             expenses: [],
@@ -1266,30 +1267,30 @@
                             </div>
                         </div>
                         
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
-                            <div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center;">
+                            <div style="min-width: 0;">
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Limite</div>
-                                <div style="font-size: 1.1rem; font-weight: 700;">${formatAEDShort(state.goal)}</div>
+                                <div style="font-size: 1.05rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatAEDShort(state.goal)}</div>
                             </div>
-                            <div>
+                            <div style="min-width: 0;">
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Gasto</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${percent > 90 ? '#fca5a5' : '#fff'};">${formatAEDShort(total)}</div>
-                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
+                                <div style="font-size: 1.05rem; font-weight: 700; color: ${percent > 90 ? '#fca5a5' : '#fff'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatAEDShort(total)}</div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}/d` : '💸 0/d'}
                                 </div>
                             </div>
-                            <div>
+                            <div style="min-width: 0;">
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Restante</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShort(remaining)}</div>
-                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
+                                <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatAEDShort(remaining)}</div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     ${monthDays.remaining > 0 ? `💰 ${formatAEDShort(dailyLimit)}/d` : '💰 0/d'}
                                 </div>
                             </div>
-                            <div>
+                            <div style="min-width: 0;">
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Hoje</div>
-                                <div style="font-size: 1.1rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'};">${formatAEDShort(Math.max(0, todayRemaining))}</div>
-                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                    💸 ${formatAEDShort(todayTotal)} gasto
+                                <div style="font-size: 1.05rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatAEDShort(Math.max(0, todayRemaining))}</div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    💸 ${formatAEDShort(todayTotal)}
                                 </div>
                             </div>
                         </div>
