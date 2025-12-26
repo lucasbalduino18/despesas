@@ -520,7 +520,7 @@
 
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx8TuH88p9QO5DasjAdO76RdyDJMBwNl3ozPUdqoive2vRxBwi7ohqm2iEV19avP6dGpg/exec';
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzTO261avS8mzdrK_6rZkcULo2YOlLd46fnjzyVqbgTHDH1eaW8p1s4gxxJJ12-1RtdRw/exec';
 
         // Categorias padrão
         const CATEGORIES = [
@@ -587,7 +587,15 @@
             try {
                 const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
                 const despesasData = await despesasResponse.json();
+                
+                console.log('Resposta getDespesas:', despesasData);
+                console.log('Tipo:', typeof despesasData);
+                console.log('É array?', Array.isArray(despesasData));
+                
                 state.expenses = despesasData.expenses || despesasData || [];
+                
+                console.log('state.expenses:', state.expenses);
+                console.log('Quantidade:', state.expenses.length);
 
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
@@ -1039,6 +1047,27 @@
                 console.error('Erro ao deletar:', error);
                 alert('❌ Erro ao deletar despesa fixa');
             }
+        }
+        
+        // Selecionar categoria sem perder valores dos campos
+        function selectCategoryForFixed(categoryId) {
+            // Salvar valores atuais dos campos
+            const name = document.getElementById('fixedName')?.value || '';
+            const amount = document.getElementById('fixedAmount')?.value || '';
+            const day = document.getElementById('fixedDay')?.value || '';
+            
+            // Atualizar categoria
+            state.selectedCategory = categoryId;
+            
+            // Re-renderizar
+            render();
+            
+            // Restaurar valores após renderização
+            setTimeout(() => {
+                if (name) document.getElementById('fixedName').value = name;
+                if (amount) document.getElementById('fixedAmount').value = amount;
+                if (day) document.getElementById('fixedDay').value = day;
+            }, 10);
         }
 
         // Colar SMS da área de transferência
@@ -1678,7 +1707,7 @@
                                 ${CATEGORIES.map(cat => `
                                     <div 
                                         class="category-option ${state.selectedCategory === cat.id ? 'selected' : ''}"
-                                        onclick="state.selectedCategory='${cat.id}'; render()"
+                                        onclick="selectCategoryForFixed('${cat.id}')"
                                         style="border-color: ${state.selectedCategory === cat.id ? cat.color : 'transparent'}"
                                     >
                                         <div class="category-icon">${cat.icon}</div>
@@ -2094,18 +2123,23 @@
                     })() : ''}
                 `;
             } else {
+                // Tab Histórico
                 const expensesByMonth = {};
+                
+                // Validar se expenses existe e é array
+                if (!state.expenses || !Array.isArray(state.expenses)) {
+                    state.expenses = [];
+                }
+                
                 state.expenses.forEach(e => {
                     // Validar se a despesa tem os dados necessários
                     if (!e || !e.date || !e.amount) {
-                        console.warn('Despesa inválida encontrada:', e);
-                        return;
+                        return; // Pular esta despesa
                     }
                     
                     const parts = e.date.toString().split('/');
                     if (parts.length < 3) {
-                        console.warn('Data inválida:', e.date);
-                        return;
+                        return; // Pular esta despesa
                     }
                     
                     const monthYear = `${parts[1]}/${parts[2]}`;
