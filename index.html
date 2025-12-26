@@ -606,7 +606,8 @@
             tab: 'add',
             expenses: [],
             fixedExpenses: [],  // Nova: despesas fixas
-            goal: 5000,
+            goal: 5000,         // Limite de variáveis
+            goalFixed: 0,       // Limite de fixas
             sms: '',
             loading: true,
             selectedCategory: null,
@@ -649,9 +650,11 @@
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
                 state.goal = metaData.meta || 5000;
+                state.goalFixed = metaData.metaFixed || 0;
                 
                 console.log('=== META ===');
-                console.log('Limite:', state.goal);
+                console.log('Limite Variáveis:', state.goal);
+                console.log('Limite Fixas:', state.goalFixed);
 
                 // Carregar despesas fixas
                 try {
@@ -719,6 +722,19 @@
                 return result.success;
             } catch (error) {
                 console.error('Erro ao atualizar limite:', error);
+                return false;
+            }
+        }
+        
+        async function updateGoalFixedInSheets(valor) {
+            const url = `${SHEETS_URL}?action=setMeta&tipo=fixed&valor=${valor}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao atualizar limite fixas:', error);
                 return false;
             }
         }
@@ -874,6 +890,18 @@
                 render();
             } else {
                 alert('❌ Erro ao atualizar limite. Tente novamente.');
+            }
+        }
+        
+        async function updateGoalFixed(value) {
+            const newGoalFixed = parseFloat(value) || 0;
+            const success = await updateGoalFixedInSheets(newGoalFixed);
+            
+            if (success) {
+                state.goalFixed = newGoalFixed;
+                render();
+            } else {
+                alert('❌ Erro ao atualizar limite de fixas. Tente novamente.');
             }
         }
 
@@ -1568,7 +1596,7 @@
                                             ${formatAED(total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0))}
                                         </div>
                                         <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                            ${((total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0)) / state.goal * 100).toFixed(1)}% do limite
+                                            ${(((total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0)) / (state.goal + state.goalFixed)) * 100).toFixed(1)}% do limite total
                                         </div>
                                     </div>
                                 </div>
@@ -1576,9 +1604,18 @@
                             
                             <!-- Comparação com Limite -->
                             ${(() => {
-                                const totalGeral = total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
-                                const disponivel = state.goal - totalGeral;
-                                const percentGeral = (totalGeral / state.goal) * 100;
+                                const totalVariaveis = total;
+                                const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                                const totalGeral = totalVariaveis + totalFixas;
+                                const limiteTotal = state.goal + state.goalFixed;
+                                
+                                const disponivelVariaveis = state.goal - totalVariaveis;
+                                const disponivelFixas = state.goalFixed - totalFixas;
+                                const disponivelGeral = limiteTotal - totalGeral;
+                                
+                                const percentVariaveis = state.goal > 0 ? (totalVariaveis / state.goal) * 100 : 0;
+                                const percentFixas = state.goalFixed > 0 ? (totalFixas / state.goalFixed) * 100 : 0;
+                                const percentGeral = limiteTotal > 0 ? (totalGeral / limiteTotal) * 100 : 0;
                                 
                                 return `
                                     <div style="
@@ -1587,24 +1624,105 @@
                                         border-radius: 8px;
                                         border: 1px solid rgba(255,255,255,0.1);
                                     ">
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                            <span style="font-size: 0.85rem; opacity: 0.8;">Limite mensal</span>
-                                            <span style="font-weight: 600;">${formatAED(state.goal)}</span>
+                                        <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; opacity: 0.9;">
+                                            📊 Comparação com Limites
                                         </div>
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                                            <span style="font-size: 0.85rem; opacity: 0.8;">Total gasto</span>
-                                            <span style="font-weight: 600; color: ${percentGeral > 90 ? '#fca5a5' : '#fff'};">
-                                                ${formatAED(totalGeral)}
-                                            </span>
+                                        
+                                        <!-- Variáveis -->
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span style="font-size: 0.8rem; opacity: 0.7;">💸 Variáveis</span>
+                                                <span style="font-size: 0.75rem; opacity: 0.6;">
+                                                    ${formatAED(totalVariaveis)} / ${formatAED(state.goal)}
+                                                </span>
+                                            </div>
+                                            <div style="
+                                                width: 100%;
+                                                height: 8px;
+                                                background: rgba(255,255,255,0.1);
+                                                border-radius: 4px;
+                                                overflow: hidden;
+                                            ">
+                                                <div style="
+                                                    width: ${Math.min(percentVariaveis, 100)}%;
+                                                    height: 100%;
+                                                    background: ${percentVariaveis > 90 ? '#ef4444' : percentVariaveis > 70 ? '#fbbf24' : '#3b82f6'};
+                                                    transition: width 0.3s;
+                                                "></div>
+                                            </div>
+                                            <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 3px; text-align: right;">
+                                                ${percentVariaveis.toFixed(1)}% • ${disponivelVariaveis >= 0 ? 'Disponível' : 'Acima'}: ${formatAED(Math.abs(disponivelVariaveis))}
+                                            </div>
                                         </div>
-                                        <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 10px 0;"></div>
-                                        <div style="display: flex; justify-content: space-between;">
-                                            <span style="font-size: 0.9rem; font-weight: 600;">
-                                                ${disponivel >= 0 ? '✅ Disponível' : '⚠️ Acima do limite'}
-                                            </span>
-                                            <span style="font-weight: 700; font-size: 1.1rem; color: ${disponivel >= 0 ? '#86efac' : '#fca5a5'};">
-                                                ${formatAED(Math.abs(disponivel))}
-                                            </span>
+                                        
+                                        <!-- Fixas -->
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span style="font-size: 0.8rem; opacity: 0.7;">💳 Fixas</span>
+                                                <span style="font-size: 0.75rem; opacity: 0.6;">
+                                                    ${formatAED(totalFixas)} / ${formatAED(state.goalFixed)}
+                                                </span>
+                                            </div>
+                                            <div style="
+                                                width: 100%;
+                                                height: 8px;
+                                                background: rgba(255,255,255,0.1);
+                                                border-radius: 4px;
+                                                overflow: hidden;
+                                            ">
+                                                <div style="
+                                                    width: ${Math.min(percentFixas, 100)}%;
+                                                    height: 100%;
+                                                    background: ${percentFixas > 90 ? '#ef4444' : percentFixas > 70 ? '#fbbf24' : '#fb923c'};
+                                                    transition: width 0.3s;
+                                                "></div>
+                                            </div>
+                                            <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 3px; text-align: right;">
+                                                ${percentFixas.toFixed(1)}% • ${disponivelFixas >= 0 ? 'Disponível' : 'Acima'}: ${formatAED(Math.abs(disponivelFixas))}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Total -->
+                                        <div style="
+                                            border-top: 1px solid rgba(255,255,255,0.1);
+                                            padding-top: 15px;
+                                        ">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                                <span style="font-size: 0.85rem; font-weight: 600;">💰 Total Geral</span>
+                                                <span style="font-size: 0.8rem; font-weight: 600;">
+                                                    ${formatAED(totalGeral)} / ${formatAED(limiteTotal)}
+                                                </span>
+                                            </div>
+                                            <div style="
+                                                width: 100%;
+                                                height: 10px;
+                                                background: rgba(255,255,255,0.1);
+                                                border-radius: 5px;
+                                                overflow: hidden;
+                                            ">
+                                                <div style="
+                                                    width: ${Math.min(percentGeral, 100)}%;
+                                                    height: 100%;
+                                                    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+                                                    transition: width 0.3s;
+                                                "></div>
+                                            </div>
+                                            <div style="
+                                                display: flex;
+                                                justify-content: space-between;
+                                                margin-top: 8px;
+                                            ">
+                                                <span style="font-size: 0.8rem; opacity: 0.7;">
+                                                    ${percentGeral.toFixed(1)}% usado
+                                                </span>
+                                                <span style="
+                                                    font-size: 0.9rem;
+                                                    font-weight: 700;
+                                                    color: ${disponivelGeral >= 0 ? '#86efac' : '#fca5a5'};
+                                                ">
+                                                    ${disponivelGeral >= 0 ? '✅' : '⚠️'} ${formatAED(Math.abs(disponivelGeral))}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 `;
@@ -1843,11 +1961,47 @@
                             ${state.manualEntry ? '✅ Adicionar Manualmente' : '📱 Extrair e Adicionar'}
                         </button>
                     </div>
+                    
+                    <!-- Card de Configuração de Limites -->
                     <div class="card">
+                        <h3 style="margin-bottom: 20px;">⚙️ Configuração de Limites</h3>
+                        
                         <div class="input-group">
-                            <label class="label">Limite Mensal (AED):</label>
+                            <label class="label">💸 Limite Mensal - Despesas Variáveis (AED):</label>
                             <input type="number" id="goalInput" value="${state.goal}" 
-                                   onblur="updateGoal(this.value)">
+                                   onblur="updateGoal(this.value)" 
+                                   style="font-size: 1.1rem; font-weight: 600;">
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                Mercado, restaurante, transporte, etc.
+                            </div>
+                        </div>
+                        
+                        <div class="input-group" style="margin-top: 15px;">
+                            <label class="label">💳 Limite Mensal - Despesas Fixas (AED):</label>
+                            <input type="number" id="goalFixedInput" value="${state.goalFixed}" 
+                                   onblur="updateGoalFixed(this.value)"
+                                   style="font-size: 1.1rem; font-weight: 600;">
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                Aluguel, contas, assinaturas, etc.
+                            </div>
+                        </div>
+                        
+                        <div style="
+                            margin-top: 20px;
+                            padding: 15px;
+                            background: rgba(59, 130, 246, 0.1);
+                            border-radius: 8px;
+                            border-left: 4px solid #3b82f6;
+                        ">
+                            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">
+                                📊 Limite Total Mensal
+                            </div>
+                            <div style="font-size: 1.8rem; font-weight: 700; color: #3b82f6;">
+                                AED ${formatAEDShort(state.goal + state.goalFixed)}
+                            </div>
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                Variáveis (${formatAEDShort(state.goal)}) + Fixas (${formatAEDShort(state.goalFixed)})
+                            </div>
                         </div>
                     </div>
                 `;
