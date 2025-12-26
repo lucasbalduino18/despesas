@@ -879,6 +879,11 @@
         }
 
         function getMonthExpenses() {
+            if (!state.expenses || !Array.isArray(state.expenses)) {
+                console.warn('getMonthExpenses: state.expenses inválido', state.expenses);
+                return [];
+            }
+            
             const now = new Date();
             return state.expenses.filter(e => {
                 if (!e || !e.date) return false;
@@ -1323,6 +1328,12 @@
         }
 
         function render() {
+            console.log('=== RENDER CHAMADO ===');
+            console.log('state.loading:', state.loading);
+            console.log('state.expenses:', state.expenses);
+            console.log('state.expenses.length:', state.expenses?.length);
+            console.log('state.tab:', state.tab);
+            
             const app = document.getElementById('app');
 
             if (state.loading) {
