@@ -560,7 +560,6 @@
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
         const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx3AI8vmT4Oqu98qF8oSGLV6sdKYhh9DYuKKt6pu93R3Lr-m-F_s4XG2kuPu6K7bMGuqQ/exec';
-        
 
         // Categorias padrão
         const CATEGORIES = [
@@ -625,30 +624,46 @@
             const wasLoading = state.loading;
             
             try {
+                console.log('=== INICIANDO CARREGAMENTO ===');
+                console.log('URL:', SHEETS_URL);
+                
                 const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
+                console.log('Status getDespesas:', despesasResponse.status);
+                
                 const despesasData = await despesasResponse.json();
                 
-                console.log('Resposta getDespesas:', despesasData);
+                console.log('=== RESPOSTA getDespesas ===');
+                console.log('Dados completos:', despesasData);
                 console.log('Tipo:', typeof despesasData);
                 console.log('É array?', Array.isArray(despesasData));
+                console.log('Tem expenses?', despesasData.expenses);
+                console.log('Erro?', despesasData.error);
                 
                 state.expenses = despesasData.expenses || despesasData || [];
                 
-                console.log('state.expenses:', state.expenses);
+                console.log('=== STATE.EXPENSES ===');
+                console.log('Valor:', state.expenses);
                 console.log('Quantidade:', state.expenses.length);
+                console.log('Primeiro item:', state.expenses[0]);
 
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
                 state.goal = metaData.meta || 5000;
+                
+                console.log('=== META ===');
+                console.log('Limite:', state.goal);
 
                 // Carregar despesas fixas
                 try {
                     const fixedResponse = await fetch(`${SHEETS_URL}?action=getFixedExpenses`);
                     const fixedData = await fixedResponse.json();
                     state.fixedExpenses = fixedData.fixedExpenses || [];
+                    console.log('=== FIXAS ===');
+                    console.log('Quantidade:', state.fixedExpenses.length);
                 } catch (error) {
                     console.log('Despesas fixas ainda não disponíveis');
                     state.fixedExpenses = [];
+                }
                 }
 
                 state.loading = false;
