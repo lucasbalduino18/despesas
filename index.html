@@ -519,7 +519,7 @@
 
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx8TuH88p9QO5DasjAdO76RdyDJMBwNl3ozPUdqoive2vRxBwi7ohqm2iEV19avP6dGpg/exec';
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzTO261avS8mzdrK_6rZkcULo2YOlLd46fnjzyVqbgTHDH1eaW8p1s4gxxJJ12-1RtdRw/exec';
 
         // Categorias padrão
         const CATEGORIES = [
@@ -565,11 +565,13 @@
         const state = {
             tab: 'add',
             expenses: [],
+            fixedExpenses: [],  // Nova: despesas fixas
             goal: 5000,
             sms: '',
             loading: true,
             selectedCategory: null,
             editingExpense: null,
+            editingFixed: null,  // Nova: editando despesa fixa
             obs: '',
             expandedMonths: {},  // Controla quais meses estão expandidos
             viewingCategoryExpenses: null,  // Categoria sendo visualizada
@@ -589,6 +591,16 @@
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
                 state.goal = metaData.meta || 5000;
+
+                // Carregar despesas fixas
+                try {
+                    const fixedResponse = await fetch(`${SHEETS_URL}?action=getFixedExpenses`);
+                    const fixedData = await fixedResponse.json();
+                    state.fixedExpenses = fixedData.fixedExpenses || [];
+                } catch (error) {
+                    console.log('Despesas fixas ainda não disponíveis');
+                    state.fixedExpenses = [];
+                }
 
                 state.loading = false;
                 
@@ -900,6 +912,133 @@
             render();
         }
 
+        // ============================================
+        // FUNÇÕES DE DESPESAS FIXAS
+        // ============================================
+        
+        async function addFixedExpense() {
+            const name = document.getElementById('fixedName').value.trim();
+            const amount = document.getElementById('fixedAmount').value.trim();
+            const day = document.getElementById('fixedDay').value;
+            const category = state.selectedCategory;
+            
+            if (!name || !amount || !day || !category) {
+                alert('⚠️ Preencha todos os campos');
+                return;
+            }
+            
+            const fixedExpense = {
+                id: Date.now(),
+                name: name,
+                amount: parseFloat(amount),
+                day: parseInt(day),
+                category: category
+            };
+            
+            try {
+                const url = `${SHEETS_URL}?action=addFixedExpense&id=${fixedExpense.id}&name=${encodeURIComponent(fixedExpense.name)}&amount=${fixedExpense.amount}&day=${fixedExpense.day}&category=${fixedExpense.category}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Despesa fixa adicionada!');
+                    await loadData();
+                    
+                    // Limpar campos
+                    document.getElementById('fixedName').value = '';
+                    document.getElementById('fixedAmount').value = '';
+                    document.getElementById('fixedDay').value = '';
+                    state.selectedCategory = null;
+                    render();
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar despesa fixa:', error);
+                alert('❌ Erro ao adicionar despesa fixa');
+            }
+        }
+        
+        function editFixedExpense(id) {
+            const fixed = state.fixedExpenses.find(f => f.id == id);
+            if (fixed) {
+                state.editingFixed = fixed;
+                state.selectedCategory = fixed.category;
+                render();
+                
+                setTimeout(() => {
+                    document.getElementById('fixedName').value = fixed.name;
+                    document.getElementById('fixedAmount').value = fixed.amount;
+                    document.getElementById('fixedDay').value = fixed.day;
+                }, 100);
+            }
+        }
+        
+        async function saveFixedExpense() {
+            const name = document.getElementById('fixedName').value.trim();
+            const amount = document.getElementById('fixedAmount').value.trim();
+            const day = document.getElementById('fixedDay').value;
+            const category = state.selectedCategory;
+            
+            if (!name || !amount || !day || !category) {
+                alert('⚠️ Preencha todos os campos');
+                return;
+            }
+            
+            try {
+                const url = `${SHEETS_URL}?action=editFixedExpense&id=${state.editingFixed.id}&name=${encodeURIComponent(name)}&amount=${amount}&day=${day}&category=${category}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Despesa fixa atualizada!');
+                    state.editingFixed = null;
+                    await loadData();
+                    
+                    // Limpar campos
+                    document.getElementById('fixedName').value = '';
+                    document.getElementById('fixedAmount').value = '';
+                    document.getElementById('fixedDay').value = '';
+                    state.selectedCategory = null;
+                    render();
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('❌ Erro ao salvar despesa fixa');
+            }
+        }
+        
+        function cancelEditFixed() {
+            state.editingFixed = null;
+            state.selectedCategory = null;
+            render();
+        }
+        
+        async function deleteFixedExpense(id) {
+            if (!confirm('❌ Tem certeza que deseja deletar esta despesa fixa?')) {
+                return;
+            }
+            
+            try {
+                const url = `${SHEETS_URL}?action=deleteFixedExpense&id=${id}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Despesa fixa deletada!');
+                    await loadData();
+                    render();
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao deletar:', error);
+                alert('❌ Erro ao deletar despesa fixa');
+            }
+        }
+
         // Colar SMS da área de transferência
         async function pasteFromClipboard() {
             try {
@@ -1136,6 +1275,7 @@
                     <div class="tabs">
                         <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
                         <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
@@ -1285,6 +1425,7 @@
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab active" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
                         <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
@@ -1494,6 +1635,147 @@
                         smsInput.select();
                     }
                 }, 100);
+            } else if (state.tab === 'fixed') {
+                // ============================================
+                // ABA FIXAS
+                // ============================================
+                
+                const totalFixed = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                
+                app.innerHTML = `
+                    <div class="tabs">
+                        <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
+                        <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab active" onclick="state.tab='fixed'; render()">Fixas</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
+                        <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px;">💳 ${state.editingFixed ? 'Editar' : 'Nova'} Despesa Fixa</h3>
+                        
+                        <div class="input-group">
+                            <label class="label">Nome da despesa:</label>
+                            <input type="text" id="fixedName" class="input-field" placeholder="Ex: Aluguel, Internet, Netflix..." />
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+                            <div class="input-group">
+                                <label class="label">Valor (AED):</label>
+                                <input type="number" id="fixedAmount" class="input-field" placeholder="Ex: 150.00" step="0.01" />
+                            </div>
+                            <div class="input-group">
+                                <label class="label">Dia do mês:</label>
+                                <input type="number" id="fixedDay" class="input-field" placeholder="1-31" min="1" max="31" />
+                            </div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label class="label">Categoria:</label>
+                            <div class="category-grid">
+                                ${CATEGORIES.map(cat => `
+                                    <div 
+                                        class="category-option ${state.selectedCategory === cat.id ? 'selected' : ''}"
+                                        onclick="state.selectedCategory='${cat.id}'; render()"
+                                        style="border-color: ${state.selectedCategory === cat.id ? cat.color : 'transparent'}"
+                                    >
+                                        <div class="category-icon">${cat.icon}</div>
+                                        <div class="category-name">${cat.name}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        ${state.editingFixed ? `
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                                <button class="btn" onclick="saveFixedExpense()" style="background: #22c55e;">💾 Salvar</button>
+                                <button class="btn" onclick="cancelEditFixed()" style="background: #6b7280;">❌ Cancelar</button>
+                            </div>
+                        ` : `
+                            <button class="btn" onclick="addFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
+                        `}
+                    </div>
+                    
+                    <div class="card">
+                        <h3 style="margin-bottom: 15px;">📋 Minhas Despesas Fixas</h3>
+                        
+                        ${state.fixedExpenses.length === 0 ? `
+                            <div class="empty">📭<br>Nenhuma despesa fixa cadastrada</div>
+                        ` : `
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                                <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Total de Despesas Fixas por Mês</div>
+                                <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">AED ${totalFixed.toFixed(2)}</div>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                ${state.fixedExpenses
+                                    .sort((a, b) => a.day - b.day)
+                                    .map(fixed => {
+                                        const cat = CATEGORIES.find(c => c.id === fixed.category);
+                                        return `
+                                            <div style="
+                                                background: rgba(255,255,255,0.05);
+                                                padding: 15px;
+                                                border-radius: 12px;
+                                                border-left: 4px solid ${cat ? cat.color : '#6b7280'};
+                                            ">
+                                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                                    <div>
+                                                        <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 5px;">
+                                                            ${cat ? cat.icon : '📦'} ${fixed.name}
+                                                        </div>
+                                                        <div style="font-size: 0.85rem; opacity: 0.8;">
+                                                            📅 Dia ${fixed.day} do mês
+                                                        </div>
+                                                    </div>
+                                                    <div style="text-align: right;">
+                                                        <div style="font-size: 1.3rem; font-weight: 700; color: ${cat ? cat.color : '#fff'};">
+                                                            AED ${parseFloat(fixed.amount).toFixed(2)}
+                                                        </div>
+                                                        <div style="font-size: 0.75rem; opacity: 0.7;">
+                                                            ${cat ? cat.name : 'Outros'}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                                                    <button 
+                                                        onclick="editFixedExpense(${fixed.id})"
+                                                        style="
+                                                            flex: 1;
+                                                            padding: 8px;
+                                                            background: rgba(59, 130, 246, 0.2);
+                                                            border: 1px solid rgba(59, 130, 246, 0.3);
+                                                            border-radius: 8px;
+                                                            color: #60a5fa;
+                                                            cursor: pointer;
+                                                            font-size: 0.85rem;
+                                                        "
+                                                    >
+                                                        ✏️ Editar
+                                                    </button>
+                                                    <button 
+                                                        onclick="deleteFixedExpense(${fixed.id})"
+                                                        style="
+                                                            flex: 1;
+                                                            padding: 8px;
+                                                            background: rgba(239, 68, 68, 0.2);
+                                                            border: 1px solid rgba(239, 68, 68, 0.3);
+                                                            border-radius: 8px;
+                                                            color: #f87171;
+                                                            cursor: pointer;
+                                                            font-size: 0.85rem;
+                                                        "
+                                                    >
+                                                        🗑️ Deletar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                            </div>
+                        `}
+                    </div>
+                `;
             } else if (state.tab === 'categories') {
                 // Obter todos os meses disponíveis
                 const expensesByMonth = {};
@@ -1535,6 +1817,7 @@
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
                         <button class="tab active" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
@@ -1863,6 +2146,7 @@
                     <div class="tabs">
                         <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
                         <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
                         <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab active" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
