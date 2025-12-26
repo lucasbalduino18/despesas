@@ -207,7 +207,9 @@
             transition: max-height 0.3s ease-out;
         }
         .month-expenses.expanded {
-            max-height: 10000px;
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         .expand-controls {
             display: flex;
@@ -489,6 +491,22 @@
         }
         .modal-buttons .btn {
             flex: 1;
+        }
+        
+        /* Scrollbar personalizada para month-expenses */
+        .month-expenses.expanded::-webkit-scrollbar {
+            width: 6px;
+        }
+        .month-expenses.expanded::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .month-expenses.expanded::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+        }
+        .month-expenses.expanded::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
         }
     </style>
 </head>
