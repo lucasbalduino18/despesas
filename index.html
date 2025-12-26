@@ -1491,6 +1491,126 @@
                             <div class="stat-value">${Object.values(getCategoryStats()).filter(s => s.count > 0).length}</div>
                         </div>
                     </div>
+                    
+                    <!-- Card Resumo: Fixas + Variáveis -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            📊 Resumo do Mês
+                        </h3>
+                        
+                        <div style="display: grid; gap: 15px;">
+                            <!-- Despesas Variáveis -->
+                            <div style="
+                                background: rgba(59, 130, 246, 0.1);
+                                border-left: 4px solid #3b82f6;
+                                padding: 15px;
+                                border-radius: 8px;
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
+                                            💸 Despesas Variáveis
+                                        </div>
+                                        <div style="font-size: 0.75rem; opacity: 0.6;">
+                                            ${monthExpenses.length} transações este mês
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">
+                                            ${formatAED(total)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Despesas Fixas -->
+                            <div style="
+                                background: rgba(251, 146, 60, 0.1);
+                                border-left: 4px solid #fb923c;
+                                padding: 15px;
+                                border-radius: 8px;
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
+                                            💳 Despesas Fixas
+                                        </div>
+                                        <div style="font-size: 0.75rem; opacity: 0.6;">
+                                            ${state.fixedExpenses.length} despesas fixas
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: #fb923c;">
+                                            ${formatAED(state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Total Geral -->
+                            <div style="
+                                background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(219, 39, 119, 0.2));
+                                border: 2px solid rgba(139, 92, 246, 0.5);
+                                padding: 20px;
+                                border-radius: 12px;
+                            ">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
+                                            💰 Total do Mês
+                                        </div>
+                                        <div style="font-size: 0.75rem; opacity: 0.7;">
+                                            Fixas + Variáveis
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 2rem; font-weight: 700; color: #fff;">
+                                            ${formatAED(total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0))}
+                                        </div>
+                                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                            ${((total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0)) / state.goal * 100).toFixed(1)}% do limite
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Comparação com Limite -->
+                            ${(() => {
+                                const totalGeral = total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                                const disponivel = state.goal - totalGeral;
+                                const percentGeral = (totalGeral / state.goal) * 100;
+                                
+                                return `
+                                    <div style="
+                                        background: rgba(255,255,255,0.05);
+                                        padding: 15px;
+                                        border-radius: 8px;
+                                        border: 1px solid rgba(255,255,255,0.1);
+                                    ">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span style="font-size: 0.85rem; opacity: 0.8;">Limite mensal</span>
+                                            <span style="font-weight: 600;">${formatAED(state.goal)}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                            <span style="font-size: 0.85rem; opacity: 0.8;">Total gasto</span>
+                                            <span style="font-weight: 600; color: ${percentGeral > 90 ? '#fca5a5' : '#fff'};">
+                                                ${formatAED(totalGeral)}
+                                            </span>
+                                        </div>
+                                        <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 10px 0;"></div>
+                                        <div style="display: flex; justify-content: space-between;">
+                                            <span style="font-size: 0.9rem; font-weight: 600;">
+                                                ${disponivel >= 0 ? '✅ Disponível' : '⚠️ Acima do limite'}
+                                            </span>
+                                            <span style="font-weight: 700; font-size: 1.1rem; color: ${disponivel >= 0 ? '#86efac' : '#fca5a5'};">
+                                                ${formatAED(Math.abs(disponivel))}
+                                            </span>
+                                        </div>
+                                    </div>
+                                `;
+                            })()}
+                        </div>
+                    </div>
                 `;
             } else if (state.tab === 'add') {
                 const monthExpenses = getMonthExpenses();
