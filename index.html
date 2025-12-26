@@ -519,7 +519,7 @@
 
     <script>
         // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
-        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzTO261avS8mzdrK_6rZkcULo2YOlLd46fnjzyVqbgTHDH1eaW8p1s4gxxJJ12-1RtdRw/exec';
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx3AI8vmT4Oqu98qF8oSGLV6sdKYhh9DYuKKt6pu93R3Lr-m-F_s4XG2kuPu6K7bMGuqQ/exec';
 
         // Categorias padrão
         const CATEGORIES = [
@@ -585,8 +585,8 @@
             
             try {
                 const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
-                const despesas = await despesasResponse.json();
-                state.expenses = despesas;
+                const despesasData = await despesasResponse.json();
+                state.expenses = despesasData.expenses || despesasData || [];
 
                 const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
                 const metaData = await metaResponse.json();
@@ -610,8 +610,9 @@
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
+                console.error('URL sendo usada:', SHEETS_URL);
                 if (wasLoading) {
-                    alert('❌ Erro ao carregar dados. Verifique a configuração da URL do Google Sheets.');
+                    alert(`❌ Erro ao carregar dados.\n\nDetalhes: ${error.message}\n\nVerifique:\n1. Apps Script foi reimplantado?\n2. URL está correta?\n3. Planilha tem aba "Despesas"?`);
                 }
                 state.loading = false;
                 if (wasLoading) {
