@@ -113,6 +113,45 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        
+        /* Estilos para seleção de categoria */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .category-option {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 10px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-option:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.05);
+        }
+        .category-option:active {
+            transform: scale(0.95);
+        }
+        .category-option.selected {
+            background: rgba(255,255,255,0.2);
+            border-width: 3px;
+        }
+        .category-icon {
+            font-size: 2rem;
+        }
+        .category-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
         .btn-secondary {
             background: rgba(255,255,255,0.2);
             color: #fff;
@@ -1051,13 +1090,19 @@
         
         // Selecionar categoria sem perder valores dos campos
         function selectCategoryForFixed(categoryId) {
+            console.log('selectCategoryForFixed chamada com:', categoryId);
+            
             // Salvar valores atuais dos campos
             const name = document.getElementById('fixedName')?.value || '';
             const amount = document.getElementById('fixedAmount')?.value || '';
             const day = document.getElementById('fixedDay')?.value || '';
             
+            console.log('Valores salvos:', { name, amount, day });
+            
             // Atualizar categoria
             state.selectedCategory = categoryId;
+            
+            console.log('Categoria selecionada:', state.selectedCategory);
             
             // Re-renderizar
             render();
@@ -1067,6 +1112,7 @@
                 if (name) document.getElementById('fixedName').value = name;
                 if (amount) document.getElementById('fixedAmount').value = amount;
                 if (day) document.getElementById('fixedDay').value = day;
+                console.log('Valores restaurados');
             }, 10);
         }
 
