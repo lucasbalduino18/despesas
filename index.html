@@ -2196,6 +2196,9 @@
                 `;
             } else {
                 // Tab Histórico
+                console.log('=== TAB HISTÓRICO ===');
+                console.log('Total de despesas:', state.expenses.length);
+                
                 const expensesByMonth = {};
                 
                 // Validar se expenses existe e é array
@@ -2203,23 +2206,49 @@
                     state.expenses = [];
                 }
                 
-                state.expenses.forEach(e => {
+                let processadas = 0;
+                let puladas = 0;
+                
+                state.expenses.forEach((e, index) => {
+                    // Debug das primeiras 3 despesas
+                    if (index < 3) {
+                        console.log(`Despesa ${index}:`, e);
+                        console.log(`  - date:`, e.date);
+                        console.log(`  - amount:`, e.amount);
+                        console.log(`  - merchant:`, e.merchant);
+                    }
+                    
                     // Validar se a despesa tem os dados necessários
                     if (!e || !e.date || !e.amount) {
-                        return; // Pular esta despesa
+                        puladas++;
+                        if (index < 3) console.log(`  ❌ Pulada: sem date ou amount`);
+                        return;
                     }
                     
                     const parts = e.date.toString().split('/');
+                    if (index < 3) console.log(`  - parts:`, parts);
+                    
                     if (parts.length < 3) {
-                        return; // Pular esta despesa
+                        puladas++;
+                        if (index < 3) console.log(`  ❌ Pulada: data inválida (parts < 3)`);
+                        return;
                     }
                     
                     const monthYear = `${parts[1]}/${parts[2]}`;
+                    if (index < 3) console.log(`  - monthYear:`, monthYear);
+                    
                     if (!expensesByMonth[monthYear]) {
                         expensesByMonth[monthYear] = [];
                     }
                     expensesByMonth[monthYear].push(e);
+                    processadas++;
                 });
+                
+                console.log('=== RESUMO PROCESSAMENTO ===');
+                console.log('Processadas:', processadas);
+                console.log('Puladas:', puladas);
+                console.log('Meses encontrados:', Object.keys(expensesByMonth));
+                console.log('expensesByMonth:', expensesByMonth);
 
                 // Ordenar despesas dentro de cada mês (mais recente primeiro)
                 Object.keys(expensesByMonth).forEach(monthYear => {
