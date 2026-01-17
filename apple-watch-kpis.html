@@ -308,6 +308,45 @@
             });
         }
 
+        function getDailyBudget() {
+            const now = new Date();
+            const monthExpenses = getMonthExpenses();
+            const totalGastoMes = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+            const limiteTotal = state.goal + state.goalFixed;
+            
+            // Disponível total no mês
+            const disponivelMes = limiteTotal - totalGastoMes - totalFixas;
+            
+            // Dias totais do mês
+            const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            
+            // Dias passados (incluindo hoje)
+            const daysPassed = now.getDate();
+            
+            // Dias restantes (incluindo hoje)
+            const daysRemaining = lastDayOfMonth - now.getDate() + 1;
+            
+            // Orçamento por dia restante
+            const budgetPerDay = daysRemaining > 0 ? disponivelMes / daysRemaining : 0;
+            
+            // Total gasto hoje
+            const todayExpenses = getTodayExpenses();
+            const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            
+            // Quanto ainda pode gastar hoje
+            const canSpendToday = budgetPerDay - totalToday;
+            
+            return {
+                totalToday,
+                budgetPerDay,
+                canSpendToday,
+                daysRemaining,
+                disponivelMes,
+                percentOfDailyBudget: budgetPerDay > 0 ? (totalToday / budgetPerDay) * 100 : 0
+            };
+        }
+
         // ============================================
         // CARREGAR DADOS
         // ============================================
@@ -357,18 +396,22 @@
 
             const monthExpenses = getMonthExpenses();
             const todayExpenses = getTodayExpenses();
+            const dailyBudget = getDailyBudget();
             const totalVariaveis = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
             const totalGeral = totalVariaveis + totalFixas;
             const limiteTotal = state.goal + state.goalFixed;
             const disponivel = limiteTotal - totalGeral;
             const percentGeral = limiteTotal > 0 ? (totalGeral / limiteTotal) * 100 : 0;
-            const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const maior = monthExpenses.length ? Math.max(...monthExpenses.map(e => parseFloat(e.amount) || 0)) : 0;
 
             let progressClass = '';
             if (percentGeral > 90) progressClass = 'danger';
             else if (percentGeral > 70) progressClass = 'warning';
+
+            let dailyProgressClass = '';
+            if (dailyBudget.percentOfDailyBudget > 100) dailyProgressClass = 'danger';
+            else if (dailyBudget.percentOfDailyBudget > 80) dailyProgressClass = 'warning';
 
             const now = new Date();
             const dateStr = now.toLocaleDateString('pt-BR', { 
@@ -382,6 +425,66 @@
                     <h1>💰 Despesas</h1>
                     <div class="date">${dateStr}</div>
                 </div>
+
+                <!-- HOJE - Destaque Principal -->
+                <div class="kpi-grid">
+                    <div class="kpi-card large blue" style="
+                        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.1));
+                        border: 2px solid rgba(59, 130, 246, 0.5);
+                    ">
+                        <div class="kpi-label"><span class="icon">📅</span>HOJE</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 8px;">
+                            <div>
+                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Gasto até agora</div>
+                                <div class="kpi-value" style="font-size: 24px;">${formatAEDShort(dailyBudget.totalToday)}</div>
+                                <div class="kpi-subtitle">${todayExpenses.length} transações</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Posso gastar</div>
+                                <div class="kpi-value" style="font-size: 24px; color: ${dailyBudget.canSpendToday >= 0 ? '#86efac' : '#fca5a5'};">
+                                    ${dailyBudget.canSpendToday >= 0 ? '' : '-'}${formatAEDShort(Math.abs(dailyBudget.canSpendToday))}
+                                </div>
+                                <div class="kpi-subtitle">para manter meta</div>
+                            </div>
+                        </div>
+                        <div class="progress-bar" style="margin-top: 12px;">
+                            <div class="progress-fill ${dailyProgressClass}" style="width: ${Math.min(dailyBudget.percentOfDailyBudget, 100)}%"></div>
+                        </div>
+                        <div style="font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: center;">
+                            ${dailyBudget.percentOfDailyBudget.toFixed(0)}% do orçamento diário (${formatAEDShort(dailyBudget.budgetPerDay)}/dia • ${dailyBudget.daysRemaining} dias restantes)
+                        </div>
+                    </div>
+
+                    <!-- Últimas Transações de Hoje -->
+                    ${todayExpenses.length > 0 ? `
+                        <div class="kpi-card large" style="background: rgba(255,255,255,0.05); padding: 10px;">
+                            <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px; opacity: 0.8;">🕐 Transações de Hoje</div>
+                            ${todayExpenses.slice(0, 3).map(e => `
+                                <div class="expense-item" style="padding: 6px 0;">
+                                    <div class="expense-info">
+                                        <div class="expense-merchant" style="font-size: 10px;">${e.merchant || 'Sem nome'}</div>
+                                        <div class="expense-time" style="font-size: 8px;">${e.time || ''}</div>
+                                    </div>
+                                    <div class="expense-amount" style="font-size: 12px;">${formatAEDShort(parseFloat(e.amount) || 0)}</div>
+                                </div>
+                            `).join('')}
+                            ${todayExpenses.length > 3 ? `
+                                <div style="font-size: 9px; opacity: 0.6; text-align: center; margin-top: 4px;">
+                                    +${todayExpenses.length - 3} mais...
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : `
+                        <div class="kpi-card large" style="background: rgba(255,255,255,0.05);">
+                            <div style="text-align: center; padding: 20px 0; opacity: 0.6; font-size: 11px;">
+                                ✨ Nenhum gasto hoje ainda
+                            </div>
+                        </div>
+                    `}
+                </div>
+
+                <!-- Divisor -->
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
 
                 <!-- Total do Mês -->
                 <div class="kpi-grid">
@@ -414,37 +517,7 @@
                         <div class="kpi-value">${formatAEDShort(Math.abs(disponivel))}</div>
                         <div class="kpi-subtitle">de ${formatAEDShort(limiteTotal)}</div>
                     </div>
-
-                    <!-- Hoje -->
-                    <div class="kpi-card blue">
-                        <div class="kpi-label"><span class="icon">📅</span>Hoje</div>
-                        <div class="kpi-value">${formatAEDShort(totalToday)}</div>
-                        <div class="kpi-subtitle">${todayExpenses.length} trans.</div>
-                    </div>
                 </div>
-
-                <!-- Gastos de Hoje -->
-                ${todayExpenses.length > 0 ? `
-                    <div class="today-section">
-                        <div class="today-header">🕐 Transações de Hoje</div>
-                        ${todayExpenses.slice(0, 5).map(e => `
-                            <div class="expense-item">
-                                <div class="expense-info">
-                                    <div class="expense-merchant">${e.merchant || 'Sem nome'}</div>
-                                    <div class="expense-time">${e.time || ''}</div>
-                                </div>
-                                <div class="expense-amount">${formatAEDShort(parseFloat(e.amount) || 0)}</div>
-                            </div>
-                        `).join('')}
-                        ${todayExpenses.length > 5 ? `
-                            <div class="expense-item">
-                                <div class="expense-info">
-                                    <div class="expense-time">+${todayExpenses.length - 5} mais...</div>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
             `;
         }
 
@@ -472,18 +545,9 @@
         // ============================================
         // INICIALIZAR
         // ============================================
-        if (SHEETS_URL === 'COLE_SUA_URL_AQUI') {
-            document.getElementById('app').innerHTML = `
-                <div class="error">
-                    ⚠️ Configure a URL do Google Sheets<br>
-                    <small>Edite o arquivo HTML e cole sua URL</small>
-                </div>
-            `;
-        } else {
-            loadData();
-            // Auto-refresh a cada 5 minutos
-            setInterval(loadData, 5 * 60 * 1000);
-        }
+        loadData();
+        // Auto-refresh a cada 5 minutos
+        setInterval(loadData, 5 * 60 * 1000);
     </script>
 </body>
 </html>
