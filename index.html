@@ -833,7 +833,7 @@
                 alert('❌ Erro ao salvar. Tente novamente.');
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = 'Extrair e Adicionar';
+                    btn.textContent = 'Adicionar';
                 }
             }
         }
@@ -1273,10 +1273,10 @@
             const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const monthDays = getMonthDays();
             
-            // Quanto deveria ter gastado até agora (proporcional aos dias)
+            // Quanto poderia ter gastado até agora (proporcional aos dias)
             const deveriaGastar = (state.goal * monthDays.passed) / monthDays.total;
             
-            // Ritmo: gasto real / deveria gastar * 100
+            // Ritmo: gasto real / poderia gastar * 100
             const ritmo = deveriaGastar > 0 ? (total / deveriaGastar * 100) : 0;
             
             // Determinar status e cor
@@ -1436,7 +1436,7 @@
                             <div class="ritmo-status-emoji">${ritmo.emoji}</div>
                             <div class="ritmo-status-text" style="color: ${ritmo.cor}">${ritmo.status}</div>
                             <div class="ritmo-status-desc">
-                                ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que deveria!' :
+                                ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que poderia!' :
                                   ritmo.ritmo < 100 ? 'Você está no ritmo ideal!' :
                                   ritmo.ritmo < 110 ? 'Levemente acima do esperado' :
                                   ritmo.ritmo < 120 ? 'Você está gastando mais que deveria' :
@@ -1450,7 +1450,7 @@
                                 <div class="ritmo-detail-value">AED ${ritmo.gastoReal.toFixed(0)}</div>
                             </div>
                             <div class="ritmo-detail-item">
-                                <div class="ritmo-detail-label">Deveria Gastar</div>
+                                <div class="ritmo-detail-label">Poderia Gastar</div>
                                 <div class="ritmo-detail-value">AED ${ritmo.deveriaGastar.toFixed(0)}</div>
                             </div>
                             <div class="ritmo-detail-item">
