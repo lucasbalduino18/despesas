@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>💰 Despesas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            overflow-x: hidden;
+            padding: 8px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 12px 0;
+            margin-bottom: 12px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header .date {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:active {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .kpi-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .kpi-card.large {
+            grid-column: 1 / -1;
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .kpi-card.large .kpi-value {
+            font-size: 28px;
+        }
+
+        .kpi-subtitle {
+            font-size: 9px;
+            opacity: 0.6;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        /* Color Variants */
+        .kpi-card.blue {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .kpi-card.orange {
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(251, 146, 60, 0.05));
+            border-color: rgba(251, 146, 60, 0.3);
+        }
+
+        .kpi-card.purple {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05));
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .kpi-card.green {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .kpi-card.red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05));
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Today Section */
+        .today-section {
+            margin-top: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .today-header {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .expense-item:last-child {
+            border-bottom: none;
+        }
+
+        .expense-info {
+            flex: 1;
+        }
+
+        .expense-merchant {
+            font-size: 11px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .expense-time {
+            font-size: 9px;
+            opacity: 0.6;
+        }
+
+        .expense-amount {
+            font-size: 13px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px 0;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Error */
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 11px;
+        }
+
+        /* Icon */
+        .icon {
+            display: inline-block;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <button class="refresh-btn" onclick="loadData()">↻</button>
+    
+    <div class="container" id="app">
+        <div class="loading">⏳ Carregando...</div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAÇÃO
+        // ============================================
+        const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx3AI8vmT4Oqu98qF8oSGLV6sdKYhh9DYuKKt6pu93R3Lr-m-F_s4XG2kuPu6K7bMGuqQ/exec';
+
+        const state = {
+            expenses: [],
+            fixedExpenses: [],
+            goal: 20000,
+            goalFixed: 5000,
+            loading: true
+        };
+
+        // ============================================
+        // UTILITÁRIOS
+        // ============================================
+        function formatAED(value) {
+            return 'AED ' + value.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function formatAEDShort(value) {
+            if (value >= 1000) {
+                return 'AED ' + (value / 1000).toFixed(1) + 'k';
+            }
+            return 'AED ' + value.toFixed(0);
+        }
+
+        function getMonthExpenses() {
+            const now = new Date();
+            return state.expenses.filter(e => {
+                if (!e || !e.date) return false;
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return false;
+                const month = parseInt(parts[1]) - 1;
+                const year = parseInt(parts[2]);
+                return month === now.getMonth() && year === now.getFullYear();
+            });
+        }
+
+        function getTodayExpenses() {
+            const now = new Date();
+            const today = now.getDate();
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            
+            return state.expenses.filter(e => {
+                if (!e || !e.date) return false;
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return false;
+                const day = parseInt(parts[0]);
+                const eMonth = parseInt(parts[1]) - 1;
+                const eYear = parseInt(parts[2]);
+                return day === today && eMonth === month && eYear === year;
+            }).sort((a, b) => {
+                // Ordenar por hora (mais recente primeiro)
+                const timeA = a.time || '00:00:00';
+                const timeB = b.time || '00:00:00';
+                return timeB.localeCompare(timeA);
+            });
+        }
+
+        // ============================================
+        // CARREGAR DADOS
+        // ============================================
+        async function loadData() {
+            state.loading = true;
+            render();
+
+            try {
+                // Carregar despesas
+                const expensesResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
+                const expensesData = await expensesResponse.json();
+                state.expenses = expensesData.expenses || [];
+
+                // Carregar meta
+                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
+                const metaData = await metaResponse.json();
+                state.goal = metaData.meta || 20000;
+                state.goalFixed = metaData.metaFixed || 5000;
+
+                // Carregar despesas fixas
+                try {
+                    const fixedResponse = await fetch(`${SHEETS_URL}?action=getFixedExpenses`);
+                    const fixedData = await fixedResponse.json();
+                    state.fixedExpenses = fixedData.fixedExpenses || [];
+                } catch (error) {
+                    state.fixedExpenses = [];
+                }
+
+                state.loading = false;
+                render();
+            } catch (error) {
+                state.loading = false;
+                renderError(error.message);
+            }
+        }
+
+        // ============================================
+        // RENDERIZAR
+        // ============================================
+        function render() {
+            const app = document.getElementById('app');
+
+            if (state.loading) {
+                app.innerHTML = '<div class="loading">⏳ Carregando...</div>';
+                return;
+            }
+
+            const monthExpenses = getMonthExpenses();
+            const todayExpenses = getTodayExpenses();
+            const totalVariaveis = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+            const totalGeral = totalVariaveis + totalFixas;
+            const limiteTotal = state.goal + state.goalFixed;
+            const disponivel = limiteTotal - totalGeral;
+            const percentGeral = limiteTotal > 0 ? (totalGeral / limiteTotal) * 100 : 0;
+            const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            const maior = monthExpenses.length ? Math.max(...monthExpenses.map(e => parseFloat(e.amount) || 0)) : 0;
+
+            let progressClass = '';
+            if (percentGeral > 90) progressClass = 'danger';
+            else if (percentGeral > 70) progressClass = 'warning';
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: 'short',
+                year: 'numeric'
+            });
+
+            app.innerHTML = `
+                <div class="header">
+                    <h1>💰 Despesas</h1>
+                    <div class="date">${dateStr}</div>
+                </div>
+
+                <!-- Total do Mês -->
+                <div class="kpi-grid">
+                    <div class="kpi-card large purple">
+                        <div class="kpi-label"><span class="icon">💰</span>Total Mês</div>
+                        <div class="kpi-value">${formatAEDShort(totalGeral)}</div>
+                        <div class="kpi-subtitle">${percentGeral.toFixed(1)}% do limite</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${progressClass}" style="width: ${Math.min(percentGeral, 100)}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Variáveis -->
+                    <div class="kpi-card blue">
+                        <div class="kpi-label"><span class="icon">💸</span>Variáveis</div>
+                        <div class="kpi-value">${formatAEDShort(totalVariaveis)}</div>
+                        <div class="kpi-subtitle">${monthExpenses.length} trans.</div>
+                    </div>
+
+                    <!-- Fixas -->
+                    <div class="kpi-card orange">
+                        <div class="kpi-label"><span class="icon">💳</span>Fixas</div>
+                        <div class="kpi-value">${formatAEDShort(totalFixas)}</div>
+                        <div class="kpi-subtitle">${state.fixedExpenses.length} fixas</div>
+                    </div>
+
+                    <!-- Disponível -->
+                    <div class="kpi-card ${disponivel >= 0 ? 'green' : 'red'}">
+                        <div class="kpi-label"><span class="icon">${disponivel >= 0 ? '✅' : '⚠️'}</span>Disponível</div>
+                        <div class="kpi-value">${formatAEDShort(Math.abs(disponivel))}</div>
+                        <div class="kpi-subtitle">de ${formatAEDShort(limiteTotal)}</div>
+                    </div>
+
+                    <!-- Hoje -->
+                    <div class="kpi-card blue">
+                        <div class="kpi-label"><span class="icon">📅</span>Hoje</div>
+                        <div class="kpi-value">${formatAEDShort(totalToday)}</div>
+                        <div class="kpi-subtitle">${todayExpenses.length} trans.</div>
+                    </div>
+                </div>
+
+                <!-- Gastos de Hoje -->
+                ${todayExpenses.length > 0 ? `
+                    <div class="today-section">
+                        <div class="today-header">🕐 Transações de Hoje</div>
+                        ${todayExpenses.slice(0, 5).map(e => `
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <div class="expense-merchant">${e.merchant || 'Sem nome'}</div>
+                                    <div class="expense-time">${e.time || ''}</div>
+                                </div>
+                                <div class="expense-amount">${formatAEDShort(parseFloat(e.amount) || 0)}</div>
+                            </div>
+                        `).join('')}
+                        ${todayExpenses.length > 5 ? `
+                            <div class="expense-item">
+                                <div class="expense-info">
+                                    <div class="expense-time">+${todayExpenses.length - 5} mais...</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function renderError(message) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="error">
+                    ❌ Erro ao carregar dados<br>
+                    <small>${message}</small>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="loadData()" style="
+                        background: #3b82f6;
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        cursor: pointer;
+                    ">Tentar Novamente</button>
+                </div>
+            `;
+        }
+
+        // ============================================
+        // INICIALIZAR
+        // ============================================
+        if (SHEETS_URL === 'COLE_SUA_URL_AQUI') {
+            document.getElementById('app').innerHTML = `
+                <div class="error">
+                    ⚠️ Configure a URL do Google Sheets<br>
+                    <small>Edite o arquivo HTML e cole sua URL</small>
+                </div>
+            `;
+        } else {
+            loadData();
+            // Auto-refresh a cada 5 minutos
+            setInterval(loadData, 5 * 60 * 1000);
+        }
+    </script>
+</body>
+</html>
