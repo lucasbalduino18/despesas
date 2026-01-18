@@ -1558,7 +1558,7 @@
                         
                         <div class="ritmo-gauge">
                             <div class="ritmo-bar">
-                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo, 150)}%; background: ${ritmo.cor}">
+                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo / 150 * 100, 100)}%; background: ${ritmo.cor}">
                                     ${ritmo.ritmo.toFixed(1)}%
                                 </div>
                             </div>
@@ -1993,7 +1993,7 @@
                                 </div>
                             </div>
                             <div class="ritmo-bar">
-                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo, 150)}%; background: ${ritmo.cor}">
+                                <div class="ritmo-fill" style="width: ${Math.min(ritmo.ritmo / 150 * 100, 100)}%; background: ${ritmo.cor}">
                                 </div>
                             </div>
                             <div class="ritmo-markers">
