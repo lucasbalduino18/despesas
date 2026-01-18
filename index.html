@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Minhas Despesas</title>
+    <title>💰 Minhas Despesas</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -548,11 +548,6 @@
         .month-expenses.expanded::-webkit-scrollbar-thumb:hover {
             background: rgba(255,255,255,0.5);
         }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -626,135 +621,52 @@
         };
 
         // Carregar dados do Google Sheets
-        // ============================================
-        // CACHE SYSTEM
-        // ============================================
-        const CACHE_KEY = 'despesas_app_cache';
-        const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
-
-        function saveCache(data) {
-            try {
-                const cache = {
-                    data,
-                    timestamp: Date.now()
-                };
-                sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-            } catch (e) {
-                console.log('Cache save failed:', e);
-            }
-        }
-
-        function loadCache() {
-            try {
-                const cached = sessionStorage.getItem(CACHE_KEY);
-                if (!cached) return null;
-                
-                const cache = JSON.parse(cached);
-                const age = Date.now() - cache.timestamp;
-                
-                if (age < CACHE_DURATION) {
-                    console.log('✅ Cache HIT - Idade:', Math.round(age/1000), 'segundos');
-                    return cache.data;
-                }
-                
-                console.log('❌ Cache MISS - Expirado');
-                sessionStorage.removeItem(CACHE_KEY);
-                return null;
-            } catch (e) {
-                console.log('Cache load failed:', e);
-                return null;
-            }
-        }
-
-        function clearAppCache() {
-            try {
-                sessionStorage.removeItem(CACHE_KEY);
-                console.log('✅ Cache limpo');
-            } catch (e) {
-                console.log('Cache clear failed:', e);
-            }
-        }
-
-        // ============================================
-        // LOAD DATA (OTIMIZADO)
-        // ============================================
-        async function loadData(forceRefresh = false) {
+        async function loadData() {
             const wasLoading = state.loading;
-            
-            // Tentar cache primeiro (se não for force refresh)
-            if (!forceRefresh) {
-                const cached = loadCache();
-                if (cached) {
-                    state.expenses = cached.expenses || [];
-                    state.goal = cached.goal || 5000;
-                    state.goalFixed = cached.goalFixed || 0;
-                    state.fixedExpenses = cached.fixedExpenses || [];
-                    state.loading = false;
-                    
-                    console.log('📦 Dados carregados do cache');
-                    console.log('Despesas:', state.expenses.length);
-                    console.log('Fixas:', state.fixedExpenses.length);
-                    
-                    if (wasLoading) {
-                        render();
-                    }
-                    return;
-                }
-            }
             
             try {
                 console.log('=== INICIANDO CARREGAMENTO ===');
                 console.log('URL:', SHEETS_URL);
-                console.log('Force Refresh:', forceRefresh);
                 
-                // REQUESTS PARALELOS - Todas ao mesmo tempo
-                const [despesasResult, metaResult, fixedResult] = await Promise.allSettled([
-                    fetch(`${SHEETS_URL}?action=getDespesas`).then(r => r.json()),
-                    fetch(`${SHEETS_URL}?action=getMeta`).then(r => r.json()),
-                    fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json())
-                ]);
+                const despesasResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
+                console.log('Status getDespesas:', despesasResponse.status);
                 
-                // Processar despesas
-                if (despesasResult.status === 'fulfilled') {
-                    const despesasData = despesasResult.value;
-                    state.expenses = despesasData.expenses || despesasData || [];
-                    console.log('✅ Despesas:', state.expenses.length);
-                } else {
-                    console.error('❌ Erro despesas:', despesasResult.reason);
-                    state.expenses = [];
-                }
+                const despesasData = await despesasResponse.json();
                 
-                // Processar meta
-                if (metaResult.status === 'fulfilled') {
-                    const metaData = metaResult.value;
-                    state.goal = metaData.meta || 5000;
-                    state.goalFixed = metaData.metaFixed || 0;
-                    console.log('✅ Limite Variáveis:', state.goal);
-                    console.log('✅ Limite Fixas:', state.goalFixed);
-                } else {
-                    console.error('❌ Erro meta:', metaResult.reason);
-                    state.goal = 5000;
-                    state.goalFixed = 0;
-                }
+                console.log('=== RESPOSTA getDespesas ===');
+                console.log('Dados completos:', despesasData);
+                console.log('Tipo:', typeof despesasData);
+                console.log('É array?', Array.isArray(despesasData));
+                console.log('Tem expenses?', despesasData.expenses);
+                console.log('Erro?', despesasData.error);
                 
-                // Processar fixas
-                if (fixedResult.status === 'fulfilled') {
-                    const fixedData = fixedResult.value;
+                state.expenses = despesasData.expenses || despesasData || [];
+                
+                console.log('=== STATE.EXPENSES ===');
+                console.log('Valor:', state.expenses);
+                console.log('Quantidade:', state.expenses.length);
+                console.log('Primeiro item:', state.expenses[0]);
+
+                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
+                const metaData = await metaResponse.json();
+                state.goal = metaData.meta || 5000;
+                state.goalFixed = metaData.metaFixed || 0;
+                
+                console.log('=== META ===');
+                console.log('Limite Variáveis:', state.goal);
+                console.log('Limite Fixas:', state.goalFixed);
+
+                // Carregar despesas fixas
+                try {
+                    const fixedResponse = await fetch(`${SHEETS_URL}?action=getFixedExpenses`);
+                    const fixedData = await fixedResponse.json();
                     state.fixedExpenses = fixedData.fixedExpenses || [];
-                    console.log('✅ Fixas:', state.fixedExpenses.length);
-                } else {
-                    console.log('⚠️ Fixas não disponíveis');
+                    console.log('=== FIXAS ===');
+                    console.log('Quantidade:', state.fixedExpenses.length);
+                } catch (error) {
+                    console.log('Despesas fixas ainda não disponíveis');
                     state.fixedExpenses = [];
                 }
-
-                // Salvar cache
-                saveCache({
-                    expenses: state.expenses,
-                    fixedExpenses: state.fixedExpenses,
-                    goal: state.goal,
-                    goalFixed: state.goalFixed
-                });
-                console.log('💾 Cache salvo');
 
                 state.loading = false;
                 
@@ -773,34 +685,6 @@
                     render();
                 }
             }
-        }
-
-
-        // ============================================
-        // REFRESH DATA
-        // ============================================
-        async function refreshData() {
-            const btn = event.target;
-            const originalText = btn.innerHTML;
-            
-            // Animação de loading
-            btn.innerHTML = '⏳';
-            btn.style.animation = 'spin 1s linear infinite';
-            btn.disabled = true;
-            
-            // Force refresh (ignora cache)
-            await loadData(true);
-            
-            // Restaura botão
-            btn.innerHTML = originalText;
-            btn.style.animation = '';
-            btn.disabled = false;
-            
-            // Feedback visual
-            btn.innerHTML = '✓';
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-            }, 1000);
         }
 
         async function addExpenseToSheets(expense) {
@@ -1389,11 +1273,11 @@
             const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const monthDays = getMonthDays();
             
-            // Quanto deveria ter gastado até agora (proporcional aos dias)
-            const deveriaGastar = (state.goal * monthDays.passed) / monthDays.total;
+            // Quanto poderia ter gastado até agora (proporcional aos dias)
+            const poderiaGastar = (state.goal * monthDays.passed) / monthDays.total;
             
-            // Ritmo: gasto real / deveria gastar * 100
-            const ritmo = deveriaGastar > 0 ? (total / deveriaGastar * 100) : 0;
+            // Ritmo: gasto real / poderia gastar * 100
+            const ritmo = poderiaGastar > 0 ? (total / poderiaGastar * 100) : 0;
             
             // Determinar status e cor
             let status = '';
@@ -1428,8 +1312,8 @@
                 cor: cor,
                 emoji: emoji,
                 gastoReal: total,
-                deveriaGastar: deveriaGastar,
-                diferenca: total - deveriaGastar,
+                poderiaGastar: poderiaGastar,
+                diferenca: total - poderiaGastar,
                 progressoMes: (monthDays.passed / monthDays.total * 100)
             };
         }
@@ -1519,26 +1403,12 @@
             
             if (state.tab === 'dash') {
                 app.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <div class="tabs" style="flex: 1;">
-                            <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
-                            <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
-                            <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                            <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                            <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
-                        </div>
-                        <button onclick="refreshData()" style="
-                            background: rgba(255,255,255,0.2);
-                            border: none;
-                            color: white;
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 50%;
-                            font-size: 20px;
-                            cursor: pointer;
-                            margin-left: 10px;
-                            transition: all 0.3s;
-                        " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">↻</button>
+                    <div class="tabs">
+                        <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
+                        <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
+                        <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     
                     <!-- Card do Termômetro de Ritmo -->
@@ -1566,10 +1436,10 @@
                             <div class="ritmo-status-emoji">${ritmo.emoji}</div>
                             <div class="ritmo-status-text" style="color: ${ritmo.cor}">${ritmo.status}</div>
                             <div class="ritmo-status-desc">
-                                ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que deveria!' :
+                                ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que poderia!' :
                                   ritmo.ritmo < 100 ? 'Você está no ritmo ideal!' :
                                   ritmo.ritmo < 110 ? 'Levemente acima do esperado' :
-                                  ritmo.ritmo < 120 ? 'Você está gastando mais que deveria' :
+                                  ritmo.ritmo < 120 ? 'Você está gastando mais que poderia' :
                                   'Gastos MUITO acima do esperado!'}
                             </div>
                         </div>
@@ -1580,8 +1450,8 @@
                                 <div class="ritmo-detail-value">AED ${ritmo.gastoReal.toFixed(0)}</div>
                             </div>
                             <div class="ritmo-detail-item">
-                                <div class="ritmo-detail-label">Deveria Gastar</div>
-                                <div class="ritmo-detail-value">AED ${ritmo.deveriaGastar.toFixed(0)}</div>
+                                <div class="ritmo-detail-label">Poderia Gastar</div>
+                                <div class="ritmo-detail-value">AED ${ritmo.poderiaGastar.toFixed(0)}</div>
                             </div>
                             <div class="ritmo-detail-item">
                                 <div class="ritmo-detail-label">Diferença</div>
