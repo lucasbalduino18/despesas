@@ -28,7 +28,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 12px 0;
@@ -68,7 +67,6 @@
             background: rgba(255,255,255,0.2);
         }
 
-        /* KPI Cards */
         .kpi-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -111,7 +109,6 @@
             opacity: 0.6;
         }
 
-        /* Progress Bar */
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -135,7 +132,6 @@
             background: linear-gradient(90deg, #ef4444, #dc2626);
         }
 
-        /* Color Variants */
         .kpi-card.blue {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.05));
             border-color: rgba(59, 130, 246, 0.3);
@@ -161,27 +157,11 @@
             border-color: rgba(239, 68, 68, 0.3);
         }
 
-        /* Today Section */
-        .today-section {
-            margin-top: 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .today-header {
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            opacity: 0.9;
-        }
-
         .expense-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
@@ -189,28 +169,23 @@
             border-bottom: none;
         }
 
-        .expense-info {
-            flex: 1;
-        }
-
         .expense-merchant {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             margin-bottom: 2px;
         }
 
         .expense-time {
-            font-size: 9px;
+            font-size: 8px;
             opacity: 0.6;
         }
 
         .expense-amount {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #3b82f6;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             padding: 40px 0;
@@ -218,126 +193,142 @@
             opacity: 0.7;
         }
 
-        /* Error */
-        .error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            margin: 20px 0;
-            font-size: 11px;
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: skeleton 1.5s ease-in-out infinite;
         }
 
-        /* Icon */
-        .icon {
-            display: inline-block;
-            margin-right: 4px;
+        @keyframes skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
 </head>
 <body>
-    <button class="refresh-btn" onclick="loadData()">↻</button>
+    <button class="refresh-btn" onclick="loadData(true)">↻</button>
     
     <div class="container" id="app">
         <div class="loading">⏳ Carregando...</div>
     </div>
 
     <script>
-        // ============================================
-        // CONFIGURAÇÃO
-        // ============================================
         const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx3AI8vmT4Oqu98qF8oSGLV6sdKYhh9DYuKKt6pu93R3Lr-m-F_s4XG2kuPu6K7bMGuqQ/exec';
+        const CACHE_KEY = 'despesas_cache';
+        const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
 
         const state = {
             expenses: [],
             fixedExpenses: [],
             goal: 20000,
             goalFixed: 5000,
-            loading: true
+            loading: true,
+            // Cache de cálculos
+            monthExpenses: null,
+            todayExpenses: null,
+            dailyBudget: null
         };
 
         // ============================================
-        // UTILITÁRIOS
+        // CACHE
         // ============================================
-        function formatAED(value) {
-            return 'AED ' + value.toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+        function saveCache(data) {
+            try {
+                const cache = {
+                    data,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+            } catch (e) {
+                console.log('Cache save failed:', e);
+            }
         }
 
-        function formatAEDShort(value) {
-            if (value >= 1000) {
-                return 'AED ' + (value / 1000).toFixed(1) + 'k';
+        function loadCache() {
+            try {
+                const cached = sessionStorage.getItem(CACHE_KEY);
+                if (!cached) return null;
+                
+                const cache = JSON.parse(cached);
+                const age = Date.now() - cache.timestamp;
+                
+                if (age < CACHE_DURATION) {
+                    return cache.data;
+                }
+                
+                sessionStorage.removeItem(CACHE_KEY);
+                return null;
+            } catch (e) {
+                return null;
             }
-            return 'AED ' + value.toFixed(0);
+        }
+
+        // ============================================
+        // UTILITÁRIOS (MEMOIZADOS)
+        // ============================================
+        function formatAED(value) {
+            return value >= 1000 
+                ? 'AED ' + (value / 1000).toFixed(1) + 'k'
+                : 'AED ' + value.toFixed(0);
         }
 
         function getMonthExpenses() {
+            if (state.monthExpenses) return state.monthExpenses;
+            
             const now = new Date();
-            return state.expenses.filter(e => {
-                if (!e || !e.date) return false;
+            const month = now.getMonth();
+            const year = now.getFullYear();
+            
+            state.monthExpenses = state.expenses.filter(e => {
+                if (!e?.date) return false;
                 const parts = e.date.toString().split('/');
                 if (parts.length < 3) return false;
-                const month = parseInt(parts[1]) - 1;
-                const year = parseInt(parts[2]);
-                return month === now.getMonth() && year === now.getFullYear();
+                return parseInt(parts[1]) - 1 === month && parseInt(parts[2]) === year;
             });
+            
+            return state.monthExpenses;
         }
 
         function getTodayExpenses() {
+            if (state.todayExpenses) return state.todayExpenses;
+            
             const now = new Date();
             const today = now.getDate();
             const month = now.getMonth();
             const year = now.getFullYear();
             
-            return state.expenses.filter(e => {
-                if (!e || !e.date) return false;
+            state.todayExpenses = state.expenses.filter(e => {
+                if (!e?.date) return false;
                 const parts = e.date.toString().split('/');
                 if (parts.length < 3) return false;
-                const day = parseInt(parts[0]);
-                const eMonth = parseInt(parts[1]) - 1;
-                const eYear = parseInt(parts[2]);
-                return day === today && eMonth === month && eYear === year;
-            }).sort((a, b) => {
-                // Ordenar por hora (mais recente primeiro)
-                const timeA = a.time || '00:00:00';
-                const timeB = b.time || '00:00:00';
-                return timeB.localeCompare(timeA);
-            });
+                return parseInt(parts[0]) === today && 
+                       parseInt(parts[1]) - 1 === month && 
+                       parseInt(parts[2]) === year;
+            }).sort((a, b) => (b.time || '').localeCompare(a.time || ''));
+            
+            return state.todayExpenses;
         }
 
         function getDailyBudget() {
+            if (state.dailyBudget) return state.dailyBudget;
+            
             const now = new Date();
             const monthExpenses = getMonthExpenses();
-            const totalGastoMes = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-            const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
-            const limiteTotal = state.goal + state.goalFixed;
+            const todayExpenses = getTodayExpenses();
             
-            // Disponível total no mês
+            const totalGastoMes = monthExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+            const totalFixas = state.fixedExpenses.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
+            const limiteTotal = state.goal + state.goalFixed;
             const disponivelMes = limiteTotal - totalGastoMes - totalFixas;
             
-            // Dias totais do mês
-            const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            
-            // Dias passados (incluindo hoje)
-            const daysPassed = now.getDate();
-            
-            // Dias restantes (incluindo hoje)
-            const daysRemaining = lastDayOfMonth - now.getDate() + 1;
-            
-            // Orçamento por dia restante
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const daysRemaining = lastDay - now.getDate() + 1;
             const budgetPerDay = daysRemaining > 0 ? disponivelMes / daysRemaining : 0;
             
-            // Total gasto hoje
-            const todayExpenses = getTodayExpenses();
-            const totalToday = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-            
-            // Quanto ainda pode gastar hoje
+            const totalToday = todayExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
             const canSpendToday = budgetPerDay - totalToday;
             
-            return {
+            state.dailyBudget = {
                 totalToday,
                 budgetPerDay,
                 canSpendToday,
@@ -345,35 +336,68 @@
                 disponivelMes,
                 percentOfDailyBudget: budgetPerDay > 0 ? (totalToday / budgetPerDay) * 100 : 0
             };
+            
+            return state.dailyBudget;
+        }
+
+        function clearCache() {
+            state.monthExpenses = null;
+            state.todayExpenses = null;
+            state.dailyBudget = null;
         }
 
         // ============================================
-        // CARREGAR DADOS
+        // CARREGAR DADOS (PARALELO + CACHE)
         // ============================================
-        async function loadData() {
+        async function loadData(forceRefresh = false) {
+            // Tentar cache primeiro
+            if (!forceRefresh) {
+                const cached = loadCache();
+                if (cached) {
+                    state.expenses = cached.expenses || [];
+                    state.fixedExpenses = cached.fixedExpenses || [];
+                    state.goal = cached.goal || 20000;
+                    state.goalFixed = cached.goalFixed || 5000;
+                    state.loading = false;
+                    clearCache();
+                    render();
+                    return;
+                }
+            }
+
             state.loading = true;
+            clearCache();
             render();
 
             try {
-                // Carregar despesas
-                const expensesResponse = await fetch(`${SHEETS_URL}?action=getDespesas`);
-                const expensesData = await expensesResponse.json();
-                state.expenses = expensesData.expenses || [];
+                // PARALELO: Todas requests ao mesmo tempo
+                const [expensesRes, metaRes, fixedRes] = await Promise.allSettled([
+                    fetch(`${SHEETS_URL}?action=getDespesas`).then(r => r.json()),
+                    fetch(`${SHEETS_URL}?action=getMeta`).then(r => r.json()),
+                    fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json())
+                ]);
 
-                // Carregar meta
-                const metaResponse = await fetch(`${SHEETS_URL}?action=getMeta`);
-                const metaData = await metaResponse.json();
-                state.goal = metaData.meta || 20000;
-                state.goalFixed = metaData.metaFixed || 5000;
-
-                // Carregar despesas fixas
-                try {
-                    const fixedResponse = await fetch(`${SHEETS_URL}?action=getFixedExpenses`);
-                    const fixedData = await fixedResponse.json();
-                    state.fixedExpenses = fixedData.fixedExpenses || [];
-                } catch (error) {
-                    state.fixedExpenses = [];
+                // Processar resultados
+                if (expensesRes.status === 'fulfilled') {
+                    state.expenses = expensesRes.value.expenses || [];
                 }
+                
+                if (metaRes.status === 'fulfilled') {
+                    state.goal = metaRes.value.meta || 20000;
+                    state.goalFixed = metaRes.value.metaFixed || 5000;
+                }
+                
+                if (fixedRes.status === 'fulfilled') {
+                    state.fixedExpenses = fixedRes.value.fixedExpenses || [];
+                }
+
+                // Salvar cache
+                saveCache({
+                    expenses: state.expenses,
+                    fixedExpenses: state.fixedExpenses,
+                    goal: state.goal,
+                    goalFixed: state.goalFixed
+                });
 
                 state.loading = false;
                 render();
@@ -384,7 +408,7 @@
         }
 
         // ============================================
-        // RENDERIZAR
+        // RENDERIZAR (OTIMIZADO)
         // ============================================
         function render() {
             const app = document.getElementById('app');
@@ -397,28 +421,20 @@
             const monthExpenses = getMonthExpenses();
             const todayExpenses = getTodayExpenses();
             const dailyBudget = getDailyBudget();
-            const totalVariaveis = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-            const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+            
+            const totalVariaveis = monthExpenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+            const totalFixas = state.fixedExpenses.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
             const totalGeral = totalVariaveis + totalFixas;
             const limiteTotal = state.goal + state.goalFixed;
             const disponivel = limiteTotal - totalGeral;
             const percentGeral = limiteTotal > 0 ? (totalGeral / limiteTotal) * 100 : 0;
-            const maior = monthExpenses.length ? Math.max(...monthExpenses.map(e => parseFloat(e.amount) || 0)) : 0;
 
-            let progressClass = '';
-            if (percentGeral > 90) progressClass = 'danger';
-            else if (percentGeral > 70) progressClass = 'warning';
-
-            let dailyProgressClass = '';
-            if (dailyBudget.percentOfDailyBudget > 100) dailyProgressClass = 'danger';
-            else if (dailyBudget.percentOfDailyBudget > 80) dailyProgressClass = 'warning';
+            const progressClass = percentGeral > 90 ? 'danger' : percentGeral > 70 ? 'warning' : '';
+            const dailyProgressClass = dailyBudget.percentOfDailyBudget > 100 ? 'danger' : 
+                                       dailyBudget.percentOfDailyBudget > 80 ? 'warning' : '';
 
             const now = new Date();
-            const dateStr = now.toLocaleDateString('pt-BR', { 
-                day: '2-digit', 
-                month: 'short',
-                year: 'numeric'
-            });
+            const dateStr = now.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 
             app.innerHTML = `
                 <div class="header">
@@ -426,118 +442,94 @@
                     <div class="date">${dateStr}</div>
                 </div>
 
-                <!-- HOJE - Destaque Principal -->
                 <div class="kpi-grid">
-                    <div class="kpi-card large blue" style="
-                        background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.1));
-                        border: 2px solid rgba(59, 130, 246, 0.5);
-                    ">
-                        <div class="kpi-label"><span class="icon">📅</span>HOJE</div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 8px;">
+                    <div class="kpi-card large blue" style="background:linear-gradient(135deg,rgba(59,130,246,0.3),rgba(37,99,235,0.1));border:2px solid rgba(59,130,246,0.5);">
+                        <div class="kpi-label"><span>📅</span>HOJE</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
                             <div>
-                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Gasto até agora</div>
-                                <div class="kpi-value" style="font-size: 24px;">${formatAEDShort(dailyBudget.totalToday)}</div>
+                                <div style="font-size:11px;opacity:0.7;margin-bottom:4px;">Gasto até agora</div>
+                                <div class="kpi-value" style="font-size:24px;">${formatAED(dailyBudget.totalToday)}</div>
                                 <div class="kpi-subtitle">${todayExpenses.length} transações</div>
                             </div>
                             <div>
-                                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 4px;">Posso gastar</div>
-                                <div class="kpi-value" style="font-size: 24px; color: ${dailyBudget.canSpendToday >= 0 ? '#86efac' : '#fca5a5'};">
-                                    ${dailyBudget.canSpendToday >= 0 ? '' : '-'}${formatAEDShort(Math.abs(dailyBudget.canSpendToday))}
+                                <div style="font-size:11px;opacity:0.7;margin-bottom:4px;">Posso gastar</div>
+                                <div class="kpi-value" style="font-size:24px;color:${dailyBudget.canSpendToday>=0?'#86efac':'#fca5a5'};">
+                                    ${dailyBudget.canSpendToday>=0?'':'-'}${formatAED(Math.abs(dailyBudget.canSpendToday))}
                                 </div>
                                 <div class="kpi-subtitle">para manter meta</div>
                             </div>
                         </div>
-                        <div class="progress-bar" style="margin-top: 12px;">
-                            <div class="progress-fill ${dailyProgressClass}" style="width: ${Math.min(dailyBudget.percentOfDailyBudget, 100)}%"></div>
+                        <div class="progress-bar" style="margin-top:12px;">
+                            <div class="progress-fill ${dailyProgressClass}" style="width:${Math.min(dailyBudget.percentOfDailyBudget,100)}%"></div>
                         </div>
-                        <div style="font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: center;">
-                            ${dailyBudget.percentOfDailyBudget.toFixed(0)}% do orçamento diário (${formatAEDShort(dailyBudget.budgetPerDay)}/dia • ${dailyBudget.daysRemaining} dias restantes)
+                        <div style="font-size:9px;opacity:0.6;margin-top:4px;text-align:center;">
+                            ${dailyBudget.percentOfDailyBudget.toFixed(0)}% do orçamento diário (${formatAED(dailyBudget.budgetPerDay)}/dia • ${dailyBudget.daysRemaining} dias restantes)
                         </div>
                     </div>
 
-                    <!-- Últimas Transações de Hoje -->
                     ${todayExpenses.length > 0 ? `
-                        <div class="kpi-card large" style="background: rgba(255,255,255,0.05); padding: 10px;">
-                            <div style="font-size: 11px; font-weight: 600; margin-bottom: 8px; opacity: 0.8;">🕐 Transações de Hoje</div>
+                        <div class="kpi-card large" style="background:rgba(255,255,255,0.05);padding:10px;">
+                            <div style="font-size:11px;font-weight:600;margin-bottom:8px;opacity:0.8;">🕐 Transações de Hoje</div>
                             ${todayExpenses.slice(0, 3).map(e => `
-                                <div class="expense-item" style="padding: 6px 0;">
-                                    <div class="expense-info">
-                                        <div class="expense-merchant" style="font-size: 10px;">${e.merchant || 'Sem nome'}</div>
-                                        <div class="expense-time" style="font-size: 8px;">${e.time || ''}</div>
+                                <div class="expense-item" style="padding:6px 0;">
+                                    <div>
+                                        <div class="expense-merchant">${e.merchant||'Sem nome'}</div>
+                                        <div class="expense-time">${e.time||''}</div>
                                     </div>
-                                    <div class="expense-amount" style="font-size: 12px;">${formatAEDShort(parseFloat(e.amount) || 0)}</div>
+                                    <div class="expense-amount">${formatAED(parseFloat(e.amount)||0)}</div>
                                 </div>
                             `).join('')}
-                            ${todayExpenses.length > 3 ? `
-                                <div style="font-size: 9px; opacity: 0.6; text-align: center; margin-top: 4px;">
-                                    +${todayExpenses.length - 3} mais...
-                                </div>
-                            ` : ''}
+                            ${todayExpenses.length>3?`<div style="font-size:9px;opacity:0.6;text-align:center;margin-top:4px;">+${todayExpenses.length-3} mais...</div>`:''}
                         </div>
                     ` : `
-                        <div class="kpi-card large" style="background: rgba(255,255,255,0.05);">
-                            <div style="text-align: center; padding: 20px 0; opacity: 0.6; font-size: 11px;">
-                                ✨ Nenhum gasto hoje ainda
-                            </div>
+                        <div class="kpi-card large" style="background:rgba(255,255,255,0.05);">
+                            <div style="text-align:center;padding:20px 0;opacity:0.6;font-size:11px;">✨ Nenhum gasto hoje ainda</div>
                         </div>
                     `}
                 </div>
 
-                <!-- Divisor -->
-                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0;"></div>
+                <div style="height:1px;background:rgba(255,255,255,0.1);margin:15px 0;"></div>
 
-                <!-- Total do Mês -->
                 <div class="kpi-grid">
                     <div class="kpi-card large purple">
-                        <div class="kpi-label"><span class="icon">💰</span>Total Mês</div>
-                        <div class="kpi-value">${formatAEDShort(totalGeral)}</div>
+                        <div class="kpi-label"><span>💰</span>Total Mês</div>
+                        <div class="kpi-value">${formatAED(totalGeral)}</div>
                         <div class="kpi-subtitle">${percentGeral.toFixed(1)}% do limite</div>
                         <div class="progress-bar">
-                            <div class="progress-fill ${progressClass}" style="width: ${Math.min(percentGeral, 100)}%"></div>
+                            <div class="progress-fill ${progressClass}" style="width:${Math.min(percentGeral,100)}%"></div>
                         </div>
                     </div>
 
-                    <!-- Variáveis -->
                     <div class="kpi-card blue">
-                        <div class="kpi-label"><span class="icon">💸</span>Variáveis</div>
-                        <div class="kpi-value">${formatAEDShort(totalVariaveis)}</div>
+                        <div class="kpi-label"><span>💸</span>Variáveis</div>
+                        <div class="kpi-value">${formatAED(totalVariaveis)}</div>
                         <div class="kpi-subtitle">${monthExpenses.length} trans.</div>
                     </div>
 
-                    <!-- Fixas -->
                     <div class="kpi-card orange">
-                        <div class="kpi-label"><span class="icon">💳</span>Fixas</div>
-                        <div class="kpi-value">${formatAEDShort(totalFixas)}</div>
+                        <div class="kpi-label"><span>💳</span>Fixas</div>
+                        <div class="kpi-value">${formatAED(totalFixas)}</div>
                         <div class="kpi-subtitle">${state.fixedExpenses.length} fixas</div>
                     </div>
 
-                    <!-- Disponível -->
-                    <div class="kpi-card ${disponivel >= 0 ? 'green' : 'red'}">
-                        <div class="kpi-label"><span class="icon">${disponivel >= 0 ? '✅' : '⚠️'}</span>Disponível</div>
-                        <div class="kpi-value">${formatAEDShort(Math.abs(disponivel))}</div>
-                        <div class="kpi-subtitle">de ${formatAEDShort(limiteTotal)}</div>
+                    <div class="kpi-card ${disponivel>=0?'green':'red'}">
+                        <div class="kpi-label"><span>${disponivel>=0?'✅':'⚠️'}</span>Disponível</div>
+                        <div class="kpi-value">${formatAED(Math.abs(disponivel))}</div>
+                        <div class="kpi-subtitle">de ${formatAED(limiteTotal)}</div>
                     </div>
                 </div>
             `;
         }
 
         function renderError(message) {
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="error">
-                    ❌ Erro ao carregar dados<br>
-                    <small>${message}</small>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button onclick="loadData()" style="
-                        background: #3b82f6;
-                        color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        cursor: pointer;
-                    ">Tentar Novamente</button>
+            document.getElementById('app').innerHTML = `
+                <div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:48px;margin-bottom:16px;">❌</div>
+                    <div style="font-size:16px;margin-bottom:8px;">Erro ao carregar</div>
+                    <div style="font-size:12px;opacity:0.7;">${message}</div>
+                    <button onclick="loadData(true)" style="margin-top:20px;background:#3b82f6;color:white;border:none;padding:12px 24px;border-radius:8px;font-size:14px;">
+                        Tentar Novamente
+                    </button>
                 </div>
             `;
         }
@@ -546,8 +538,7 @@
         // INICIALIZAR
         // ============================================
         loadData();
-        // Auto-refresh a cada 5 minutos
-        setInterval(loadData, 5 * 60 * 1000);
+        setInterval(() => loadData(false), 5 * 60 * 1000);
     </script>
 </body>
 </html>
