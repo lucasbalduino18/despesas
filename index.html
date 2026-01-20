@@ -1507,18 +1507,41 @@
             render();
         }
 
-        function showCategoryMerchants(categoryId) {
+        function formatMonthYear(monthYear) {
+            if (!monthYear) return '';
+            const [month, year] = monthYear.split('/').map(Number);
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            return `${monthNames[month - 1]} ${year}`;
+        }
+
+        function showCategoryMerchants(categoryId, selectedMonth = null) {
             // Obter categoria
             const category = CATEGORIES.find(c => c.id === categoryId);
             if (!category) return;
             
-            // Filtrar despesas desta categoria
-            const categoryExpenses = state.expenses.filter(e => 
-                e && e.category === categoryId && e.merchant
-            );
+            // Se não foi passado mês, usar o selecionado do state
+            if (!selectedMonth) {
+                selectedMonth = state.selectedCategoryMonth;
+            }
+            
+            // Filtrar despesas desta categoria E do mês selecionado
+            const categoryExpenses = state.expenses.filter(e => {
+                if (!e || e.category !== categoryId || !e.merchant) return false;
+                
+                // Se não há mês selecionado, mostrar todas
+                if (!selectedMonth) return true;
+                
+                // Filtrar pelo mês
+                if (!e.date) return false;
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return false;
+                const monthYear = `${parts[1]}/${parts[2]}`;
+                return monthYear === selectedMonth;
+            });
             
             if (categoryExpenses.length === 0) {
-                alert(`Nenhuma despesa em ${category.icon} ${category.name}`);
+                const monthInfo = selectedMonth ? ` em ${formatMonthYear(selectedMonth)}` : '';
+                alert(`Nenhuma despesa em ${category.icon} ${category.name}${monthInfo}`);
                 return;
             }
             
@@ -1575,9 +1598,16 @@
                     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0; font-size: 1.3rem;">
-                            ${category.icon} ${category.name}
-                        </h3>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.3rem;">
+                                ${category.icon} ${category.name}
+                            </h3>
+                            ${selectedMonth ? `
+                                <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 5px;">
+                                    📅 ${formatMonthYear(selectedMonth)}
+                                </div>
+                            ` : ''}
+                        </div>
                         <button onclick="this.closest('.modal-overlay').remove()" style="
                             background: rgba(255,255,255,0.2);
                             border: none;
@@ -2602,9 +2632,15 @@
                     
                     <!-- Gráfico de Pizza - Total Geral -->
                     <div class="card">
-                        <h3 style="margin-bottom: 20px;">🍕 Distribuição Total por Categoria</h3>
+                        <h3 style="margin-bottom: 20px;">
+                            🍕 Distribuição por Categoria
+                            ${selectedMonth ? (() => {
+                                const [m, y] = selectedMonth.split('/').map(Number);
+                                return `<span style="font-size: 0.85rem; opacity: 0.8; font-weight: 400;"> - ${monthNames[m - 1]} ${y}</span>`;
+                            })() : ''}
+                        </h3>
                         ${(() => {
-                            // Calcular totais de TODAS as despesas (não apenas do mês)
+                            // Calcular totais do MÊS SELECIONADO
                             const allCategoryStats = {};
                             CATEGORIES.forEach(cat => {
                                 allCategoryStats[cat.id] = {
@@ -2616,8 +2652,19 @@
                                 };
                             });
                             
+                            // Filtrar despesas do mês selecionado
                             state.expenses.forEach(e => {
                                 if (!e || !e.amount) return;
+                                
+                                // Filtrar pelo mês
+                                if (selectedMonth && e.date) {
+                                    const parts = e.date.toString().split('/');
+                                    if (parts.length >= 3) {
+                                        const monthYear = `${parts[1]}/${parts[2]}`;
+                                        if (monthYear !== selectedMonth) return;
+                                    }
+                                }
+                                
                                 const catId = e.category || 'outros';
                                 if (allCategoryStats[catId]) {
                                     allCategoryStats[catId].total += parseFloat(e.amount) || 0;
@@ -2689,7 +2736,7 @@
                                                 style="cursor: pointer; transition: opacity 0.3s;"
                                                 onmouseover="this.style.opacity='0.8'"
                                                 onmouseout="this.style.opacity='1'"
-                                                onclick="showCategoryMerchants('${categoryId}')"
+                                                onclick="showCategoryMerchants('${categoryId}', '${selectedMonth}')"
                                             >
                                                 <title>${slice.icon} ${slice.name}: AED ${slice.total.toFixed(2)} (${slice.percentage.toFixed(1)}%)</title>
                                             </path>
@@ -2707,7 +2754,7 @@
                                             const catObj = Object.entries(allCategoryStats).find(([id, s]) => s.name === stat.name);
                                             const categoryId = catObj ? catObj[0] : 'outros';
                                             return `
-                                                <div onclick="showCategoryMerchants('${categoryId}')" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
+                                                <div onclick="showCategoryMerchants('${categoryId}', '${selectedMonth}')" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
                                                     <div style="width: 12px; height: 12px; border-radius: 3px; background: ${stat.color}; flex-shrink: 0;"></div>
                                                     <div style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                         ${stat.icon} ${stat.name}
