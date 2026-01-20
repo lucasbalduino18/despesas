@@ -571,6 +571,11 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -1500,6 +1505,172 @@
         function closeCategoryView() {
             state.viewingCategoryExpenses = null;
             render();
+        }
+
+        function showCategoryMerchants(categoryId) {
+            // Obter categoria
+            const category = CATEGORIES.find(c => c.id === categoryId);
+            if (!category) return;
+            
+            // Filtrar despesas desta categoria
+            const categoryExpenses = state.expenses.filter(e => 
+                e && e.category === categoryId && e.merchant
+            );
+            
+            if (categoryExpenses.length === 0) {
+                alert(`Nenhuma despesa em ${category.icon} ${category.name}`);
+                return;
+            }
+            
+            // Agrupar por estabelecimento
+            const merchantStats = {};
+            categoryExpenses.forEach(e => {
+                const merchant = e.merchant || 'Sem nome';
+                if (!merchantStats[merchant]) {
+                    merchantStats[merchant] = {
+                        name: merchant,
+                        total: 0,
+                        count: 0,
+                        transactions: []
+                    };
+                }
+                merchantStats[merchant].total += parseFloat(e.amount) || 0;
+                merchantStats[merchant].count++;
+                merchantStats[merchant].transactions.push(e);
+            });
+            
+            // Ordenar por total
+            const sortedMerchants = Object.values(merchantStats)
+                .sort((a, b) => b.total - a.total);
+            
+            // Criar modal
+            const totalCategory = sortedMerchants.reduce((sum, m) => sum + m.total, 0);
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                animation: fadeIn 0.3s;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 20px;
+                    max-width: 500px;
+                    width: 100%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    padding: 25px;
+                    color: white;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0; font-size: 1.3rem;">
+                            ${category.icon} ${category.name}
+                        </h3>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="
+                            background: rgba(255,255,255,0.2);
+                            border: none;
+                            color: white;
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            font-size: 20px;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        ">×</button>
+                    </div>
+                    
+                    <div style="
+                        background: rgba(255,255,255,0.15);
+                        border-radius: 12px;
+                        padding: 15px;
+                        margin-bottom: 20px;
+                        text-align: center;
+                    ">
+                        <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Total da Categoria</div>
+                        <div style="font-size: 1.8rem; font-weight: 700;">AED ${totalCategory.toFixed(2)}</div>
+                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                            ${categoryExpenses.length} transações em ${sortedMerchants.length} estabelecimentos
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-bottom: 15px; font-size: 1rem; opacity: 0.9;">
+                        🏪 Estabelecimentos:
+                    </h4>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        ${sortedMerchants.map(merchant => {
+                            const percentage = (merchant.total / totalCategory) * 100;
+                            return `
+                                <div style="
+                                    background: rgba(255,255,255,0.1);
+                                    border-radius: 12px;
+                                    padding: 15px;
+                                    border: 1px solid rgba(255,255,255,0.2);
+                                ">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                        <div style="flex: 1; font-weight: 600; font-size: 0.95rem;">
+                                            ${merchant.name}
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1.1rem; font-weight: 700;">
+                                                AED ${merchant.total.toFixed(2)}
+                                            </div>
+                                            <div style="font-size: 0.75rem; opacity: 0.7;">
+                                                ${merchant.count} ${merchant.count === 1 ? 'vez' : 'vezes'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Barra de progresso -->
+                                    <div style="
+                                        width: 100%;
+                                        height: 6px;
+                                        background: rgba(255,255,255,0.2);
+                                        border-radius: 3px;
+                                        overflow: hidden;
+                                        margin-bottom: 5px;
+                                    ">
+                                        <div style="
+                                            height: 100%;
+                                            background: ${category.color};
+                                            width: ${percentage}%;
+                                            transition: width 0.5s ease;
+                                        "></div>
+                                    </div>
+                                    
+                                    <div style="font-size: 0.75rem; opacity: 0.7; text-align: right;">
+                                        ${percentage.toFixed(1)}% do total
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+            
+            modal.className = 'modal-overlay';
+            document.body.appendChild(modal);
+            
+            // Fechar ao clicar fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
         }
 
         function render() {
@@ -2506,7 +2677,10 @@
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
                                     <!-- SVG Pizza -->
                                     <svg width="200" height="200" viewBox="0 0 200 200">
-                                        ${slices.map(slice => `
+                                        ${slices.map((slice, idx) => {
+                                            const catObj = Object.entries(allCategoryStats).find(([id, s]) => s.name === slice.name);
+                                            const categoryId = catObj ? catObj[0] : 'outros';
+                                            return `
                                             <path
                                                 d="${slice.pathData}"
                                                 fill="${slice.color}"
@@ -2515,10 +2689,11 @@
                                                 style="cursor: pointer; transition: opacity 0.3s;"
                                                 onmouseover="this.style.opacity='0.8'"
                                                 onmouseout="this.style.opacity='1'"
+                                                onclick="showCategoryMerchants('${categoryId}')"
                                             >
                                                 <title>${slice.icon} ${slice.name}: AED ${slice.total.toFixed(2)} (${slice.percentage.toFixed(1)}%)</title>
                                             </path>
-                                        `).join('')}
+                                        `}).join('')}
                                         <!-- Centro branco -->
                                         <circle cx="100" cy="100" r="40" fill="rgba(255,255,255,0.15)" />
                                         <text x="100" y="95" text-anchor="middle" fill="white" font-size="14" font-weight="700">Total</text>
@@ -2529,8 +2704,10 @@
                                     <div style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                         ${allSortedStats.map(stat => {
                                             const percentage = (stat.total / grandTotal) * 100;
+                                            const catObj = Object.entries(allCategoryStats).find(([id, s]) => s.name === stat.name);
+                                            const categoryId = catObj ? catObj[0] : 'outros';
                                             return `
-                                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                                                <div onclick="showCategoryMerchants('${categoryId}')" style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">
                                                     <div style="width: 12px; height: 12px; border-radius: 3px; background: ${stat.color}; flex-shrink: 0;"></div>
                                                     <div style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                         ${stat.icon} ${stat.name}
