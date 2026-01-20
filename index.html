@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Minhas Despesas</title>
+    <title>💰 Minhas Despesas</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -566,7 +566,21 @@
 </head>
 <body>
     <div class="container">
-        <h1>💰 Minhas Despesas</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0;">💰 Minhas Despesas</h1>
+            <button onclick="refreshData()" id="mainRefreshBtn" style="
+                background: rgba(255,255,255,0.2);
+                border: none;
+                color: white;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                font-size: 24px;
+                cursor: pointer;
+                transition: all 0.3s;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'; this.style.transform='rotate(180deg)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'; this.style.transform='rotate(0deg)'">↻</button>
+        </div>
 
         <div id="app"></div>
     </div>
@@ -1528,26 +1542,12 @@
             
             if (state.tab === 'dash') {
                 app.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <div class="tabs" style="flex: 1;">
-                            <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
-                            <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
-                            <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                            <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                            <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
-                        </div>
-                        <button onclick="refreshData()" style="
-                            background: rgba(255,255,255,0.2);
-                            border: none;
-                            color: white;
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 50%;
-                            font-size: 20px;
-                            cursor: pointer;
-                            margin-left: 10px;
-                            transition: all 0.3s;
-                        " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">↻</button>
+                    <div class="tabs">
+                        <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
+                        <button class="tab" onclick="state.tab='add'; render()">Adicionar</button>
+                        <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
+                        <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
+                        <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     
                     <!-- Card do Termômetro de Ritmo -->
