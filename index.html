@@ -977,7 +977,7 @@
             
             if (success) {
                 // Recarregar dados do servidor em vez de adicionar localmente
-                await loadData();
+                await loadData(true); // ← FORÇAR REFRESH
                 state.sms = '';
                 state.obs = '';
                 state.selectedCategory = null;
@@ -999,7 +999,7 @@
                 
                 if (success) {
                     // Recarregar dados do servidor em vez de filtrar localmente
-                    await loadData();
+                    await loadData(true); // ← FORÇAR REFRESH
                     render();
                 } else {
                     alert('❌ Erro ao deletar. Tente novamente.');
@@ -1027,7 +1027,7 @@
             
             if (success) {
                 // Recarregar dados do servidor em vez de atualizar localmente
-                await loadData();
+                await loadData(true); // ← FORÇAR REFRESH
                 state.editingExpense = null;
                 alert('✅ Despesa atualizada com sucesso!');
                 render();
@@ -1194,7 +1194,7 @@
                 
                 if (result.success) {
                     alert('✅ Despesa fixa adicionada!');
-                    await loadData();
+                    await loadData(true); // ← FORÇAR REFRESH
                     
                     // Limpar campos
                     document.getElementById('fixedName').value = '';
@@ -1245,7 +1245,7 @@
                 if (result.success) {
                     alert('✅ Despesa fixa atualizada!');
                     state.editingFixed = null;
-                    await loadData();
+                    await loadData(true); // ← FORÇAR REFRESH
                     
                     // Limpar campos
                     document.getElementById('fixedName').value = '';
@@ -1280,7 +1280,7 @@
                 
                 if (result.success) {
                     alert('✅ Despesa fixa deletada!');
-                    await loadData();
+                    await loadData(true); // ← FORÇAR REFRESH
                     render();
                 } else {
                     throw new Error(result.error || 'Erro desconhecido');
@@ -1392,7 +1392,7 @@
             const success = await addExpenseToSheets(expense);
             
             if (success) {
-                await loadData();
+                await loadData(true); // ← FORÇAR REFRESH
                 // Limpar campos
                 document.getElementById('manualMerchant').value = '';
                 document.getElementById('manualAmount').value = '';
