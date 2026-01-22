@@ -828,13 +828,15 @@
             // Force refresh (ignora cache)
             await loadData(true);
             
+            // IMPORTANTE: Atualizar a tela!
+            render();
+            
             // Restaura botão
-            btn.innerHTML = originalText;
+            btn.innerHTML = '✓';
             btn.style.animation = '';
             btn.disabled = false;
             
-            // Feedback visual
-            btn.innerHTML = '✓';
+            // Volta ao ícone original
             setTimeout(() => {
                 btn.innerHTML = originalText;
             }, 1000);
