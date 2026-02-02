@@ -650,7 +650,6 @@
             fixedExpenses: [],  // Nova: despesas fixas
             goal: 5000,         // Limite de variáveis
             goalFixed: 0,       // Limite de fixas
-            monthlyIncome: {},  // Nova: rendimentos por mês (formato: "MM/YYYY": valor)
             sms: '',
             loading: true,
             selectedCategory: null,
@@ -727,13 +726,11 @@
                     state.goal = cached.goal || 5000;
                     state.goalFixed = cached.goalFixed || 0;
                     state.fixedExpenses = cached.fixedExpenses || [];
-                    state.monthlyIncome = cached.monthlyIncome || {};
                     state.loading = false;
                     
                     console.log('📦 Dados carregados do cache');
                     console.log('Despesas:', state.expenses.length);
                     console.log('Fixas:', state.fixedExpenses.length);
-                    console.log('Rendimentos:', Object.keys(state.monthlyIncome).length, 'meses');
                     
                     if (wasLoading) {
                         render();
@@ -748,11 +745,10 @@
                 console.log('Force Refresh:', forceRefresh);
                 
                 // REQUESTS PARALELOS - Todas ao mesmo tempo
-                const [despesasResult, metaResult, fixedResult, incomeResult] = await Promise.allSettled([
+                const [despesasResult, metaResult, fixedResult] = await Promise.allSettled([
                     fetch(`${SHEETS_URL}?action=getDespesas`).then(r => r.json()),
                     fetch(`${SHEETS_URL}?action=getMeta`).then(r => r.json()),
-                    fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json()),
-                    fetch(`${SHEETS_URL}?action=getIncome`).then(r => r.json())
+                    fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json())
                 ]);
                 
                 // Processar despesas
@@ -787,24 +783,13 @@
                     console.log('⚠️ Fixas não disponíveis');
                     state.fixedExpenses = [];
                 }
-                
-                // Processar rendimentos
-                if (incomeResult.status === 'fulfilled') {
-                    const incomeData = incomeResult.value;
-                    state.monthlyIncome = incomeData.income || {};
-                    console.log('✅ Rendimentos:', Object.keys(state.monthlyIncome).length, 'meses');
-                } else {
-                    console.log('⚠️ Rendimentos não disponíveis');
-                    state.monthlyIncome = {};
-                }
 
                 // Salvar cache
                 saveCache({
                     expenses: state.expenses,
                     fixedExpenses: state.fixedExpenses,
                     goal: state.goal,
-                    goalFixed: state.goalFixed,
-                    monthlyIncome: state.monthlyIncome
+                    goalFixed: state.goalFixed
                 });
                 console.log('💾 Cache salvo');
 
@@ -1072,37 +1057,6 @@
                 render();
             } else {
                 alert('❌ Erro ao atualizar limite de fixas. Tente novamente.');
-            }
-        }
-
-        async function saveMonthlyIncome() {
-            const input = document.getElementById('monthlyIncomeInput');
-            if (!input) return;
-            
-            const value = parseFloat(input.value) || 0;
-            if (value < 0) {
-                alert('⚠️ O rendimento não pode ser negativo');
-                return;
-            }
-            
-            const now = new Date();
-            const monthKey = `${now.getMonth() + 1}/${now.getFullYear()}`;
-            
-            try {
-                const url = `${SHEETS_URL}?action=saveIncome&month=${encodeURIComponent(monthKey)}&value=${value}`;
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.success) {
-                    state.monthlyIncome[monthKey] = value;
-                    alert(`✅ Rendimento de AED ${value.toFixed(0)} salvo com sucesso!`);
-                    render();
-                } else {
-                    throw new Error(result.error || 'Erro desconhecido');
-                }
-            } catch (error) {
-                console.error('Erro ao salvar rendimento:', error);
-                alert('❌ Erro ao salvar rendimento. Tente novamente.');
             }
         }
 
@@ -2400,102 +2354,6 @@
                                 Variáveis (${formatAEDShort(state.goal)}) + Fixas (${formatAEDShort(state.goalFixed)})
                             </div>
                         </div>
-                        
-                        <!-- Card de Rendimento Mensal -->
-                        <div style="
-                            margin-top: 20px;
-                            padding: 20px;
-                            background: rgba(34, 197, 94, 0.1);
-                            border-radius: 12px;
-                            border-left: 4px solid #22c55e;
-                        ">
-                            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                💰 Rendimento Mensal
-                            </div>
-                            ${(() => {
-                                const now = new Date();
-                                const currentMonthKey = \`\${now.getMonth() + 1}/\${now.getFullYear()}\`;
-                                const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
-                                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                                
-                                return \`
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">
-                                            Rendimento de \${monthNames[now.getMonth()]} \${now.getFullYear()}
-                                        </label>
-                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                            <input 
-                                                type="number" 
-                                                id="monthlyIncomeInput"
-                                                placeholder="Ex: 15000"
-                                                value="\${currentIncome || ''}"
-                                                style="
-                                                    flex: 1;
-                                                    padding: 12px;
-                                                    border: 2px solid rgba(34, 197, 94, 0.3);
-                                                    border-radius: 8px;
-                                                    background: rgba(255,255,255,0.1);
-                                                    color: white;
-                                                    font-size: 1rem;
-                                                    font-weight: 600;
-                                                "
-                                            />
-                                            <button 
-                                                onclick="saveMonthlyIncome()"
-                                                style="
-                                                    padding: 12px 20px;
-                                                    background: #22c55e;
-                                                    border: none;
-                                                    border-radius: 8px;
-                                                    color: white;
-                                                    font-weight: 600;
-                                                    cursor: pointer;
-                                                    white-space: nowrap;
-                                                "
-                                            >
-                                                💾 Salvar
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    \${currentIncome > 0 ? \`
-                                        <div style="
-                                            padding: 12px;
-                                            background: rgba(34, 197, 94, 0.15);
-                                            border-radius: 8px;
-                                            margin-top: 10px;
-                                        ">
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">
-                                                <div>
-                                                    <div style="opacity: 0.8;">Rendimento</div>
-                                                    <div style="font-size: 1.1rem; font-weight: 700; color: #22c55e;">
-                                                        AED \${currentIncome.toFixed(0)}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div style="opacity: 0.8;">Despesas</div>
-                                                    <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                                        AED \${total.toFixed(0)}
-                                                    </div>
-                                                </div>
-                                                <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                                    <div style="opacity: 0.8;">Economia</div>
-                                                    <div style="font-size: 1.3rem; font-weight: 700; color: \${currentIncome - total > 0 ? '#22c55e' : '#ef4444'};">
-                                                        \${currentIncome - total > 0 ? '💰' : '⚠️'} AED \${(currentIncome - total).toFixed(0)}
-                                                    </div>
-                                                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                                        \${currentIncome - total > 0 ? 
-                                                            \`Você está economizando \${((currentIncome - total) / currentIncome * 100).toFixed(1)}% do rendimento!\` : 
-                                                            \`Gastando AED \${(total - currentIncome).toFixed(0)} a mais que o rendimento\`
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    \` : ''}
-                                \`;
-                            })()}
-                        </div>
                     </div>
                 `;
                 setTimeout(() => {
@@ -3146,53 +3004,6 @@
                                                 </div>
                                             </div>
                                         `}).join('')}
-                                        
-                                        ${(() => {
-                                            const monthIncome = state.monthlyIncome[monthYear] || 0;
-                                            if (monthIncome > 0) {
-                                                const economy = monthIncome - totalMonth;
-                                                const economyPercent = (economy / monthIncome * 100);
-                                                const isPositive = economy > 0;
-                                                
-                                                return `
-                                                    <div style="
-                                                        margin-top: 15px;
-                                                        padding: 15px;
-                                                        background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
-                                                        border-radius: 8px;
-                                                        border-left: 4px solid ${isPositive ? '#22c55e' : '#ef4444'};
-                                                    ">
-                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">
-                                                            <div>
-                                                                <div style="opacity: 0.8;">💰 Rendimento</div>
-                                                                <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">
-                                                                    AED ${monthIncome.toFixed(0)}
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <div style="opacity: 0.8;">💸 Despesas</div>
-                                                                <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                                                    AED ${totalMonth.toFixed(0)}
-                                                                </div>
-                                                            </div>
-                                                            <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                                                <div style="opacity: 0.8;">${isPositive ? '🎉' : '⚠️'} Economia</div>
-                                                                <div style="font-size: 1.3rem; font-weight: 700; color: ${isPositive ? '#22c55e' : '#ef4444'};">
-                                                                    ${economy > 0 ? '+' : ''}AED ${economy.toFixed(0)}
-                                                                </div>
-                                                                <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                                                    ${isPositive ? 
-                                                                        `Você economizou ${economyPercent.toFixed(1)}% do seu rendimento!` : 
-                                                                        `Gastou AED ${Math.abs(economy).toFixed(0)} a mais que o rendimento`
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                `;
-                                            }
-                                            return '';
-                                        })()}
                                     </div>
                                 </div>
                             `;
