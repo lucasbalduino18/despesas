@@ -1106,6 +1106,145 @@
             }
         }
 
+        function toggleIncomeManager() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                animation: fadeIn 0.2s;
+            `;
+            
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
+            // Criar lista de meses (últimos 12 meses + próximos 6)
+            const months = [];
+            const now = new Date();
+            for (let i = -12; i <= 6; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                const monthKey = `${d.getMonth() + 1}/${d.getFullYear()}`;
+                months.push({
+                    key: monthKey,
+                    display: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+                    value: state.monthlyIncome[monthKey] || 0
+                });
+            }
+            
+            let html = '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); ';
+            html += 'border-radius: 20px; max-width: 500px; max-height: 80vh; overflow: hidden; ';
+            html += 'box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">';
+            
+            // Header
+            html += '<div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); ';
+            html += 'display: flex; justify-content: space-between; align-items: center;">';
+            html += '<h3 style="margin: 0; color: white;">💰 Gerenciar Rendimentos</h3>';
+            html += '<button onclick="this.closest(\\'.modal-overlay\\').remove()" ';
+            html += 'style="background: rgba(255,255,255,0.2); border: none; color: white; ';
+            html += 'width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1.2rem;">×</button>';
+            html += '</div>';
+            
+            // Lista de meses
+            html += '<div style="padding: 20px; overflow-y: auto; max-height: calc(80vh - 140px);">';
+            
+            months.forEach(month => {
+                const isCurrentMonth = month.key === `${now.getMonth() + 1}/${now.getFullYear()}`;
+                html += '<div style="background: rgba(255,255,255,' + (isCurrentMonth ? '0.15' : '0.05') + '); ';
+                html += 'border-radius: 12px; padding: 15px; margin-bottom: 10px; ';
+                html += 'border-left: 4px solid ' + (month.value > 0 ? '#22c55e' : 'rgba(255,255,255,0.2)') + ';">';
+                
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">';
+                html += '<div style="font-weight: 600; color: white;">';
+                html += month.display;
+                if (isCurrentMonth) html += ' <span style="font-size: 0.75rem; opacity: 0.7;">(atual)</span>';
+                html += '</div>';
+                html += '<div style="font-size: 1.1rem; font-weight: 700; color: ' + (month.value > 0 ? '#22c55e' : 'rgba(255,255,255,0.5)') + ';">';
+                html += month.value > 0 ? 'AED ' + month.value.toFixed(0) : 'Não definido';
+                html += '</div>';
+                html += '</div>';
+                
+                html += '<div style="display: flex; gap: 8px;">';
+                html += '<input type="number" id="income_' + month.key.replace('/', '_') + '" ';
+                html += 'placeholder="Digite o rendimento" value="' + (month.value || '') + '" ';
+                html += 'style="flex: 1; padding: 10px; border: 2px solid rgba(255,255,255,0.2); ';
+                html += 'border-radius: 8px; background: rgba(255,255,255,0.1); color: white; font-size: 0.95rem;" />';
+                html += '<button onclick="saveIncomeForMonth(\\'' + month.key + '\\')" ';
+                html += 'style="padding: 10px 16px; background: #22c55e; border: none; ';
+                html += 'border-radius: 8px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap;">💾</button>';
+                html += '</div>';
+                
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            
+            // Footer
+            html += '<div style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); ';
+            html += 'text-align: center; font-size: 0.85rem; color: rgba(255,255,255,0.7);">';
+            html += 'Últimos 12 meses e próximos 6 meses disponíveis';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            modal.innerHTML = html;
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+            
+            document.body.appendChild(modal);
+        }
+
+        async function saveIncomeForMonth(monthKey) {
+            const inputId = 'income_' + monthKey.replace('/', '_');
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            
+            const value = parseFloat(input.value) || 0;
+            if (value < 0) {
+                alert('⚠️ O rendimento não pode ser negativo');
+                return;
+            }
+            
+            try {
+                const url = `${SHEETS_URL}?action=saveIncome&month=${encodeURIComponent(monthKey)}&value=${value}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success) {
+                    state.monthlyIncome[monthKey] = value;
+                    
+                    // Atualizar visual do input
+                    input.style.borderColor = '#22c55e';
+                    setTimeout(() => {
+                        input.style.borderColor = 'rgba(255,255,255,0.2)';
+                    }, 1000);
+                    
+                    // Mostrar feedback
+                    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    const [m, y] = monthKey.split('/');
+                    const monthName = monthNames[parseInt(m) - 1];
+                    
+                    alert(`✅ Rendimento de ${monthName} ${y} salvo: AED ${value.toFixed(0)}`);
+                    
+                    // Reabrir modal atualizado
+                    document.querySelector('.modal-overlay').remove();
+                    toggleIncomeManager();
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar rendimento:', error);
+                alert('❌ Erro ao salvar rendimento. Tente novamente.');
+            }
+        }
+
         function getMonthExpenses() {
             if (!state.expenses || !Array.isArray(state.expenses)) {
                 console.warn('getMonthExpenses: state.expenses inválido', state.expenses);
@@ -2409,8 +2548,13 @@
                             border-radius: 12px;
                             border-left: 4px solid #22c55e;
                         ">
-                            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                💰 Rendimento Mensal
+                            <div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>💰 Rendimento Mensal</span>
+                                <button onclick="toggleIncomeManager()" 
+                                    style="padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; 
+                                    border-radius: 6px; color: white; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
+                                    📋 Gerenciar Todos
+                                </button>
                             </div>
                             ${(() => {
                                 const now = new Date();
