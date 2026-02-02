@@ -2414,86 +2414,53 @@
                             </div>
                             ${(() => {
                                 const now = new Date();
-                                const currentMonthKey = \`\${now.getMonth() + 1}/\${now.getFullYear()}\`;
+                                const currentMonthKey = now.getMonth() + 1 + '/' + now.getFullYear();
                                 const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
                                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                                 
-                                return \`
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display: block; font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">
-                                            Rendimento de \${monthNames[now.getMonth()]} \${now.getFullYear()}
-                                        </label>
-                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                            <input 
-                                                type="number" 
-                                                id="monthlyIncomeInput"
-                                                placeholder="Ex: 15000"
-                                                value="\${currentIncome || ''}"
-                                                style="
-                                                    flex: 1;
-                                                    padding: 12px;
-                                                    border: 2px solid rgba(34, 197, 94, 0.3);
-                                                    border-radius: 8px;
-                                                    background: rgba(255,255,255,0.1);
-                                                    color: white;
-                                                    font-size: 1rem;
-                                                    font-weight: 600;
-                                                "
-                                            />
-                                            <button 
-                                                onclick="saveMonthlyIncome()"
-                                                style="
-                                                    padding: 12px 20px;
-                                                    background: #22c55e;
-                                                    border: none;
-                                                    border-radius: 8px;
-                                                    color: white;
-                                                    font-weight: 600;
-                                                    cursor: pointer;
-                                                    white-space: nowrap;
-                                                "
-                                            >
-                                                💾 Salvar
-                                            </button>
-                                        </div>
-                                    </div>
+                                let html = '<div style="margin-bottom: 15px;">';
+                                html += '<label style="display: block; font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">';
+                                html += 'Rendimento de ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
+                                html += '</label>';
+                                html += '<div style="display: flex; gap: 10px; align-items: center;">';
+                                html += '<input type="number" id="monthlyIncomeInput" placeholder="Ex: 15000" ';
+                                html += 'value="' + (currentIncome || '') + '" ';
+                                html += 'style="flex: 1; padding: 12px; border: 2px solid rgba(34, 197, 94, 0.3); ';
+                                html += 'border-radius: 8px; background: rgba(255,255,255,0.1); color: white; ';
+                                html += 'font-size: 1rem; font-weight: 600;" />';
+                                html += '<button onclick="saveMonthlyIncome()" ';
+                                html += 'style="padding: 12px 20px; background: #22c55e; border: none; ';
+                                html += 'border-radius: 8px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap;">';
+                                html += '💾 Salvar</button>';
+                                html += '</div></div>';
+                                
+                                if (currentIncome > 0) {
+                                    const economy = currentIncome - total;
+                                    const economyPercent = (economy / currentIncome * 100);
+                                    const isPositive = economy > 0;
                                     
-                                    \${currentIncome > 0 ? \`
-                                        <div style="
-                                            padding: 12px;
-                                            background: rgba(34, 197, 94, 0.15);
-                                            border-radius: 8px;
-                                            margin-top: 10px;
-                                        ">
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">
-                                                <div>
-                                                    <div style="opacity: 0.8;">Rendimento</div>
-                                                    <div style="font-size: 1.1rem; font-weight: 700; color: #22c55e;">
-                                                        AED \${currentIncome.toFixed(0)}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div style="opacity: 0.8;">Despesas</div>
-                                                    <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                                        AED \${total.toFixed(0)}
-                                                    </div>
-                                                </div>
-                                                <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                                    <div style="opacity: 0.8;">Economia</div>
-                                                    <div style="font-size: 1.3rem; font-weight: 700; color: \${currentIncome - total > 0 ? '#22c55e' : '#ef4444'};">
-                                                        \${currentIncome - total > 0 ? '💰' : '⚠️'} AED \${(currentIncome - total).toFixed(0)}
-                                                    </div>
-                                                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                                        \${currentIncome - total > 0 ? 
-                                                            \`Você está economizando \${((currentIncome - total) / currentIncome * 100).toFixed(1)}% do rendimento!\` : 
-                                                            \`Gastando AED \${(total - currentIncome).toFixed(0)} a mais que o rendimento\`
-                                                        }
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    \` : ''}
-                                \`;
+                                    html += '<div style="padding: 12px; ';
+                                    html += 'background: ' + (isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)') + '; ';
+                                    html += 'border-radius: 8px; margin-top: 10px;">';
+                                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
+                                    html += '<div><div style="opacity: 0.8;">Rendimento</div>';
+                                    html += '<div style="font-size: 1.1rem; font-weight: 700; color: #22c55e;">AED ' + currentIncome.toFixed(0) + '</div></div>';
+                                    html += '<div><div style="opacity: 0.8;">Despesas</div>';
+                                    html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">AED ' + total.toFixed(0) + '</div></div>';
+                                    html += '<div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">';
+                                    html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' Economia</div>';
+                                    html += '<div style="font-size: 1.3rem; font-weight: 700; color: ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
+                                    html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
+                                    html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
+                                    if (isPositive) {
+                                        html += 'Você economizou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
+                                    } else {
+                                        html += 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento';
+                                    }
+                                    html += '</div></div></div></div>';
+                                }
+                                
+                                return html;
                             })()}
                         </div>
                     </div>
