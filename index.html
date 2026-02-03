@@ -3198,6 +3198,17 @@
                             const [month, year] = monthYear.split('/').map(Number);
                             const expenses = expensesByMonth[monthYear];
                             const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                            
+                            // Calcular despesas fixas do mês
+                            const fixedMonthTotal = state.fixedExpenses.reduce((sum, f) => {
+                                // Verificar se a despesa fixa existe neste mês
+                                // (despesas fixas são sempre do mês atual, mas vamos incluir no cálculo)
+                                return sum + (parseFloat(f.amount) || 0);
+                            }, 0);
+                            
+                            // Total real do mês (variáveis + fixas)
+                            const totalMonthWithFixed = totalMonth + fixedMonthTotal;
+                            
                             const isExpanded = state.expandedMonths[monthYear];
                             
                             // Determinar se ficou acima ou abaixo do limite
@@ -3205,11 +3216,11 @@
                             let statusColor = '';
                             let statusTitle = '';
                             
-                            if (totalMonth > state.goal) {
+                            if (totalMonthWithFixed > (state.goal + state.goalFixed)) {
                                 statusIcon = '🔴';
                                 statusColor = '#ef4444';
                                 statusTitle = 'Acima do limite';
-                            } else if (totalMonth > state.goal * 0.9) {
+                            } else if (totalMonthWithFixed > (state.goal + state.goalFixed) * 0.9) {
                                 statusIcon = '🟡';
                                 statusColor = '#fbbf24';
                                 statusTitle = 'Próximo do limite';
@@ -3227,7 +3238,7 @@
                                             <span title="${statusTitle}" style="font-size: 0.9rem;">${statusIcon}</span>
                                         </span>
                                         <span style="display: flex; align-items: center; gap: 15px;">
-                                            <span>AED ${totalMonth.toFixed(2)}</span>
+                                            <span>AED ${totalMonthWithFixed.toFixed(2)}</span>
                                             <span class="month-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
                                         </span>
                                     </div>
@@ -3259,48 +3270,51 @@
                                         `}).join('')}
                                         
                                         ${(() => {
+                                            // Procurar rendimento com formato correto (M/YYYY sem zero à esquerda)
                                             const monthIncome = state.monthlyIncome[monthYear] || 0;
+                                            
                                             if (monthIncome > 0) {
-                                                const economy = monthIncome - totalMonth;
+                                                const economy = monthIncome - totalMonthWithFixed;
                                                 const economyPercent = (economy / monthIncome * 100);
                                                 const isPositive = economy > 0;
                                                 
-                                                return `
-                                                    <div style="
-                                                        margin-top: 15px;
-                                                        padding: 15px;
-                                                        background: ${isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
-                                                        border-radius: 8px;
-                                                        border-left: 4px solid ${isPositive ? '#22c55e' : '#ef4444'};
-                                                    ">
-                                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">
-                                                            <div>
-                                                                <div style="opacity: 0.8;">💰 Rendimento</div>
-                                                                <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">
-                                                                    AED ${monthIncome.toFixed(0)}
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <div style="opacity: 0.8;">💸 Despesas</div>
-                                                                <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                                                    AED ${totalMonth.toFixed(0)}
-                                                                </div>
-                                                            </div>
-                                                            <div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                                                <div style="opacity: 0.8;">${isPositive ? '🎉' : '⚠️'} Economia</div>
-                                                                <div style="font-size: 1.3rem; font-weight: 700; color: ${isPositive ? '#22c55e' : '#ef4444'};">
-                                                                    ${economy > 0 ? '+' : ''}AED ${economy.toFixed(0)}
-                                                                </div>
-                                                                <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                                                    ${isPositive ? 
-                                                                        `Você economizou ${economyPercent.toFixed(1)}% do seu rendimento!` : 
-                                                                        `Gastou AED ${Math.abs(economy).toFixed(0)} a mais que o rendimento`
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                `;
+                                                let html = '<div style="margin-top: 15px; padding: 15px; ';
+                                                html += 'background: ' + (isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)') + '; ';
+                                                html += 'border-radius: 8px; ';
+                                                html += 'border-left: 4px solid ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
+                                                
+                                                html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
+                                                
+                                                // Rendimento
+                                                html += '<div><div style="opacity: 0.8;">💰 Rendimento</div>';
+                                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">AED ' + monthIncome.toFixed(0) + '</div></div>';
+                                                
+                                                // Despesas Variáveis
+                                                html += '<div><div style="opacity: 0.8;">💸 Variáveis</div>';
+                                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">AED ' + totalMonth.toFixed(0) + '</div></div>';
+                                                
+                                                // Despesas Fixas
+                                                html += '<div><div style="opacity: 0.8;">🔒 Fixas</div>';
+                                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">AED ' + fixedMonthTotal.toFixed(0) + '</div></div>';
+                                                
+                                                // Total e Economia
+                                                html += '<div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">';
+                                                html += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
+                                                html += '<div style="opacity: 0.8;">📊 Total Despesas</div>';
+                                                html += '<div style="font-weight: 700;">AED ' + totalMonthWithFixed.toFixed(0) + '</div>';
+                                                html += '</div>';
+                                                html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' Economia</div>';
+                                                html += '<div style="font-size: 1.3rem; font-weight: 700; color: ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
+                                                html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
+                                                html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
+                                                if (isPositive) {
+                                                    html += 'Você economizou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
+                                                } else {
+                                                    html += 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento';
+                                                }
+                                                html += '</div></div></div></div>';
+                                                
+                                                return html;
                                             }
                                             return '';
                                         })()}
