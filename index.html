@@ -3247,7 +3247,6 @@
                                     <div class="month-header" onclick="toggleMonth('${monthYear}')">
                                         <span style="display: flex; align-items: center; gap: 8px;">
                                             <span>${monthNames[month - 1]} ${year}</span>
-                                            <span title="${statusTitle}" style="font-size: 0.9rem;">${statusIcon}</span>
                                             ${hasIncomeBadge ? `
                                                 <span style="
                                                     font-size: 0.7rem;
@@ -3269,7 +3268,7 @@
                                         </span>
                                         <span style="display: flex; align-items: center; gap: 15px;">
                                             <span style="display: flex; align-items: center; gap: 8px;">
-                                                <span style="font-size: 0.9rem;" title="Despesas Fixas: AED ${fixedMonthTotal.toFixed(0)}${ fixedMonthTotal > state.goalFixed ? ' (Acima do limite!)' : fixedMonthTotal > state.goalFixed * 0.9 ? ' (Próximo do limite)' : ' (Dentro do limite)'}">${ fixedMonthTotal > state.goalFixed ? '🔴' : fixedMonthTotal > state.goalFixed * 0.9 ? '🟡' : '🟢'}🔒</span>
+                                                <span title="${statusTitle}" style="font-size: 0.9rem;">${statusIcon}</span>
                                                 <span>AED ${totalMonthWithFixed.toFixed(2)}</span>
                                             </span>
                                             <span class="month-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
