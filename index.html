@@ -660,6 +660,7 @@
             expandedMonths: {},  // Controla quais meses estão expandidos
             viewingCategoryExpenses: null,  // Categoria sendo visualizada
             selectedCategoryMonth: null,  // Mês selecionado na aba categorias (formato MM/YYYY)
+            selectedDashMonth: null,  // Mês selecionado no dashboard (formato MM/YYYY)
             manualEntry: false  // Controla se está em modo manual ou SMS
         };
 
@@ -1245,13 +1246,24 @@
             }
         }
 
-        function getMonthExpenses() {
+        function getMonthExpenses(monthYear = null) {
             if (!state.expenses || !Array.isArray(state.expenses)) {
                 console.warn('getMonthExpenses: state.expenses inválido', state.expenses);
                 return [];
             }
             
-            const now = new Date();
+            // Se não especificar mês, usa mês atual
+            let targetMonth, targetYear;
+            if (monthYear) {
+                const parts = monthYear.split('/');
+                targetMonth = parseInt(parts[0]) - 1;  // 0-indexed
+                targetYear = parseInt(parts[1]);
+            } else {
+                const now = new Date();
+                targetMonth = now.getMonth();
+                targetYear = now.getFullYear();
+            }
+            
             return state.expenses.filter(e => {
                 if (!e || !e.date) return false;
                 
@@ -1260,7 +1272,7 @@
                 
                 const month = parseInt(parts[1]) - 1;
                 const year = parseInt(parts[2]);
-                return month === now.getMonth() && year === now.getFullYear();
+                return month === targetMonth && year === targetYear;
             });
         }
 
@@ -1924,7 +1936,7 @@
                 return;
             }
 
-            const monthExpenses = getMonthExpenses();
+            const monthExpenses = getMonthExpenses(state.selectedDashMonth);
             const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
             const remaining = state.goal - total;
             const percent = (total / state.goal) * 100;
@@ -1937,6 +1949,31 @@
             if (percent > 90) progressClass = 'danger';
             else if (percent > 70) progressClass = 'warning';
             
+            // Inicializar mês selecionado se não existir
+            if (!state.selectedDashMonth) {
+                const now = new Date();
+                state.selectedDashMonth = `${now.getMonth() + 1}/${now.getFullYear()}`;
+            }
+            
+            // Obter meses disponíveis
+            const availableMonths = {};
+            state.expenses.forEach(e => {
+                if (!e || !e.date) return;
+                const parts = e.date.toString().split('/');
+                if (parts.length < 3) return;
+                const monthYear = `${parts[1]}/${parts[2]}`;
+                availableMonths[monthYear] = true;
+            });
+            
+            const monthsList = Object.keys(availableMonths).sort((a, b) => {
+                const [monthA, yearA] = a.split('/').map(Number);
+                const [monthB, yearB] = b.split('/').map(Number);
+                if (yearA !== yearB) return yearB - yearA;
+                return monthB - monthA;
+            });
+            
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            
             if (state.tab === 'dash') {
                 app.innerHTML = `
                     <div class="tabs">
@@ -1945,6 +1982,48 @@
                         <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
                         <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    </div>
+                    
+                    <!-- Seletor de Mês -->
+                    <div style="
+                        margin: 20px 0;
+                        padding: 15px;
+                        background: rgba(255,255,255,0.05);
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    ">
+                        <div style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">
+                            📅 Visualizar Mês:
+                        </div>
+                        <select 
+                            id="dashMonthSelect"
+                            onchange="state.selectedDashMonth = this.value; render();"
+                            style="
+                                padding: 10px 15px;
+                                background: rgba(255,255,255,0.1);
+                                border: 2px solid rgba(255,255,255,0.3);
+                                border-radius: 8px;
+                                color: white;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 0.95rem;
+                                outline: none;
+                                min-width: 150px;
+                            "
+                        >
+                            ${monthsList.map(monthYear => {
+                                const [m, y] = monthYear.split('/');
+                                const monthName = monthNames[parseInt(m) - 1];
+                                const isSelected = monthYear === state.selectedDashMonth;
+                                return `<option value="${monthYear}" ${isSelected ? 'selected' : ''}>
+                                    ${monthName} ${y}
+                                </option>`;
+                            }).join('')}
+                        </select>
                     </div>
                     
                     <!-- Card do Termômetro de Ritmo -->
