@@ -3243,32 +3243,6 @@
                                         </span>
                                     </div>
                                     <div class="month-expenses ${isExpanded ? 'expanded' : ''}">
-                                        ${expenses.map(e => {
-                                            const amount = parseFloat(e.amount) || 0;
-                                            const merchant = e.merchant || 'Sem nome';
-                                            const date = e.date || '';
-                                            const time = e.time || '';
-                                            const category = e.category || 'outros';
-                                            const obs = e.obs || '';
-                                            
-                                            return `
-                                            <div class="expense-item">
-                                                <div class="expense-info">
-                                                    <div class="expense-merchant">${merchant}</div>
-                                                    <div class="expense-date">${date} às ${time}</div>
-                                                    ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
-                                                    <span class="expense-category" style="background: ${getCategoryColor(category)}">
-                                                        ${getCategoryIcon(category)} ${getCategoryName(category)}
-                                                    </span>
-                                                </div>
-                                                <div style="display:flex; align-items:center;">
-                                                    <div class="expense-amount">AED ${amount.toFixed(2)}</div>
-                                                    <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
-                                                    <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
-                                                </div>
-                                            </div>
-                                        `}).join('')}
-                                        
                                         ${(() => {
                                             // Normalizar chave do mês (remover zero à esquerda)
                                             const normalizeMonthKey = (key) => {
@@ -3285,7 +3259,7 @@
                                             let monthIncome = state.monthlyIncome[normalizedMonthYear] || 
                                                              state.monthlyIncome[monthYear] || 0;
                                             
-                                            // Debug no console
+                                            // Debug no console (opcional - pode remover depois)
                                             if (normalizedMonthYear === '1/2026' || monthYear === '01/2026') {
                                                 console.log('🔍 Debug Janeiro 2026:');
                                                 console.log('  monthYear original:', monthYear);
@@ -3299,7 +3273,7 @@
                                                 const economyPercent = (economy / monthIncome * 100);
                                                 const isPositive = economy > 0;
                                                 
-                                                let html = '<div style="margin-top: 15px; padding: 15px; ';
+                                                let html = '<div style="margin-bottom: 15px; padding: 15px; ';
                                                 html += 'background: ' + (isPositive ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)') + '; ';
                                                 html += 'border-radius: 8px; ';
                                                 html += 'border-left: 4px solid ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
@@ -3339,6 +3313,32 @@
                                             }
                                             return '';
                                         })()}
+                                        
+                                        ${expenses.map(e => {
+                                            const amount = parseFloat(e.amount) || 0;
+                                            const merchant = e.merchant || 'Sem nome';
+                                            const date = e.date || '';
+                                            const time = e.time || '';
+                                            const category = e.category || 'outros';
+                                            const obs = e.obs || '';
+                                            
+                                            return `
+                                            <div class="expense-item">
+                                                <div class="expense-info">
+                                                    <div class="expense-merchant">${merchant}</div>
+                                                    <div class="expense-date">${date} às ${time}</div>
+                                                    ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
+                                                    <span class="expense-category" style="background: ${getCategoryColor(category)}">
+                                                        ${getCategoryIcon(category)} ${getCategoryName(category)}
+                                                    </span>
+                                                </div>
+                                                <div style="display:flex; align-items:center;">
+                                                    <div class="expense-amount">AED ${amount.toFixed(2)}</div>
+                                                    <button class="edit-btn" onclick="startEditExpense(${e.id})">✏️</button>
+                                                    <button class="delete-btn" onclick="deleteExpense(${e.id})">🗑️</button>
+                                                </div>
+                                            </div>
+                                        `}).join('')}
                                     </div>
                                 </div>
                             `;
