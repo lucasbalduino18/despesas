@@ -2676,7 +2676,7 @@
                                     html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
                                     html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
                                     if (isPositive) {
-                                        html += 'Você economizou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
+                                        html += 'Você guardou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
                                     } else {
                                         html += 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento';
                                     }
@@ -3339,7 +3339,7 @@
                                                     display: flex;
                                                     align-items: center;
                                                     gap: 4px;
-                                                " title="${economyForBadge > 0 ? 'Economizou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)}">
+                                                " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)}">
                                                     ${economyForBadge > 0 ? '💚' : '⚠️'}
                                                     ${economyForBadge > 0 ? '+' : ''}${(economyForBadge / 1000).toFixed(1)}K
                                                 </span>
@@ -3414,7 +3414,7 @@
                                                 html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
                                                 html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
                                                 if (isPositive) {
-                                                    html += 'Você economizou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
+                                                    html += 'Você guardou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
                                                 } else {
                                                     html += 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento';
                                                 }
