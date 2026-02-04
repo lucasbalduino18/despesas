@@ -2059,10 +2059,10 @@
                             onchange="state.selectedDashMonth = this.value; render();"
                             style="
                                 padding: 10px 15px;
-                                background: rgba(255,255,255,0.1);
+                                background: rgba(255,255,255,0.95);
                                 border: 2px solid rgba(255,255,255,0.3);
                                 border-radius: 8px;
-                                color: white;
+                                color: #1f2937;
                                 font-weight: 600;
                                 cursor: pointer;
                                 font-size: 0.95rem;
@@ -2074,7 +2074,7 @@
                                 const [m, y] = monthYear.split('/');
                                 const monthName = monthNames[parseInt(m) - 1];
                                 const isSelected = monthYear === state.selectedDashMonth;
-                                return `<option value="${monthYear}" ${isSelected ? 'selected' : ''}>
+                                return `<option value="${monthYear}" ${isSelected ? 'selected' : ''} style="background: white; color: #1f2937; padding: 8px;">
                                     ${monthName} ${y}
                                 </option>`;
                             }).join('')}
