@@ -3270,8 +3270,29 @@
                                         `}).join('')}
                                         
                                         ${(() => {
-                                            // Procurar rendimento com formato correto (M/YYYY sem zero à esquerda)
-                                            const monthIncome = state.monthlyIncome[monthYear] || 0;
+                                            // Normalizar chave do mês (remover zero à esquerda)
+                                            const normalizeMonthKey = (key) => {
+                                                const parts = key.split('/');
+                                                if (parts.length !== 2) return key;
+                                                const month = parseInt(parts[0]); // Remove zero à esquerda
+                                                const year = parts[1];
+                                                return month + '/' + year;
+                                            };
+                                            
+                                            const normalizedMonthYear = normalizeMonthKey(monthYear);
+                                            
+                                            // Tentar ambos os formatos
+                                            let monthIncome = state.monthlyIncome[normalizedMonthYear] || 
+                                                             state.monthlyIncome[monthYear] || 0;
+                                            
+                                            // Debug no console
+                                            if (normalizedMonthYear === '1/2026' || monthYear === '01/2026') {
+                                                console.log('🔍 Debug Janeiro 2026:');
+                                                console.log('  monthYear original:', monthYear);
+                                                console.log('  normalizedMonthYear:', normalizedMonthYear);
+                                                console.log('  monthIncome encontrado:', monthIncome);
+                                                console.log('  Chaves disponíveis:', Object.keys(state.monthlyIncome));
+                                            }
                                             
                                             if (monthIncome > 0) {
                                                 const economy = monthIncome - totalMonthWithFixed;
