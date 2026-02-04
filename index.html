@@ -1984,48 +1984,6 @@
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     
-                    <!-- Seletor de Mês -->
-                    <div style="
-                        margin: 20px 0;
-                        padding: 15px;
-                        background: rgba(255,255,255,0.05);
-                        border-radius: 12px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-between;
-                        gap: 15px;
-                        flex-wrap: wrap;
-                    ">
-                        <div style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">
-                            📅 Visualizar Mês:
-                        </div>
-                        <select 
-                            id="dashMonthSelect"
-                            onchange="state.selectedDashMonth = this.value; render();"
-                            style="
-                                padding: 10px 15px;
-                                background: rgba(255,255,255,0.1);
-                                border: 2px solid rgba(255,255,255,0.3);
-                                border-radius: 8px;
-                                color: white;
-                                font-weight: 600;
-                                cursor: pointer;
-                                font-size: 0.95rem;
-                                outline: none;
-                                min-width: 150px;
-                            "
-                        >
-                            ${monthsList.map(monthYear => {
-                                const [m, y] = monthYear.split('/');
-                                const monthName = monthNames[parseInt(m) - 1];
-                                const isSelected = monthYear === state.selectedDashMonth;
-                                return `<option value="${monthYear}" ${isSelected ? 'selected' : ''}>
-                                    ${monthName} ${y}
-                                </option>`;
-                            }).join('')}
-                        </select>
-                    </div>
-                    
                     <!-- Card do Termômetro de Ritmo -->
                     <div class="ritmo-card">
                         <div class="ritmo-header">
@@ -2079,6 +2037,48 @@
                                 <div class="ritmo-detail-value">${ritmo.progressoMes.toFixed(1)}%</div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Seletor de Mês -->
+                    <div style="
+                        margin: 20px 0;
+                        padding: 15px;
+                        background: rgba(255,255,255,0.05);
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 15px;
+                        flex-wrap: wrap;
+                    ">
+                        <div style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">
+                            📅 Visualizar Mês:
+                        </div>
+                        <select 
+                            id="dashMonthSelect"
+                            onchange="state.selectedDashMonth = this.value; render();"
+                            style="
+                                padding: 10px 15px;
+                                background: rgba(255,255,255,0.1);
+                                border: 2px solid rgba(255,255,255,0.3);
+                                border-radius: 8px;
+                                color: white;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 0.95rem;
+                                outline: none;
+                                min-width: 150px;
+                            "
+                        >
+                            ${monthsList.map(monthYear => {
+                                const [m, y] = monthYear.split('/');
+                                const monthName = monthNames[parseInt(m) - 1];
+                                const isSelected = monthYear === state.selectedDashMonth;
+                                return `<option value="${monthYear}" ${isSelected ? 'selected' : ''}>
+                                    ${monthName} ${y}
+                                </option>`;
+                            }).join('')}
+                        </select>
                     </div>
                     
                     <!-- Card de Limite -->
