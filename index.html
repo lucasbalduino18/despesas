@@ -638,13 +638,16 @@
         
         // Normalizar mês para formato consistente (1/2026, não 01/2026)
         function normalizeMonth(monthYear) {
+            console.log(`🔧 normalizeMonth CHAMADA com: "${monthYear}"`);
             if (!monthYear || typeof monthYear !== 'string') return monthYear;
             const parts = monthYear.split('/');
             if (parts.length !== 2) return monthYear;
             const month = parseInt(parts[0]);
             const year = parseInt(parts[1]);
             if (isNaN(month) || isNaN(year)) return monthYear;
-            return `${month}/${year}`;
+            const resultado = `${month}/${year}`;
+            console.log(`  → Retornando: "${resultado}"`);
+            return resultado;
         }
 
         // Função para formatar apenas números (sem AED) - para página Adicionar
