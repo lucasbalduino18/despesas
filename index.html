@@ -1704,6 +1704,19 @@
                 return;
             }
             
+            // Prevenir duplicação - desabilitar botão
+            const btn = document.getElementById('addFixedBtn');
+            if (btn && btn.disabled) {
+                console.log('⚠️ Botão já desabilitado, ignorando clique duplicado');
+                return; // Já está processando
+            }
+            
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ Salvando...';
+                btn.style.opacity = '0.6';
+            }
+            
             const newFixed = {
                 id: Date.now().toString(),
                 name: name,
@@ -1712,28 +1725,54 @@
                 category: category
             };
             
-            // Adicionar à lista do mês
+            // Inicializar array se não existir
             if (!state.monthlyFixedExpenses[state.selectedFixedMonth]) {
                 state.monthlyFixedExpenses[state.selectedFixedMonth] = [];
             }
             
-            state.monthlyFixedExpenses[state.selectedFixedMonth].push(newFixed);
-            
-            // Salvar no servidor
-            const success = await saveMonthlyFixedExpenses(
-                state.selectedFixedMonth,
-                state.monthlyFixedExpenses[state.selectedFixedMonth]
+            // Verificar se já existe (prevenir duplicação)
+            const exists = state.monthlyFixedExpenses[state.selectedFixedMonth].find(
+                f => f.name === name && f.amount === parseFloat(amount) && f.day === parseInt(day)
             );
             
-            if (success) {
-                state.selectedCategory = null;
-                updateCache();
-                render();
-                alert('✅ Despesa fixa adicionada com sucesso!');
-            } else {
+            if (exists) {
+                alert('⚠️ Esta despesa fixa já existe neste mês!');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '➕ Adicionar Despesa Fixa';
+                    btn.style.opacity = '1';
+                }
+                return;
+            }
+            
+            // Adicionar à lista local
+            state.monthlyFixedExpenses[state.selectedFixedMonth].push(newFixed);
+            
+            try {
+                // Salvar no servidor
+                const success = await saveMonthlyFixedExpenses(
+                    state.selectedFixedMonth,
+                    state.monthlyFixedExpenses[state.selectedFixedMonth]
+                );
+                
+                if (success) {
+                    console.log('✅ Despesa fixa adicionada:', newFixed.name);
+                    state.selectedCategory = null;
+                    updateCache();
+                    render(); // Botão será recriado com estado correto
+                } else {
+                    throw new Error('Falha ao salvar');
+                }
+            } catch (error) {
                 // Reverter se falhou
+                console.error('❌ Erro ao adicionar:', error);
                 state.monthlyFixedExpenses[state.selectedFixedMonth].pop();
                 alert('❌ Erro ao adicionar despesa fixa. Tente novamente.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '➕ Adicionar Despesa Fixa';
+                    btn.style.opacity = '1';
+                }
             }
         }
         
@@ -3194,7 +3233,7 @@
                                 <button class="btn" onclick="cancelEditFixed()" style="background: #6b7280;">❌ Cancelar</button>
                             </div>
                         ` : `
-                            <button class="btn" onclick="addMonthlyFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
+                            <button id="addFixedBtn" class="btn" onclick="addMonthlyFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
                         `}
                     </div>
                     
