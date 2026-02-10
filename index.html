@@ -3112,17 +3112,7 @@
                 // ABA FIXAS - NOVA VERSÃO COM HISTÓRICO MENSAL
                 // ============================================
                 
-                // Inicializar mês selecionado se não existir
-                if (!state.selectedFixedMonth) {
-                    const now = new Date();
-                    state.selectedFixedMonth = `${now.getMonth() + 1}/${now.getFullYear()}`;
-                }
-                
-                // Obter fixas do mês selecionado
-                const currentMonthFixed = state.monthlyFixedExpenses[state.selectedFixedMonth] || [];
-                const totalFixed = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
-                
-                // Criar lista de meses disponíveis
+                // Obter meses disponíveis PRIMEIRO
                 const availableMonths = {};
                 state.expenses.forEach(e => {
                     if (!e.date) return;
@@ -3157,10 +3147,31 @@
                         return monthB - monthA;
                     });
                 
-                // Se selectedFixedMonth não estiver na lista, selecionar o primeiro
+                // Inicializar mês selecionado
+                // Se não existe OU não está na lista, selecionar o primeiro mês com dados
                 if (!state.selectedFixedMonth || !monthsList.includes(state.selectedFixedMonth)) {
-                    state.selectedFixedMonth = monthsList.length > 0 ? monthsList[0] : currentMonthKey;
+                    // Verificar se mês atual tem dados
+                    const currentHasData = state.monthlyFixedExpenses[currentMonthKey] && 
+                                         state.monthlyFixedExpenses[currentMonthKey].length > 0;
+                    
+                    if (currentHasData) {
+                        state.selectedFixedMonth = currentMonthKey;
+                    } else {
+                        // Selecionar primeiro mês que tem fixas
+                        const monthWithData = monthsList.find(m => 
+                            state.monthlyFixedExpenses[m] && 
+                            state.monthlyFixedExpenses[m].length > 0
+                        );
+                        
+                        state.selectedFixedMonth = monthWithData || monthsList[0] || currentMonthKey;
+                    }
+                    
+                    console.log('📅 Mês selecionado automaticamente:', state.selectedFixedMonth);
                 }
+                
+                // Obter fixas do mês selecionado
+                const currentMonthFixed = state.monthlyFixedExpenses[state.selectedFixedMonth] || [];
+                const totalFixed = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
                 
                 // Nomes dos meses
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
