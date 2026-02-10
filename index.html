@@ -1008,18 +1008,25 @@
         
         async function getMonthlyFixedExpenses(month) {
             try {
-                const response = await fetch(`${SHEETS_URL}?action=getMonthlyFixedExpenses&month=${encodeURIComponent(month)}`);
+                const url = `${SHEETS_URL}?action=getMonthlyFixedExpenses&month=${encodeURIComponent(month)}`;
+                console.log('🌐 Chamando API:', url);
+                
+                const response = await fetch(url);
+                console.log('📡 Response status:', response.status);
+                
                 const result = await response.json();
+                console.log('📦 Result completo:', result);
                 
                 if (result.success) {
                     console.log(`✅ Fixas do mês ${month}:`, result.fixedExpenses.length);
+                    console.log('📋 Dados:', result.fixedExpenses);
                     return result.fixedExpenses || [];
                 }
                 
-                console.log(`⚠️ Mês ${month} sem fixas`);
+                console.log(`⚠️ Mês ${month} sem fixas ou erro:`, result);
                 return [];
             } catch (error) {
-                console.error('Erro ao obter fixas mensais:', error);
+                console.error('❌ Erro ao obter fixas mensais:', error);
                 return [];
             }
         }
@@ -1714,7 +1721,13 @@
         
         async function loadMonthlyFixed(month) {
             console.log('📥 Carregando fixas do mês:', month);
+            console.log('📍 URL:', `${SHEETS_URL}?action=getMonthlyFixedExpenses&month=${encodeURIComponent(month)}`);
+            
             const fixedExpenses = await getMonthlyFixedExpenses(month);
+            
+            console.log('📦 Recebido do servidor:', fixedExpenses.length, 'fixas');
+            console.log('📦 Dados:', fixedExpenses);
+            
             state.monthlyFixedExpenses[month] = fixedExpenses;
             updateCache();
             render();
@@ -3380,6 +3393,16 @@
                     
                     <div style="height: 80px;"></div>
                 `;
+                
+                // IMPORTANTE: Carregar fixas do mês selecionado se não estiver no state
+                if (!currentMonthFixed || currentMonthFixed.length === 0) {
+                    console.log('🔄 Carregando fixas do mês', state.selectedFixedMonth);
+                    loadMonthlyFixed(state.selectedFixedMonth).then(() => {
+                        console.log('✅ Fixas carregadas, re-renderizando...');
+                    });
+                } else {
+                    console.log('✅ Já tem', currentMonthFixed.length, 'fixas no state para', state.selectedFixedMonth);
+                }
                 
                 // Popular campos se estiver editando
                 if (state.editingFixed) {
