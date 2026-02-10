@@ -713,6 +713,25 @@
                 console.log('Cache clear failed:', e);
             }
         }
+        
+        function updateCache() {
+            try {
+                console.log('💾 Atualizando cache...');
+                console.log('💾 state.goal:', state.goal);
+                console.log('💾 state.goalFixed:', state.goalFixed);
+                
+                saveCache({
+                    expenses: state.expenses,
+                    fixedExpenses: state.fixedExpenses,
+                    goal: state.goal,
+                    goalFixed: state.goalFixed,
+                    monthlyIncome: state.monthlyIncome
+                });
+                console.log('✅ Cache atualizado com sucesso');
+            } catch (e) {
+                console.log('❌ Erro ao atualizar cache:', e);
+            }
+        }
 
         // ============================================
         // LOAD DATA (OTIMIZADO)
@@ -724,6 +743,10 @@
             if (!forceRefresh) {
                 const cached = loadCache();
                 if (cached) {
+                    console.log('📦 Carregando do cache...');
+                    console.log('📦 cached.goal:', cached.goal);
+                    console.log('📦 cached.goalFixed:', cached.goalFixed);
+                    
                     state.expenses = cached.expenses || [];
                     state.goal = cached.goal || 5000;
                     state.goalFixed = cached.goalFixed || 0;
@@ -731,7 +754,9 @@
                     state.monthlyIncome = cached.monthlyIncome || {};
                     state.loading = false;
                     
-                    console.log('📦 Dados carregados do cache');
+                    console.log('📦 Dados carregados do cache:');
+                    console.log('✅ state.goal:', state.goal);
+                    console.log('✅ state.goalFixed:', state.goalFixed);
                     console.log('Despesas:', state.expenses.length);
                     console.log('Fixas:', state.fixedExpenses.length);
                     console.log('Rendimentos:', Object.keys(state.monthlyIncome).length, 'meses');
@@ -769,10 +794,14 @@
                 // Processar meta
                 if (metaResult.status === 'fulfilled') {
                     const metaData = metaResult.value;
+                    console.log('📥 Dados recebidos do getMeta:', JSON.stringify(metaData));
+                    console.log('📥 metaData.meta:', metaData.meta);
+                    console.log('📥 metaData.metaFixed:', metaData.metaFixed);
+                    
                     state.goal = metaData.meta || 5000;
                     state.goalFixed = metaData.metaFixed || 0;
-                    console.log('✅ Limite Variáveis:', state.goal);
-                    console.log('✅ Limite Fixas:', state.goalFixed);
+                    console.log('✅ Limite Variáveis carregado:', state.goal);
+                    console.log('✅ Limite Fixas carregado:', state.goalFixed);
                 } else {
                     console.error('❌ Erro meta:', metaResult.reason);
                     state.goal = 5000;
