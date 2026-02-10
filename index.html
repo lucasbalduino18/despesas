@@ -662,6 +662,7 @@
             monthlyFixedExpenses: {},  // NOVO: Fixas por mês {"1/2026": [...], "2/2026": [...]}
             goal: 5000,         // Limite de variáveis
             goalFixed: 0,       // Limite de fixas
+            yearlyGoal: 0,      // NOVO: Meta de economia anual
             monthlyIncome: {},  // Nova: rendimentos por mês (formato: "MM/YYYY": valor)
             sms: '',
             loading: true,
@@ -827,15 +828,19 @@
                     console.log('📥 Dados recebidos do getMeta:', JSON.stringify(metaData));
                     console.log('📥 metaData.meta:', metaData.meta);
                     console.log('📥 metaData.metaFixed:', metaData.metaFixed);
+                    console.log('📥 metaData.yearlyGoal:', metaData.yearlyGoal);
                     
                     state.goal = metaData.meta || 5000;
                     state.goalFixed = metaData.metaFixed || 0;
+                    state.yearlyGoal = metaData.yearlyGoal || 0;
                     console.log('✅ Limite Variáveis carregado:', state.goal);
                     console.log('✅ Limite Fixas carregado:', state.goalFixed);
+                    console.log('✅ Meta Anual carregada:', state.yearlyGoal);
                 } else {
                     console.error('❌ Erro meta:', metaResult.reason);
                     state.goal = 5000;
                     state.goalFixed = 0;
+                    state.yearlyGoal = 0;
                 }
                 
                 // Processar fixas
@@ -973,7 +978,7 @@
         }
 
         async function updateGoalInSheets(valor) {
-            const url = `${SHEETS_URL}?action=setMeta&goal=${valor}&goalFixed=${state.goalFixed}`;
+            const url = `${SHEETS_URL}?action=setMeta&goal=${valor}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}`;
             
             try {
                 const response = await fetch(url);
@@ -987,7 +992,7 @@
         }
         
         async function updateGoalFixedInSheets(valor) {
-            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${valor}`;
+            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${valor}&yearlyGoal=${state.yearlyGoal}`;
             
             try {
                 const response = await fetch(url);
@@ -996,6 +1001,20 @@
                 return result.success;
             } catch (error) {
                 console.error('Erro ao atualizar limite fixas:', error);
+                return false;
+            }
+        }
+        
+        async function updateYearlyGoalInSheets(valor) {
+            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${valor}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                console.log('✅ Meta anual atualizada:', valor);
+                return result.success;
+            } catch (error) {
+                console.error('Erro ao atualizar meta anual:', error);
                 return false;
             }
         }
@@ -1283,6 +1302,25 @@
                 render();
             } else {
                 alert('❌ Erro ao atualizar limite de fixas. Tente novamente.');
+            }
+        }
+        
+        async function updateYearlyGoal(value) {
+            const newYearlyGoal = parseFloat(value) || 0;
+            console.log('📝 Atualizando meta anual:', newYearlyGoal);
+            
+            const success = await updateYearlyGoalInSheets(newYearlyGoal);
+            
+            if (success) {
+                state.yearlyGoal = newYearlyGoal;
+                console.log('✅ state.yearlyGoal atualizado para:', state.yearlyGoal);
+                
+                // Atualizar cache também
+                updateCache();
+                
+                render();
+            } else {
+                alert('❌ Erro ao atualizar meta anual. Tente novamente.');
             }
         }
 
@@ -2780,6 +2818,182 @@
                             })()}
                         </div>
                     </div>
+                    
+                    <!-- Card Economia Anual -->
+                    ${(() => {
+                        if (state.yearlyGoal === 0) return ''; // Só mostra se tiver meta definida
+                        
+                        const currentYear = new Date().getFullYear();
+                        
+                        // Calcular economia de cada mês do ano atual
+                        let yearlyEconomy = 0;
+                        const monthsWithData = [];
+                        
+                        for (let month = 1; month <= 12; month++) {
+                            const monthKey = `${month}/${currentYear}`;
+                            
+                            // Pegar rendimento do mês
+                            const monthIncome = state.monthlyIncome[monthKey] || 0;
+                            
+                            if (monthIncome > 0) {
+                                // Pegar despesas variáveis do mês
+                                const monthExpenses = state.expenses.filter(e => {
+                                    if (!e || !e.date) return false;
+                                    const parts = e.date.split('/');
+                                    if (parts.length < 3) return false;
+                                    const expenseMonth = normalizeMonth(`${parts[1]}/${parts[2]}`);
+                                    return expenseMonth === monthKey;
+                                });
+                                const monthVariables = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                                
+                                // Pegar despesas fixas do mês
+                                const monthFixed = state.monthlyFixedExpenses[monthKey] || [];
+                                const monthFixedTotal = monthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                                
+                                // Economia do mês = Rendimento - (Variáveis + Fixas)
+                                const monthEconomy = monthIncome - (monthVariables + monthFixedTotal);
+                                yearlyEconomy += monthEconomy;
+                                
+                                if (monthEconomy !== 0) {
+                                    monthsWithData.push({
+                                        month,
+                                        economy: monthEconomy
+                                    });
+                                }
+                            }
+                        }
+                        
+                        const percentOfGoal = state.yearlyGoal > 0 ? (yearlyEconomy / state.yearlyGoal) * 100 : 0;
+                        const remaining = state.yearlyGoal - yearlyEconomy;
+                        const isOnTrack = yearlyEconomy >= 0;
+                        
+                        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                        const currentMonth = new Date().getMonth() + 1;
+                        const monthsElapsed = currentMonth;
+                        const expectedEconomy = (state.yearlyGoal / 12) * monthsElapsed;
+                        const isAhead = yearlyEconomy >= expectedEconomy;
+                        
+                        return `
+                            <div class="card" style="margin-top: 20px;">
+                                <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                    🎯 Economia Anual ${currentYear}
+                                </h3>
+                                
+                                <!-- Progresso Geral -->
+                                <div style="
+                                    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+                                    border: 2px solid rgba(34, 197, 94, 0.5);
+                                    padding: 20px;
+                                    border-radius: 12px;
+                                    margin-bottom: 20px;
+                                ">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                        <div>
+                                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
+                                                💰 Economizado no Ano
+                                            </div>
+                                            <div style="font-size: 0.75rem; opacity: 0.7;">
+                                                ${monthsWithData.length} ${monthsWithData.length === 1 ? 'mês' : 'meses'} com dados
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 2rem; font-weight: 700; color: ${isOnTrack ? '#22c55e' : '#ef4444'};">
+                                                ${formatAED(yearlyEconomy)}
+                                            </div>
+                                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                                ${percentOfGoal.toFixed(1)}% da meta
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Barra de Progresso -->
+                                    <div style="
+                                        width: 100%;
+                                        height: 12px;
+                                        background: rgba(255,255,255,0.1);
+                                        border-radius: 6px;
+                                        overflow: hidden;
+                                        margin-bottom: 10px;
+                                    ">
+                                        <div style="
+                                            width: ${Math.min(Math.max(percentOfGoal, 0), 100)}%;
+                                            height: 100%;
+                                            background: linear-gradient(90deg, #22c55e, #10b981);
+                                            transition: width 0.3s;
+                                        "></div>
+                                    </div>
+                                    
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="font-size: 0.8rem; opacity: 0.7;">
+                                            Meta: ${formatAED(state.yearlyGoal)}
+                                        </div>
+                                        <div style="
+                                            font-size: 0.9rem;
+                                            font-weight: 700;
+                                            color: ${remaining > 0 ? '#fbbf24' : '#22c55e'};
+                                        ">
+                                            ${remaining > 0 ? 'Faltam' : 'Superou em'}: ${formatAED(Math.abs(remaining))}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Status do Ritmo -->
+                                <div style="
+                                    background: rgba(255,255,255,0.05);
+                                    padding: 15px;
+                                    border-radius: 8px;
+                                    border-left: 4px solid ${isAhead ? '#22c55e' : '#fbbf24'};
+                                ">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 5px;">
+                                                ${isAhead ? '🚀 Acima do Esperado!' : '⏰ Atenção ao Ritmo'}
+                                            </div>
+                                            <div style="font-size: 0.75rem; opacity: 0.7;">
+                                                Esperado até ${monthNames[currentMonth - 1]}: ${formatAED(expectedEconomy)}
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 1.2rem; font-weight: 700; color: ${isAhead ? '#22c55e' : '#fbbf24'};">
+                                                ${isAhead ? '+' : ''}${formatAED(yearlyEconomy - expectedEconomy)}
+                                            </div>
+                                            <div style="font-size: 0.7rem; opacity: 0.6;">
+                                                ${isAhead ? 'acima' : 'abaixo'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Economia Mensal Média -->
+                                ${monthsWithData.length > 0 ? `
+                                    <div style="
+                                        margin-top: 15px;
+                                        padding: 15px;
+                                        background: rgba(255,255,255,0.05);
+                                        border-radius: 8px;
+                                    ">
+                                        <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; opacity: 0.9;">
+                                            📊 Detalhes
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                            <div>
+                                                <div style="font-size: 0.75rem; opacity: 0.7;">Média Mensal</div>
+                                                <div style="font-size: 1.1rem; font-weight: 700;">
+                                                    ${formatAED(yearlyEconomy / monthsWithData.length)}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div style="font-size: 0.75rem; opacity: 0.7;">Meta Mensal</div>
+                                                <div style="font-size: 1.1rem; font-weight: 700;">
+                                                    ${formatAED(state.yearlyGoal / 12)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    })()}
                 `;
             } else if (state.tab === 'add') {
                 const monthExpenses = getMonthExpenses();
@@ -3052,6 +3266,17 @@
                             </div>
                             <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
                                 Variáveis (${formatAEDShort(state.goal)}) + Fixas (${formatAEDShort(state.goalFixed)})
+                            </div>
+                        </div>
+                        
+                        <!-- Card de Meta Anual de Economia -->
+                        <div class="input-group" style="margin-top: 20px;">
+                            <label class="label">🎯 Meta de Economia Anual (AED):</label>
+                            <input type="number" id="yearlyGoalInput" value="${state.yearlyGoal}" 
+                                   onblur="updateYearlyGoal(this.value)" 
+                                   style="font-size: 1.1rem; font-weight: 600;">
+                            <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
+                                Quanto você deseja economizar este ano?
                             </div>
                         </div>
                         
