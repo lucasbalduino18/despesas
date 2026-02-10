@@ -3872,6 +3872,17 @@
                             
                             // Calcular despesas fixas DO MÊS ESPECÍFICO
                             const monthlyFixed = state.monthlyFixedExpenses[monthYear] || [];
+                            
+                            // DEBUG
+                            if (monthYear === '1/2026') {
+                                console.log('🔍 DEBUG Janeiro 2026:');
+                                console.log('  monthYear:', monthYear);
+                                console.log('  state.monthlyFixedExpenses:', state.monthlyFixedExpenses);
+                                console.log('  Chaves disponíveis:', Object.keys(state.monthlyFixedExpenses));
+                                console.log('  monthlyFixed:', monthlyFixed);
+                                console.log('  monthlyFixed.length:', monthlyFixed.length);
+                            }
+                            
                             const fixedMonthTotal = monthlyFixed.reduce((sum, f) => {
                                 return sum + (parseFloat(f.amount) || 0);
                             }, 0);
