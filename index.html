@@ -885,11 +885,12 @@
         }
 
         async function updateGoalInSheets(valor) {
-            const url = `${SHEETS_URL}?action=setMeta&valor=${valor}`;
+            const url = `${SHEETS_URL}?action=setMeta&goal=${valor}&goalFixed=${state.goalFixed}`;
             
             try {
                 const response = await fetch(url);
                 const result = await response.json();
+                console.log('✅ Limite variáveis atualizado:', valor);
                 return result.success;
             } catch (error) {
                 console.error('Erro ao atualizar limite:', error);
@@ -898,11 +899,12 @@
         }
         
         async function updateGoalFixedInSheets(valor) {
-            const url = `${SHEETS_URL}?action=setMeta&tipo=fixed&valor=${valor}`;
+            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${valor}`;
             
             try {
                 const response = await fetch(url);
                 const result = await response.json();
+                console.log('✅ Limite fixas atualizado:', valor);
                 return result.success;
             } catch (error) {
                 console.error('Erro ao atualizar limite fixas:', error);
@@ -1054,10 +1056,18 @@
 
         async function updateGoal(value) {
             const newGoal = parseFloat(value) || 0;
+            console.log('📝 Atualizando limite variáveis:', newGoal);
+            console.log('📝 Limite fixas atual:', state.goalFixed);
+            
             const success = await updateGoalInSheets(newGoal);
             
             if (success) {
                 state.goal = newGoal;
+                console.log('✅ state.goal atualizado para:', state.goal);
+                
+                // Atualizar cache também
+                updateCache();
+                
                 render();
             } else {
                 alert('❌ Erro ao atualizar limite. Tente novamente.');
@@ -1066,10 +1076,18 @@
         
         async function updateGoalFixed(value) {
             const newGoalFixed = parseFloat(value) || 0;
+            console.log('📝 Atualizando limite fixas:', newGoalFixed);
+            console.log('📝 Limite variáveis atual:', state.goal);
+            
             const success = await updateGoalFixedInSheets(newGoalFixed);
             
             if (success) {
                 state.goalFixed = newGoalFixed;
+                console.log('✅ state.goalFixed atualizado para:', state.goalFixed);
+                
+                // Atualizar cache também
+                updateCache();
+                
                 render();
             } else {
                 alert('❌ Erro ao atualizar limite de fixas. Tente novamente.');
