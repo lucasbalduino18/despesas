@@ -647,7 +647,8 @@
         const state = {
             tab: 'add',
             expenses: [],
-            fixedExpenses: [],  // Nova: despesas fixas
+            fixedExpenses: [],  // DEPRECATED: Mantido para compatibilidade
+            monthlyFixedExpenses: {},  // NOVO: Fixas por mês {"1/2026": [...], "2/2026": [...]}
             goal: 5000,         // Limite de variáveis
             goalFixed: 0,       // Limite de fixas
             monthlyIncome: {},  // Nova: rendimentos por mês (formato: "MM/YYYY": valor)
@@ -656,6 +657,7 @@
             selectedCategory: null,
             editingExpense: null,
             editingFixed: null,  // Nova: editando despesa fixa
+            selectedFixedMonth: null,  // NOVO: Mês selecionado na aba Fixas
             obs: '',
             expandedMonths: {},  // Controla quais meses estão expandidos
             viewingCategoryExpenses: null,  // Categoria sendo visualizada
@@ -723,6 +725,7 @@
                 saveCache({
                     expenses: state.expenses,
                     fixedExpenses: state.fixedExpenses,
+                    monthlyFixedExpenses: state.monthlyFixedExpenses,
                     goal: state.goal,
                     goalFixed: state.goalFixed,
                     monthlyIncome: state.monthlyIncome
@@ -751,6 +754,7 @@
                     state.goal = cached.goal || 5000;
                     state.goalFixed = cached.goalFixed || 0;
                     state.fixedExpenses = cached.fixedExpenses || [];
+                    state.monthlyFixedExpenses = cached.monthlyFixedExpenses || {};
                     state.monthlyIncome = cached.monthlyIncome || {};
                     state.loading = false;
                     
@@ -759,6 +763,7 @@
                     console.log('✅ state.goalFixed:', state.goalFixed);
                     console.log('Despesas:', state.expenses.length);
                     console.log('Fixas:', state.fixedExpenses.length);
+                    console.log('Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses');
                     console.log('Rendimentos:', Object.keys(state.monthlyIncome).length, 'meses');
                     
                     if (wasLoading) {
@@ -774,11 +779,12 @@
                 console.log('Force Refresh:', forceRefresh);
                 
                 // REQUESTS PARALELOS - Todas ao mesmo tempo
-                const [despesasResult, metaResult, fixedResult, incomeResult] = await Promise.allSettled([
+                const [despesasResult, metaResult, fixedResult, incomeResult, monthlyFixedResult] = await Promise.allSettled([
                     fetch(`${SHEETS_URL}?action=getDespesas`).then(r => r.json()),
                     fetch(`${SHEETS_URL}?action=getMeta`).then(r => r.json()),
                     fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json()),
-                    fetch(`${SHEETS_URL}?action=getIncome`).then(r => r.json())
+                    fetch(`${SHEETS_URL}?action=getIncome`).then(r => r.json()),
+                    fetch(`${SHEETS_URL}?action=getAllMonthlyFixed`).then(r => r.json())
                 ]);
                 
                 // Processar despesas
@@ -827,11 +833,26 @@
                     console.log('⚠️ Rendimentos não disponíveis');
                     state.monthlyIncome = {};
                 }
+                
+                // Processar fixas mensais (NOVO)
+                if (monthlyFixedResult.status === 'fulfilled') {
+                    const monthlyFixedData = monthlyFixedResult.value;
+                    if (monthlyFixedData.success) {
+                        state.monthlyFixedExpenses = monthlyFixedData.monthlyFixed || {};
+                        console.log('✅ Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses');
+                    } else {
+                        state.monthlyFixedExpenses = {};
+                    }
+                } else {
+                    console.log('⚠️ Fixas mensais não disponíveis');
+                    state.monthlyFixedExpenses = {};
+                }
 
                 // Salvar cache
                 saveCache({
                     expenses: state.expenses,
                     fixedExpenses: state.fixedExpenses,
+                    monthlyFixedExpenses: state.monthlyFixedExpenses,
                     goal: state.goal,
                     goalFixed: state.goalFixed,
                     monthlyIncome: state.monthlyIncome
@@ -951,6 +972,103 @@
             } catch (error) {
                 console.error('Erro ao atualizar despesa:', error);
                 return false;
+            }
+        }
+
+        // ============================================
+        // API - FIXAS MENSAIS (NOVAS)
+        // ============================================
+        
+        async function getMonthlyFixedExpenses(month) {
+            try {
+                const response = await fetch(`${SHEETS_URL}?action=getMonthlyFixedExpenses&month=${encodeURIComponent(month)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Fixas do mês ${month}:`, result.fixedExpenses.length);
+                    return result.fixedExpenses || [];
+                }
+                
+                console.log(`⚠️ Mês ${month} sem fixas`);
+                return [];
+            } catch (error) {
+                console.error('Erro ao obter fixas mensais:', error);
+                return [];
+            }
+        }
+        
+        async function saveMonthlyFixedExpenses(month, expenses) {
+            try {
+                const dataStr = JSON.stringify(expenses);
+                const response = await fetch(`${SHEETS_URL}?action=saveMonthlyFixedExpenses&month=${encodeURIComponent(month)}&data=${encodeURIComponent(dataStr)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Fixas do mês ${month} salvas`);
+                    return true;
+                }
+                
+                console.error('Erro ao salvar fixas:', result.error);
+                return false;
+            } catch (error) {
+                console.error('Erro ao salvar fixas mensais:', error);
+                return false;
+            }
+        }
+        
+        async function copyFixedFromPreviousMonth(fromMonth, toMonth) {
+            try {
+                const response = await fetch(`${SHEETS_URL}?action=copyFixedFromPreviousMonth&fromMonth=${encodeURIComponent(fromMonth)}&toMonth=${encodeURIComponent(toMonth)}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Copiadas ${result.count} fixas de ${fromMonth} para ${toMonth}`);
+                    return true;
+                }
+                
+                console.error('Erro ao copiar fixas:', result.error);
+                alert(result.error || 'Erro ao copiar despesas do mês anterior');
+                return false;
+            } catch (error) {
+                console.error('Erro ao copiar fixas:', error);
+                alert('Erro ao copiar despesas do mês anterior');
+                return false;
+            }
+        }
+        
+        async function deleteMonthlyFixed(month, id) {
+            try {
+                const response = await fetch(`${SHEETS_URL}?action=deleteMonthlyFixed&month=${encodeURIComponent(month)}&id=${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Fixa deletada do mês ${month}`);
+                    return true;
+                }
+                
+                console.error('Erro ao deletar fixa:', result.error);
+                return false;
+            } catch (error) {
+                console.error('Erro ao deletar fixa mensal:', error);
+                return false;
+            }
+        }
+        
+        async function getAllMonthlyFixed() {
+            try {
+                const response = await fetch(`${SHEETS_URL}?action=getAllMonthlyFixed`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Todas as fixas mensais:`, Object.keys(result.monthlyFixed || {}).length, 'meses');
+                    return result.monthlyFixed || {};
+                }
+                
+                console.log('⚠️ Nenhuma fixa mensal cadastrada');
+                return {};
+            } catch (error) {
+                console.error('Erro ao obter todas as fixas mensais:', error);
+                return {};
             }
         }
 
@@ -1563,6 +1681,173 @@
             }, 10);
         }
 
+        // ============================================
+        // FUNÇÕES - FIXAS MENSAIS (NOVAS)
+        // ============================================
+        
+        async function loadMonthlyFixed(month) {
+            console.log('📥 Carregando fixas do mês:', month);
+            const fixedExpenses = await getMonthlyFixedExpenses(month);
+            state.monthlyFixedExpenses[month] = fixedExpenses;
+            updateCache();
+            render();
+        }
+        
+        async function addMonthlyFixedExpense() {
+            const name = document.getElementById('fixedName').value.trim();
+            const amount = document.getElementById('fixedAmount').value;
+            const day = document.getElementById('fixedDay').value;
+            const category = state.selectedCategory;
+            
+            if (!name || !amount || !day || !category) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+            
+            const newFixed = {
+                id: Date.now().toString(),
+                name: name,
+                amount: parseFloat(amount),
+                day: parseInt(day),
+                category: category
+            };
+            
+            // Adicionar à lista do mês
+            if (!state.monthlyFixedExpenses[state.selectedFixedMonth]) {
+                state.monthlyFixedExpenses[state.selectedFixedMonth] = [];
+            }
+            
+            state.monthlyFixedExpenses[state.selectedFixedMonth].push(newFixed);
+            
+            // Salvar no servidor
+            const success = await saveMonthlyFixedExpenses(
+                state.selectedFixedMonth,
+                state.monthlyFixedExpenses[state.selectedFixedMonth]
+            );
+            
+            if (success) {
+                state.selectedCategory = null;
+                updateCache();
+                render();
+                alert('✅ Despesa fixa adicionada com sucesso!');
+            } else {
+                // Reverter se falhou
+                state.monthlyFixedExpenses[state.selectedFixedMonth].pop();
+                alert('❌ Erro ao adicionar despesa fixa. Tente novamente.');
+            }
+        }
+        
+        function editMonthlyFixedExpense(id) {
+            state.editingFixed = id;
+            
+            const fixed = state.monthlyFixedExpenses[state.selectedFixedMonth].find(f => f.id == id);
+            if (fixed) {
+                state.selectedCategory = fixed.category;
+            }
+            
+            render();
+        }
+        
+        async function saveMonthlyFixedExpense() {
+            const name = document.getElementById('fixedName').value.trim();
+            const amount = document.getElementById('fixedAmount').value;
+            const day = document.getElementById('fixedDay').value;
+            const category = state.selectedCategory;
+            
+            if (!name || !amount || !day || !category) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+            
+            // Atualizar na lista do mês
+            const fixedIndex = state.monthlyFixedExpenses[state.selectedFixedMonth].findIndex(f => f.id == state.editingFixed);
+            
+            if (fixedIndex !== -1) {
+                state.monthlyFixedExpenses[state.selectedFixedMonth][fixedIndex] = {
+                    ...state.monthlyFixedExpenses[state.selectedFixedMonth][fixedIndex],
+                    name: name,
+                    amount: parseFloat(amount),
+                    day: parseInt(day),
+                    category: category
+                };
+                
+                // Salvar no servidor
+                const success = await saveMonthlyFixedExpenses(
+                    state.selectedFixedMonth,
+                    state.monthlyFixedExpenses[state.selectedFixedMonth]
+                );
+                
+                if (success) {
+                    state.editingFixed = null;
+                    state.selectedCategory = null;
+                    updateCache();
+                    render();
+                    alert('✅ Despesa fixa atualizada com sucesso!');
+                } else {
+                    alert('❌ Erro ao atualizar despesa fixa. Tente novamente.');
+                }
+            }
+        }
+        
+        async function deleteMonthlyFixedExpense(id) {
+            if (!confirm('Tem certeza que deseja excluir esta despesa fixa deste mês?')) {
+                return;
+            }
+            
+            // Remover da lista local
+            const originalList = [...state.monthlyFixedExpenses[state.selectedFixedMonth]];
+            state.monthlyFixedExpenses[state.selectedFixedMonth] = state.monthlyFixedExpenses[state.selectedFixedMonth].filter(f => f.id != id);
+            
+            // Deletar no servidor
+            const success = await deleteMonthlyFixed(state.selectedFixedMonth, id);
+            
+            if (success) {
+                updateCache();
+                render();
+                alert('✅ Despesa fixa excluída com sucesso!');
+            } else {
+                // Reverter se falhou
+                state.monthlyFixedExpenses[state.selectedFixedMonth] = originalList;
+                alert('❌ Erro ao excluir despesa fixa. Tente novamente.');
+            }
+        }
+        
+        async function copyFromPrevMonth() {
+            const [currentMonthNum, currentYearNum] = state.selectedFixedMonth.split('/').map(Number);
+            const previousMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+            const previousYearNum = currentMonthNum === 1 ? currentYearNum - 1 : currentYearNum;
+            const previousMonth = `${previousMonthNum}/${previousYearNum}`;
+            
+            if (!state.monthlyFixedExpenses[previousMonth] || state.monthlyFixedExpenses[previousMonth].length === 0) {
+                alert('❌ Mês anterior não possui despesas fixas cadastradas.');
+                return;
+            }
+            
+            if (state.monthlyFixedExpenses[state.selectedFixedMonth] && state.monthlyFixedExpenses[state.selectedFixedMonth].length > 0) {
+                alert('❌ Este mês já possui despesas fixas cadastradas. Delete-as primeiro se quiser copiar do mês anterior.');
+                return;
+            }
+            
+            if (!confirm(`Copiar ${state.monthlyFixedExpenses[previousMonth].length} despesas fixas do mês anterior?`)) {
+                return;
+            }
+            
+            // Copiar no servidor
+            const success = await copyFixedFromPreviousMonth(previousMonth, state.selectedFixedMonth);
+            
+            if (success) {
+                // Recarregar fixas do mês atual
+                await loadMonthlyFixed(state.selectedFixedMonth);
+                alert('✅ Despesas fixas copiadas com sucesso!');
+            }
+        }
+        
+        function cancelEditFixed() {
+            state.editingFixed = null;
+            state.selectedCategory = null;
+            render();
+        }
+
         // Colar SMS da área de transferência
         async function pasteFromClipboard() {
             try {
@@ -1985,6 +2270,11 @@
 
             const monthExpenses = getMonthExpenses(state.selectedDashMonth);
             const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+            
+            // Obter fixas do mês selecionado
+            const monthlyFixed = state.monthlyFixedExpenses[state.selectedDashMonth] || [];
+            const totalFixed = monthlyFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+            
             const remaining = state.goal - total;
             const percent = (total / state.goal) * 100;
             const avg = monthExpenses.length ? total / monthExpenses.length : 0;
@@ -2226,12 +2516,12 @@
                                             💳 Despesas Fixas
                                         </div>
                                         <div style="font-size: 0.75rem; opacity: 0.6;">
-                                            ${state.fixedExpenses.length} despesas fixas
+                                            ${monthlyFixed.length} despesas fixas
                                         </div>
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-size: 1.5rem; font-weight: 700; color: #fb923c;">
-                                            ${formatAED(state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0))}
+                                            ${formatAED(totalFixed)}
                                         </div>
                                     </div>
                                 </div>
@@ -2255,10 +2545,10 @@
                                     </div>
                                     <div style="text-align: right;">
                                         <div style="font-size: 2rem; font-weight: 700; color: #fff;">
-                                            ${formatAED(total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0))}
+                                            ${formatAED(total + totalFixed)}
                                         </div>
                                         <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                            ${(((total + state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0)) / (state.goal + state.goalFixed)) * 100).toFixed(1)}% do limite total
+                                            ${(((total + totalFixed) / (state.goal + state.goalFixed)) * 100).toFixed(1)}% do limite total
                                         </div>
                                     </div>
                                 </div>
@@ -2267,7 +2557,7 @@
                             <!-- Comparação com Limite -->
                             ${(() => {
                                 const totalVariaveis = total;
-                                const totalFixas = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                                const totalFixas = totalFixed;
                                 const totalGeral = totalVariaveis + totalFixas;
                                 const limiteTotal = state.goal + state.goalFixed;
                                 
@@ -2744,10 +3034,57 @@
                 }, 100);
             } else if (state.tab === 'fixed') {
                 // ============================================
-                // ABA FIXAS
+                // ABA FIXAS - NOVA VERSÃO COM HISTÓRICO MENSAL
                 // ============================================
                 
-                const totalFixed = state.fixedExpenses.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                // Inicializar mês selecionado se não existir
+                if (!state.selectedFixedMonth) {
+                    const now = new Date();
+                    state.selectedFixedMonth = `${now.getMonth() + 1}/${now.getFullYear()}`;
+                }
+                
+                // Obter fixas do mês selecionado
+                const currentMonthFixed = state.monthlyFixedExpenses[state.selectedFixedMonth] || [];
+                const totalFixed = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                
+                // Criar lista de meses disponíveis
+                const availableMonths = {};
+                state.expenses.forEach(e => {
+                    if (!e.date) return;
+                    const parts = e.date.split('/');
+                    if (parts.length >= 3) {
+                        const monthYear = `${parts[1]}/${parts[2]}`;
+                        availableMonths[monthYear] = true;
+                    }
+                });
+                
+                // Adicionar mês atual
+                const now = new Date();
+                const currentMonthKey = `${now.getMonth() + 1}/${now.getFullYear()}`;
+                availableMonths[currentMonthKey] = true;
+                
+                // Adicionar meses que têm fixas
+                Object.keys(state.monthlyFixedExpenses).forEach(month => {
+                    availableMonths[month] = true;
+                });
+                
+                // Ordenar meses (mais recente primeiro)
+                const monthsList = Object.keys(availableMonths).sort((a, b) => {
+                    const [monthA, yearA] = a.split('/').map(Number);
+                    const [monthB, yearB] = b.split('/').map(Number);
+                    if (yearB !== yearA) return yearB - yearA;
+                    return monthB - monthA;
+                });
+                
+                // Nomes dos meses
+                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                
+                // Calcular mês anterior
+                const [currentMonthNum, currentYearNum] = state.selectedFixedMonth.split('/').map(Number);
+                const previousMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+                const previousYearNum = currentMonthNum === 1 ? currentYearNum - 1 : currentYearNum;
+                const previousMonth = `${previousMonthNum}/${previousYearNum}`;
+                const hasPreviousMonth = state.monthlyFixedExpenses[previousMonth] && state.monthlyFixedExpenses[previousMonth].length > 0;
                 
                 app.innerHTML = `
                     <div class="tabs">
@@ -2758,8 +3095,40 @@
                         <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
                     </div>
                     
+                    <!-- Seletor de Mês -->
+                    <div class="card" style="padding: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <label style="display: block; font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">📅 Selecione o Mês:</label>
+                                <select 
+                                    style="width: 100%; padding: 10px; background: rgba(255,255,255,0.95); border: none; border-radius: 8px; font-size: 1rem; color: #1f2937; font-weight: 600;"
+                                    onchange="state.selectedFixedMonth = this.value; loadMonthlyFixed(this.value);"
+                                >
+                                    ${monthsList.map(monthYear => {
+                                        const [m, y] = monthYear.split('/');
+                                        const monthName = monthNames[parseInt(m) - 1];
+                                        const isSelected = monthYear === state.selectedFixedMonth;
+                                        const hasData = state.monthlyFixedExpenses[monthYear] && state.monthlyFixedExpenses[monthYear].length > 0;
+                                        return `<option value="${monthYear}" ${isSelected ? 'selected' : ''}>${monthName} ${y}${hasData ? ' ✓' : ''}</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                            
+                            ${hasPreviousMonth && currentMonthFixed.length === 0 ? `
+                                <button 
+                                    onclick="copyFromPrevMonth()"
+                                    class="btn"
+                                    style="background: #8b5cf6; padding: 10px 20px; white-space: nowrap;"
+                                >
+                                    📋 Copiar do Mês Anterior
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- Formulário de Adicionar/Editar -->
                     <div class="card">
-                        <h3 style="margin-bottom: 20px;">💳 ${state.editingFixed ? 'Editar' : 'Nova'} Despesa Fixa</h3>
+                        <h3 style="margin-bottom: 20px;">💳 ${state.editingFixed ? 'Editar' : 'Nova'} Despesa Fixa - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
                         
                         <div class="input-group">
                             <label class="label">Nome da despesa:</label>
@@ -2795,28 +3164,42 @@
                         
                         ${state.editingFixed ? `
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                                <button class="btn" onclick="saveFixedExpense()" style="background: #22c55e;">💾 Salvar</button>
+                                <button class="btn" onclick="saveMonthlyFixedExpense()" style="background: #22c55e;">💾 Salvar</button>
                                 <button class="btn" onclick="cancelEditFixed()" style="background: #6b7280;">❌ Cancelar</button>
                             </div>
                         ` : `
-                            <button class="btn" onclick="addFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
+                            <button class="btn" onclick="addMonthlyFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
                         `}
                     </div>
                     
+                    <!-- Lista de Despesas Fixas do Mês -->
                     <div class="card">
-                        <h3 style="margin-bottom: 15px;">📋 Minhas Despesas Fixas</h3>
+                        <h3 style="margin-bottom: 15px;">📋 Despesas Fixas - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
                         
-                        ${state.fixedExpenses.length === 0 ? `
-                            <div class="empty">📭<br>Nenhuma despesa fixa cadastrada</div>
+                        ${currentMonthFixed.length === 0 ? `
+                            <div class="empty" style="padding: 40px 20px;">
+                                📭<br>
+                                <div style="font-size: 1rem; margin-top: 10px;">Nenhuma despesa fixa cadastrada neste mês</div>
+                                ${hasPreviousMonth ? `
+                                    <button 
+                                        onclick="copyFromPrevMonth()"
+                                        class="btn"
+                                        style="margin-top: 15px; background: #8b5cf6;"
+                                    >
+                                        📋 Copiar do Mês Anterior
+                                    </button>
+                                ` : ''}
+                            </div>
                         ` : `
                             <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                                <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Total de Despesas Fixas por Mês</div>
+                                <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Total de Despesas Fixas</div>
                                 <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">AED ${totalFixed.toFixed(2)}</div>
+                                <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;">${currentMonthFixed.length} despesa${currentMonthFixed.length !== 1 ? 's' : ''}</div>
                             </div>
                             
                             <div style="display: flex; flex-direction: column; gap: 10px;">
-                                ${state.fixedExpenses
-                                    .sort((a, b) => a.day - b.day)
+                                ${currentMonthFixed
+                                    .sort((a, b) => (a.day || 0) - (b.day || 0))
                                     .map(fixed => {
                                         const cat = CATEGORIES.find(c => c.id === fixed.category);
                                         return `
@@ -2846,34 +3229,34 @@
                                                 </div>
                                                 <div style="display: flex; gap: 8px; margin-top: 10px;">
                                                     <button 
-                                                        onclick="editFixedExpense(${fixed.id})"
+                                                        onclick="editMonthlyFixedExpense('${fixed.id}')"
                                                         style="
                                                             flex: 1;
                                                             padding: 8px;
-                                                            background: rgba(59, 130, 246, 0.2);
-                                                            border: 1px solid rgba(59, 130, 246, 0.3);
+                                                            background: rgba(59, 130, 246, 0.8);
+                                                            border: none;
                                                             border-radius: 8px;
-                                                            color: #60a5fa;
+                                                            color: white;
+                                                            font-weight: 600;
                                                             cursor: pointer;
-                                                            font-size: 0.85rem;
                                                         "
                                                     >
                                                         ✏️ Editar
                                                     </button>
                                                     <button 
-                                                        onclick="deleteFixedExpense(${fixed.id})"
+                                                        onclick="deleteMonthlyFixedExpense('${fixed.id}')"
                                                         style="
                                                             flex: 1;
                                                             padding: 8px;
-                                                            background: rgba(239, 68, 68, 0.2);
-                                                            border: 1px solid rgba(239, 68, 68, 0.3);
+                                                            background: rgba(239, 68, 68, 0.8);
+                                                            border: none;
                                                             border-radius: 8px;
-                                                            color: #f87171;
+                                                            color: white;
+                                                            font-weight: 600;
                                                             cursor: pointer;
-                                                            font-size: 0.85rem;
                                                         "
                                                     >
-                                                        🗑️ Deletar
+                                                        🗑️ Excluir
                                                     </button>
                                                 </div>
                                             </div>
@@ -2882,7 +3265,23 @@
                             </div>
                         `}
                     </div>
+                    
+                    <div style="height: 80px;"></div>
                 `;
+                
+                // Popular campos se estiver editando
+                if (state.editingFixed) {
+                    setTimeout(() => {
+                        const fixed = currentMonthFixed.find(f => f.id == state.editingFixed);
+                        if (fixed) {
+                            document.getElementById('fixedName').value = fixed.name;
+                            document.getElementById('fixedAmount').value = fixed.amount;
+                            document.getElementById('fixedDay').value = fixed.day;
+                            state.selectedCategory = fixed.category;
+                            render();
+                        }
+                    }, 10);
+                }
             } else if (state.tab === 'categories') {
                 // Obter todos os meses disponíveis
                 const expensesByMonth = {};
@@ -3325,10 +3724,9 @@
                             const expenses = expensesByMonth[monthYear];
                             const totalMonth = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
                             
-                            // Calcular despesas fixas do mês
-                            const fixedMonthTotal = state.fixedExpenses.reduce((sum, f) => {
-                                // Verificar se a despesa fixa existe neste mês
-                                // (despesas fixas são sempre do mês atual, mas vamos incluir no cálculo)
+                            // Calcular despesas fixas DO MÊS ESPECÍFICO
+                            const monthlyFixed = state.monthlyFixedExpenses[monthYear] || [];
+                            const fixedMonthTotal = monthlyFixed.reduce((sum, f) => {
                                 return sum + (parseFloat(f.amount) || 0);
                             }, 0);
                             
