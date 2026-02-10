@@ -3833,8 +3833,9 @@
                         return;
                     }
                     
-                    const monthYear = `${parts[1]}/${parts[2]}`;
-                    if (index < 3) console.log(`  - monthYear:`, monthYear);
+                    const rawMonthYear = `${parts[1]}/${parts[2]}`;
+                    const monthYear = normalizeMonth(rawMonthYear);  // ✅ NORMALIZAR AQUI!
+                    if (index < 3) console.log(`  - monthYear RAW:`, rawMonthYear, `→ normalizado:`, monthYear);
                     
                     if (!expensesByMonth[monthYear]) {
                         expensesByMonth[monthYear] = [];
