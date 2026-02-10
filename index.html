@@ -3610,7 +3610,7 @@
                                 if (selectedMonth && e.date) {
                                     const parts = e.date.toString().split('/');
                                     if (parts.length >= 3) {
-                                        const monthYear = `${parts[1]}/${parts[2]}`;
+                                        const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
                                         if (monthYear !== selectedMonth) return;
                                     }
                                 }
