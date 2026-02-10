@@ -635,6 +635,17 @@
                 maximumFractionDigits: 0
             }).format(value);
         }
+        
+        // Normalizar mês para formato consistente (1/2026, não 01/2026)
+        function normalizeMonth(monthYear) {
+            if (!monthYear || typeof monthYear !== 'string') return monthYear;
+            const parts = monthYear.split('/');
+            if (parts.length !== 2) return monthYear;
+            const month = parseInt(parts[0]);
+            const year = parseInt(parts[1]);
+            if (isNaN(month) || isNaN(year)) return monthYear;
+            return `${month}/${year}`;
+        }
 
         // Função para formatar apenas números (sem AED) - para página Adicionar
         function formatNumberShort(value) {
@@ -2101,7 +2112,7 @@
                 if (!e || !e.date) return;
                 const parts = e.date.toString().split('/');
                 if (parts.length < 3) return;
-                const monthYear = `${parts[1]}/${parts[2]}`;
+                const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
                 expensesByMonth[monthYear] = true;
             });
             
@@ -2154,7 +2165,7 @@
                 if (!e.date) return false;
                 const parts = e.date.toString().split('/');
                 if (parts.length < 3) return false;
-                const monthYear = `${parts[1]}/${parts[2]}`;
+                const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
                 return monthYear === selectedMonth;
             });
             
@@ -2386,7 +2397,7 @@
                 if (!e || !e.date) return;
                 const parts = e.date.toString().split('/');
                 if (parts.length < 3) return;
-                const monthYear = `${parts[1]}/${parts[2]}`;
+                const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
                 availableMonths[monthYear] = true;
             });
             
@@ -3424,7 +3435,7 @@
                     if (!e || !e.date || !e.amount) return;
                     const parts = e.date.toString().split('/');
                     if (parts.length < 3) return;
-                    const monthYear = `${parts[1]}/${parts[2]}`;
+                    const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
                     if (!expensesByMonth[monthYear]) {
                         expensesByMonth[monthYear] = [];
                     }
