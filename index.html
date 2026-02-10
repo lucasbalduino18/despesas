@@ -3053,8 +3053,10 @@
                     if (!e.date) return;
                     const parts = e.date.split('/');
                     if (parts.length >= 3) {
-                        const monthYear = `${parts[1]}/${parts[2]}`;
-                        availableMonths[monthYear] = true;
+                        const monthYear = `${parseInt(parts[1])}/${parts[2]}`;
+                        if (monthYear && !monthYear.includes('undefined') && !monthYear.includes('NaN')) {
+                            availableMonths[monthYear] = true;
+                        }
                     }
                 });
                 
@@ -3065,26 +3067,50 @@
                 
                 // Adicionar meses que têm fixas
                 Object.keys(state.monthlyFixedExpenses).forEach(month => {
-                    availableMonths[month] = true;
+                    if (month && !month.includes('undefined') && !month.includes('NaN')) {
+                        availableMonths[month] = true;
+                    }
                 });
                 
-                // Ordenar meses (mais recente primeiro)
-                const monthsList = Object.keys(availableMonths).sort((a, b) => {
-                    const [monthA, yearA] = a.split('/').map(Number);
-                    const [monthB, yearB] = b.split('/').map(Number);
-                    if (yearB !== yearA) return yearB - yearA;
-                    return monthB - monthA;
-                });
+                // Ordenar meses (mais recente primeiro) e filtrar inválidos
+                const monthsList = Object.keys(availableMonths)
+                    .filter(m => m && !m.includes('undefined') && !m.includes('NaN'))
+                    .sort((a, b) => {
+                        const [monthA, yearA] = a.split('/').map(Number);
+                        const [monthB, yearB] = b.split('/').map(Number);
+                        if (yearB !== yearA) return yearB - yearA;
+                        return monthB - monthA;
+                    });
+                
+                // Se selectedFixedMonth não estiver na lista, selecionar o primeiro
+                if (!state.selectedFixedMonth || !monthsList.includes(state.selectedFixedMonth)) {
+                    state.selectedFixedMonth = monthsList.length > 0 ? monthsList[0] : currentMonthKey;
+                }
                 
                 // Nomes dos meses
                 const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                 
-                // Calcular mês anterior
-                const [currentMonthNum, currentYearNum] = state.selectedFixedMonth.split('/').map(Number);
-                const previousMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
-                const previousYearNum = currentMonthNum === 1 ? currentYearNum - 1 : currentYearNum;
-                const previousMonth = `${previousMonthNum}/${previousYearNum}`;
-                const hasPreviousMonth = state.monthlyFixedExpenses[previousMonth] && state.monthlyFixedExpenses[previousMonth].length > 0;
+                // Calcular mês anterior (com validação)
+                let currentMonthNum, currentYearNum, previousMonthNum, previousYearNum, previousMonth, hasPreviousMonth;
+                
+                if (state.selectedFixedMonth && state.selectedFixedMonth.includes('/')) {
+                    const parts = state.selectedFixedMonth.split('/');
+                    currentMonthNum = parseInt(parts[0]) || new Date().getMonth() + 1;
+                    currentYearNum = parseInt(parts[1]) || new Date().getFullYear();
+                    previousMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+                    previousYearNum = currentMonthNum === 1 ? currentYearNum - 1 : currentYearNum;
+                    previousMonth = `${previousMonthNum}/${previousYearNum}`;
+                    hasPreviousMonth = state.monthlyFixedExpenses[previousMonth] && state.monthlyFixedExpenses[previousMonth].length > 0;
+                } else {
+                    // Fallback para mês atual
+                    const now = new Date();
+                    currentMonthNum = now.getMonth() + 1;
+                    currentYearNum = now.getFullYear();
+                    previousMonthNum = currentMonthNum === 1 ? 12 : currentMonthNum - 1;
+                    previousYearNum = currentMonthNum === 1 ? currentYearNum - 1 : currentYearNum;
+                    previousMonth = `${previousMonthNum}/${previousYearNum}`;
+                    hasPreviousMonth = false;
+                }
                 
                 app.innerHTML = `
                     <div class="tabs">
