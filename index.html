@@ -1772,28 +1772,37 @@
                 return;
             }
             
-            // Adicionar à lista local
-            state.monthlyFixedExpenses[state.selectedFixedMonth].push(newFixed);
-            
             try {
+                // Criar array temporário para salvar (state atual + nova)
+                const updatedList = [...state.monthlyFixedExpenses[state.selectedFixedMonth], newFixed];
+                
+                console.log(`📝 Salvando ${updatedList.length} fixas no servidor...`);
+                
                 // Salvar no servidor
                 const success = await saveMonthlyFixedExpenses(
                     state.selectedFixedMonth,
-                    state.monthlyFixedExpenses[state.selectedFixedMonth]
+                    updatedList
                 );
                 
                 if (success) {
-                    console.log('✅ Despesa fixa adicionada:', newFixed.name);
+                    console.log('✅ Salvo! Recarregando do servidor...');
+                    
+                    // IMPORTANTE: Recarregar do servidor para garantir sincronização
+                    await loadMonthlyFixed(state.selectedFixedMonth);
+                    
+                    // Limpar formulário
                     state.selectedCategory = null;
-                    updateCache();
-                    render(); // Botão será recriado com estado correto
+                    document.getElementById('fixedName').value = '';
+                    document.getElementById('fixedAmount').value = '';
+                    document.getElementById('fixedDay').value = '';
+                    
+                    console.log('✅ Despesa fixa adicionada com sucesso!');
                 } else {
                     throw new Error('Falha ao salvar');
                 }
             } catch (error) {
-                // Reverter se falhou
+                // Em caso de erro, não modifica o state
                 console.error('❌ Erro ao adicionar:', error);
-                state.monthlyFixedExpenses[state.selectedFixedMonth].pop();
                 alert('❌ Erro ao adicionar despesa fixa. Tente novamente.');
                 if (btn) {
                     btn.disabled = false;
