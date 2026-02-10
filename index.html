@@ -754,7 +754,20 @@
                     state.goal = cached.goal || 5000;
                     state.goalFixed = cached.goalFixed || 0;
                     state.fixedExpenses = cached.fixedExpenses || [];
-                    state.monthlyFixedExpenses = cached.monthlyFixedExpenses || {};
+                    
+                    // Filtrar fixas mensais inválidas do cache
+                    const cleanedFixed = {};
+                    Object.keys(cached.monthlyFixedExpenses || {}).forEach(month => {
+                        if (month && 
+                            !month.includes('undefined') && 
+                            !month.includes('NaN') && 
+                            month !== '0/0' &&
+                            month.includes('/')) {
+                            cleanedFixed[month] = cached.monthlyFixedExpenses[month];
+                        }
+                    });
+                    state.monthlyFixedExpenses = cleanedFixed;
+                    
                     state.monthlyIncome = cached.monthlyIncome || {};
                     state.loading = false;
                     
@@ -838,8 +851,22 @@
                 if (monthlyFixedResult.status === 'fulfilled') {
                     const monthlyFixedData = monthlyFixedResult.value;
                     if (monthlyFixedData.success) {
-                        state.monthlyFixedExpenses = monthlyFixedData.monthlyFixed || {};
-                        console.log('✅ Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses');
+                        // Filtrar meses inválidos
+                        const cleanedFixed = {};
+                        Object.keys(monthlyFixedData.monthlyFixed || {}).forEach(month => {
+                            if (month && 
+                                !month.includes('undefined') && 
+                                !month.includes('NaN') && 
+                                month !== '0/0' &&
+                                month.includes('/')) {
+                                cleanedFixed[month] = monthlyFixedData.monthlyFixed[month];
+                            } else {
+                                console.warn('⚠️ Mês inválido ignorado:', month);
+                            }
+                        });
+                        
+                        state.monthlyFixedExpenses = cleanedFixed;
+                        console.log('✅ Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses válidos');
                     } else {
                         state.monthlyFixedExpenses = {};
                     }
