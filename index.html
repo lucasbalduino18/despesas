@@ -3431,16 +3431,40 @@
             } else if (state.tab === 'categories') {
                 // Obter todos os meses disponíveis
                 const expensesByMonth = {};
+                let processCount = 0;
+                let skipCount = 0;
+                
                 state.expenses.forEach(e => {
-                    if (!e || !e.date || !e.amount) return;
+                    if (!e || !e.date || !e.amount) {
+                        skipCount++;
+                        return;
+                    }
                     const parts = e.date.toString().split('/');
-                    if (parts.length < 3) return;
-                    const monthYear = normalizeMonth(`${parts[1]}/${parts[2]}`);
+                    if (parts.length < 3) {
+                        skipCount++;
+                        return;
+                    }
+                    
+                    const rawMonthYear = `${parts[1]}/${parts[2]}`;
+                    const monthYear = normalizeMonth(rawMonthYear);
+                    
+                    // DEBUG primeira despesa de cada mês
+                    if (!expensesByMonth[monthYear]) {
+                        console.log(`📅 Novo mês detectado: "${rawMonthYear}" → normalizado: "${monthYear}"`);
+                    }
+                    
                     if (!expensesByMonth[monthYear]) {
                         expensesByMonth[monthYear] = [];
                     }
                     expensesByMonth[monthYear].push(e);
+                    processCount++;
                 });
+                
+                console.log('=== RESUMO PROCESSAMENTO ===');
+                console.log('Processadas:', processCount);
+                console.log('Puladas:', skipCount);
+                console.log('Meses encontrados:', Object.keys(expensesByMonth));
+                console.log('expensesByMonth:', expensesByMonth);
 
                 const months = Object.keys(expensesByMonth).sort((a, b) => {
                     const [monthA, yearA] = a.split('/').map(Number);
@@ -3874,13 +3898,16 @@
                             const monthlyFixed = state.monthlyFixedExpenses[monthYear] || [];
                             
                             // DEBUG
-                            if (monthYear === '1/2026') {
-                                console.log('🔍 DEBUG Janeiro 2026:');
+                            console.log(`🔍 Processando mês: "${monthYear}"`);
+                            console.log(`  Chaves em state.monthlyFixedExpenses:`, Object.keys(state.monthlyFixedExpenses));
+                            console.log(`  monthlyFixed para "${monthYear}":`, monthlyFixed.length, 'fixas');
+                            
+                            if (monthYear === '1/2026' || monthYear === '01/2026') {
+                                console.log('🚨 JANEIRO 2026 DETECTADO!');
                                 console.log('  monthYear:', monthYear);
-                                console.log('  state.monthlyFixedExpenses:', state.monthlyFixedExpenses);
-                                console.log('  Chaves disponíveis:', Object.keys(state.monthlyFixedExpenses));
-                                console.log('  monthlyFixed:', monthlyFixed);
-                                console.log('  monthlyFixed.length:', monthlyFixed.length);
+                                console.log('  state.monthlyFixedExpenses completo:', state.monthlyFixedExpenses);
+                                console.log('  Tentando acessar:', `state.monthlyFixedExpenses["${monthYear}"]`);
+                                console.log('  Resultado:', state.monthlyFixedExpenses[monthYear]);
                             }
                             
                             const fixedMonthTotal = monthlyFixed.reduce((sum, f) => {
