@@ -2310,27 +2310,31 @@
             doc.text('Rendimentos da Familia (2026)', 14, yPos);
             yPos += 10;
             
-            const incomeTableData = monthlyData.map(m => [
-                m.month,
-                m.income > 0 ? m.income.toFixed(2) : '0'
-            ]);
-            incomeTableData.push(['Total Ano', totalIncome.toFixed(2)]);
+            // Montar linha com todos os 12 meses
+            const incomeMonthlyRow = [];
+            for (let i = 0; i < 12; i++) {
+                incomeMonthlyRow.push(monthlyData[i].income > 0 ? monthlyData[i].income.toFixed(0) : '0');
+            }
+            incomeMonthlyRow.push(totalIncome.toFixed(0));
+            
+            const incomeTableData = [
+                ['Total de Renda da familia', ...incomeMonthlyRow]
+            ];
             
             doc.autoTable({
                 startY: yPos,
-                head: [['Mês', 'Rendimento (AED)']],
+                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
                 body: incomeTableData,
                 theme: 'grid',
-                headStyles: { fillColor: [34, 197, 94], textColor: 255 },
-                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 8 },
+                styles: { fontSize: 8, cellPadding: 2 },
                 columnStyles: {
-                    0: { cellWidth: 50 },
-                    1: { cellWidth: 70, halign: 'right' }
+                    0: { cellWidth: 45, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold', fillColor: [240, 253, 244] }
                 },
                 didParseCell: function(data) {
-                    if (data.row.index === incomeTableData.length - 1) {
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [240, 253, 244];
+                    if (data.column.index > 0 && data.column.index < 13) {
+                        data.cell.styles.halign = 'right';
                     }
                 }
             });
@@ -2475,27 +2479,31 @@
             doc.text('Total de Despesas da Familia', 14, yPos);
             yPos += 10;
             
-            const totalExpensesRow = monthlyData.map(m => [
-                m.month,
-                m.total > 0 ? m.total.toFixed(0) : '0'
-            ]);
-            totalExpensesRow.push(['Total Ano', totalExpenses.toFixed(0)]);
+            // Montar linha com todos os 12 meses
+            const totalExpensesMonthlyRow = [];
+            for (let i = 0; i < 12; i++) {
+                totalExpensesMonthlyRow.push(monthlyData[i].total > 0 ? monthlyData[i].total.toFixed(0) : '0');
+            }
+            totalExpensesMonthlyRow.push(totalExpenses.toFixed(0));
+            
+            const totalExpensesTableData = [
+                ['Total de Despesas da familia', ...totalExpensesMonthlyRow]
+            ];
             
             doc.autoTable({
                 startY: yPos,
-                head: [['Mês', 'Total (AED)']],
-                body: totalExpensesRow,
+                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
+                body: totalExpensesTableData,
                 theme: 'grid',
-                headStyles: { fillColor: [239, 68, 68], textColor: 255 },
-                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 8 },
+                styles: { fontSize: 8, cellPadding: 2 },
                 columnStyles: {
-                    0: { cellWidth: 50 },
-                    1: { cellWidth: 70, halign: 'right' }
+                    0: { cellWidth: 45, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226] }
                 },
                 didParseCell: function(data) {
-                    if (data.row.index === totalExpensesRow.length - 1) {
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [254, 226, 226];
+                    if (data.column.index > 0 && data.column.index < 13) {
+                        data.cell.styles.halign = 'right';
                     }
                 }
             });
@@ -2513,31 +2521,35 @@
             doc.text('Balanco Mensal', 14, yPos);
             yPos += 10;
             
-            const balanceTableData = monthlyData.map(m => [
-                m.month,
-                m.balance.toFixed(0)
-            ]);
-            balanceTableData.push(['Saldo Final', totalBalance.toFixed(0)]);
+            // Montar linha com todos os 12 meses
+            const balanceMonthlyRow = [];
+            for (let i = 0; i < 12; i++) {
+                balanceMonthlyRow.push(monthlyData[i].balance.toFixed(0));
+            }
+            balanceMonthlyRow.push(totalBalance.toFixed(0));
+            
+            const balanceTableData = [
+                ['Balanco', ...balanceMonthlyRow]
+            ];
             
             doc.autoTable({
                 startY: yPos,
-                head: [['Mês', 'Balanço (AED)']],
+                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Saldo Final']],
                 body: balanceTableData,
                 theme: 'grid',
-                headStyles: { fillColor: [102, 126, 234], textColor: 255 },
-                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [102, 126, 234], textColor: 255, fontSize: 8 },
+                styles: { fontSize: 8, cellPadding: 2 },
                 columnStyles: {
-                    0: { cellWidth: 50 },
-                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold' }
+                    0: { cellWidth: 45, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold', fillColor: totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226] }
                 },
                 didParseCell: function(data) {
-                    if (data.column.index === 1 && data.row.index < balanceTableData.length) {
-                        const value = parseFloat(data.cell.text[0].replace(',', ''));
+                    if (data.column.index > 0) {
+                        data.cell.styles.halign = 'right';
+                        data.cell.styles.fontStyle = 'bold';
+                        // Colorir valores positivos e negativos
+                        const value = parseFloat(data.cell.text[0] || '0');
                         data.cell.styles.textColor = value >= 0 ? [34, 197, 94] : [248, 113, 113];
-                    }
-                    if (data.row.index === balanceTableData.length - 1) {
-                        data.cell.styles.fillColor = totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226];
-                        data.cell.styles.fontSize = 11;
                     }
                 }
             });
