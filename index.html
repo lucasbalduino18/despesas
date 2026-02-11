@@ -2299,11 +2299,9 @@
             
             yPos = doc.lastAutoTable.finalY + 15;
             
-            // TABELA UNIFICADA - Todas as seções em uma única tabela
-            if (yPos > 170) {
-                doc.addPage();
-                yPos = 20;
-            }
+            // TABELA UNIFICADA - Nova página dedicada
+            doc.addPage();
+            yPos = 20;
             
             // Preparar dados de Rendimentos
             const incomeMonthlyRow = [];
@@ -2432,10 +2430,12 @@
                 head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
                 body: unifiedTableData,
                 theme: 'grid',
-                headStyles: { fillColor: [102, 126, 234], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 7, cellPadding: 2 },
+                headStyles: { fillColor: [102, 126, 234], textColor: 255, fontSize: 7, cellPadding: 1 },
+                styles: { fontSize: 6, cellPadding: 1, minCellHeight: 3 },
+                pageBreak: 'avoid',
+                rowPageBreak: 'avoid',
                 columnStyles: {
-                    0: { cellWidth: 35, fontSize: 8 },
+                    0: { cellWidth: 35, fontSize: 7 },
                     13: { halign: 'right', fontStyle: 'bold' }
                 },
                 didParseCell: function(data) {
