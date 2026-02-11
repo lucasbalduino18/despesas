@@ -2442,6 +2442,15 @@
                         data.cell.styles.halign = 'right';
                     }
                     
+                    // Indentação para linhas de detalhes de Fixas e Variáveis
+                    // (entre header e total de cada seção)
+                    const isFixedDetailRow = rowIndex > fixedHeaderIndex && rowIndex < fixedTotalIndex;
+                    const isVariableDetailRow = rowIndex > variableHeaderIndex && rowIndex < variableTotalIndex;
+                    
+                    if ((isFixedDetailRow || isVariableDetailRow) && colIndex === 0) {
+                        data.cell.styles.cellPadding = { left: 4, top: 1, right: 1, bottom: 1 }; // Margem esquerda
+                    }
+                    
                     // Estilizar linha de Rendimentos (header com valores)
                     if (rowIndex === incomeHeaderIndex) {
                         data.cell.styles.fillColor = [34, 197, 94]; // Verde
@@ -2470,17 +2479,13 @@
                         if (colIndex > 0) data.cell.styles.halign = 'right';
                     }
                     
-                    // Estilizar linha de Balanço (header com valores)
+                    // Estilizar linha de Balanço (header com valores) - VERDE
                     if (rowIndex === balanceHeaderIndex) {
-                        data.cell.styles.fillColor = [102, 126, 234]; // Azul
+                        data.cell.styles.fillColor = [34, 197, 94]; // Verde (igual Rendimentos)
                         data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = 255; // Branco
                         if (colIndex > 0) {
                             data.cell.styles.halign = 'right';
-                            // Colorir valores de balanço
-                            const value = parseFloat(data.cell.text[0] || '0');
-                            data.cell.styles.textColor = value >= 0 ? [255, 255, 255] : [255, 200, 200]; // Branco ou rosa claro
-                        } else {
-                            data.cell.styles.textColor = 255; // Branco para o título
                         }
                     }
                 }
