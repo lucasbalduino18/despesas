@@ -2390,9 +2390,8 @@
             
             // Montar tabela unificada
             const unifiedTableData = [
-                // Header de Rendimentos
-                [{ content: 'Rendimentos', colSpan: 14, styles: { fillColor: [34, 197, 94], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
-                ['Total de Renda da familia', ...incomeMonthlyRow],
+                // Header de Rendimentos COM valores
+                ['Rendimentos', ...incomeMonthlyRow],
                 
                 // Header de Despesas Fixas
                 [{ content: 'Despesas Fixas', colSpan: 14, styles: { fillColor: [251, 146, 60], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
@@ -2404,25 +2403,21 @@
                 ...variableRows,
                 variableTotalRow,
                 
-                // Header de Total de Despesas
-                [{ content: 'Total de Despesas', colSpan: 14, styles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
-                ['Total de Despesas da familia', ...totalExpensesRow],
+                // Header de Total de Despesas COM valores
+                ['Total de Despesas', ...totalExpensesRow],
                 
-                // Header de Balanço
-                [{ content: 'Balanco', colSpan: 14, styles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                // Header de Balanço COM valores
                 ['Balanco', ...balanceRow]
             ];
             
-            // Calcular índices das linhas especiais
+            // Calcular índices das linhas especiais (ajustados após remover linhas)
             const incomeHeaderIndex = 0;
-            const incomeTotalIndex = 1;
-            const fixedHeaderIndex = 2;
-            const fixedTotalIndex = 2 + fixedRows.length + 1;
+            const fixedHeaderIndex = 1;
+            const fixedTotalIndex = 1 + fixedRows.length + 1;
             const variableHeaderIndex = fixedTotalIndex + 1;
             const variableTotalIndex = variableHeaderIndex + variableRows.length + 1;
             const totalExpensesHeaderIndex = variableTotalIndex + 1;
-            const totalExpensesTotalIndex = totalExpensesHeaderIndex + 1;
-            const balanceHeaderIndex = totalExpensesTotalIndex + 1;
+            const balanceHeaderIndex = totalExpensesHeaderIndex + 1;
             const balanceTotalIndex = balanceHeaderIndex + 1;
             
             doc.autoTable({
@@ -2447,36 +2442,45 @@
                         data.cell.styles.halign = 'right';
                     }
                     
-                    // Estilizar linha de totais de cada seção
-                    if (rowIndex === incomeTotalIndex) {
-                        data.cell.styles.fillColor = [240, 253, 244]; // Verde claro
-                        if (colIndex > 0) data.cell.styles.fontStyle = 'bold';
+                    // Estilizar linha de Rendimentos (header com valores)
+                    if (rowIndex === incomeHeaderIndex) {
+                        data.cell.styles.fillColor = [34, 197, 94]; // Verde
+                        data.cell.styles.textColor = 255; // Branco
+                        data.cell.styles.fontStyle = 'bold';
+                        if (colIndex > 0) data.cell.styles.halign = 'right';
                     }
                     
+                    // Estilizar linha de total de Fixas
                     if (rowIndex === fixedTotalIndex) {
                         data.cell.styles.fillColor = [255, 237, 213]; // Laranja claro
                         data.cell.styles.fontStyle = 'bold';
                     }
                     
+                    // Estilizar linha de total de Variáveis
                     if (rowIndex === variableTotalIndex) {
                         data.cell.styles.fillColor = [237, 233, 254]; // Roxo claro
                         data.cell.styles.fontStyle = 'bold';
                     }
                     
-                    if (rowIndex === totalExpensesTotalIndex) {
-                        data.cell.styles.fillColor = [254, 226, 226]; // Vermelho claro
-                        if (colIndex > 0) data.cell.styles.fontStyle = 'bold';
+                    // Estilizar linha de Total de Despesas (header com valores)
+                    if (rowIndex === totalExpensesHeaderIndex) {
+                        data.cell.styles.fillColor = [239, 68, 68]; // Vermelho
+                        data.cell.styles.textColor = 255; // Branco
+                        data.cell.styles.fontStyle = 'bold';
+                        if (colIndex > 0) data.cell.styles.halign = 'right';
                     }
                     
-                    if (rowIndex === balanceTotalIndex) {
+                    // Estilizar linha de Balanço (header com valores)
+                    if (rowIndex === balanceHeaderIndex) {
+                        data.cell.styles.fillColor = [102, 126, 234]; // Azul
+                        data.cell.styles.fontStyle = 'bold';
                         if (colIndex > 0) {
-                            data.cell.styles.fontStyle = 'bold';
+                            data.cell.styles.halign = 'right';
                             // Colorir valores de balanço
                             const value = parseFloat(data.cell.text[0] || '0');
-                            data.cell.styles.textColor = value >= 0 ? [34, 197, 94] : [248, 113, 113];
-                        }
-                        if (colIndex === 13) {
-                            data.cell.styles.fillColor = totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226];
+                            data.cell.styles.textColor = value >= 0 ? [255, 255, 255] : [255, 200, 200]; // Branco ou rosa claro
+                        } else {
+                            data.cell.styles.textColor = 255; // Branco para o título
                         }
                     }
                 }
