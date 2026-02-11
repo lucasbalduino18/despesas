@@ -1883,6 +1883,18 @@
             }
             
             render();
+            
+            // Scroll suave para o formulário após render
+            setTimeout(() => {
+                const form = document.querySelector('.card'); // Primeiro card é o seletor de mês, segundo é o formulário
+                if (form) {
+                    // Pegar o segundo card (formulário)
+                    const allCards = document.querySelectorAll('.card');
+                    if (allCards[1]) {
+                        allCards[1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            }, 100);
         }
         
         async function saveMonthlyFixedExpense() {
