@@ -3646,7 +3646,7 @@
                             document.getElementById('fixedAmount').value = fixed.amount;
                             document.getElementById('fixedDay').value = fixed.day;
                             state.selectedCategory = fixed.category;
-                            render();
+                            // NÃO chamar render() aqui - causa loop infinito!
                         }
                     }, 10);
                 }
