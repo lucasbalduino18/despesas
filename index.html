@@ -2299,60 +2299,20 @@
             
             yPos = doc.lastAutoTable.finalY + 15;
             
-            // Seção 2: Rendimentos Mensais
+            // TABELA UNIFICADA - Todas as seções em uma única tabela
             if (yPos > 170) {
                 doc.addPage();
                 yPos = 20;
             }
             
-            doc.setFontSize(16);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Rendimentos da Familia (2026)', 14, yPos);
-            yPos += 10;
-            
-            // Montar linha com todos os 12 meses
+            // Preparar dados de Rendimentos
             const incomeMonthlyRow = [];
             for (let i = 0; i < 12; i++) {
                 incomeMonthlyRow.push(monthlyData[i].income > 0 ? monthlyData[i].income.toFixed(0) : '0');
             }
             incomeMonthlyRow.push(totalIncome.toFixed(0));
             
-            const incomeTableData = [
-                ['Total de Renda da familia', ...incomeMonthlyRow]
-            ];
-            
-            doc.autoTable({
-                startY: yPos,
-                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
-                body: incomeTableData,
-                theme: 'grid',
-                headStyles: { fillColor: [34, 197, 94], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 8, cellPadding: 2 },
-                columnStyles: {
-                    0: { cellWidth: 45, fontSize: 8 },
-                    13: { halign: 'right', fontStyle: 'bold', fillColor: [240, 253, 244] }
-                },
-                didParseCell: function(data) {
-                    if (data.column.index > 0 && data.column.index < 13) {
-                        data.cell.styles.halign = 'right';
-                    }
-                }
-            });
-            
-            yPos = doc.lastAutoTable.finalY + 15;
-            
-            // Seção 3: Despesas Fixas
-            if (yPos > 170) {
-                doc.addPage();
-                yPos = 20;
-            }
-            
-            doc.setFontSize(16);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Despesas Fixas da Familia (2026)', 14, yPos);
-            yPos += 10;
-            
-            // Agrupar fixas por nome
+            // Preparar dados de Despesas Fixas
             const fixedByName = {};
             for (let month = 1; month <= 12; month++) {
                 const monthKey = `${month}/${year}`;
@@ -2365,7 +2325,7 @@
                 });
             }
             
-            const fixedTableData = Object.entries(fixedByName).map(([name, amounts]) => {
+            const fixedRows = Object.entries(fixedByName).map(([name, amounts]) => {
                 const total = amounts.reduce((sum, a) => sum + a, 0);
                 return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
             });
@@ -2376,40 +2336,8 @@
                 fixedTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
             }
             fixedTotalRow.push(totalFixedExpenses.toFixed(0));
-            fixedTableData.push(fixedTotalRow);
             
-            doc.autoTable({
-                startY: yPos,
-                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
-                body: fixedTableData,
-                theme: 'grid',
-                headStyles: { fillColor: [251, 146, 60], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 7, cellPadding: 2 },
-                columnStyles: {
-                    0: { cellWidth: 35, fontSize: 8 },
-                    13: { halign: 'right', fontStyle: 'bold', fillColor: [254, 243, 199] }
-                },
-                didParseCell: function(data) {
-                    if (data.row.index === fixedTableData.length - 1) {
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [255, 237, 213];
-                    }
-                    if (data.column.index > 0 && data.column.index < 13) {
-                        data.cell.styles.halign = 'right';
-                    }
-                }
-            });
-            
-            // Nova página para Variáveis
-            doc.addPage();
-            yPos = 20;
-            
-            // Seção 4: Despesas Variáveis por Categoria
-            doc.setFontSize(16);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Despesas Variaveis da Familia (2026)', 14, yPos);
-            yPos += 10;
-            
+            // Preparar dados de Despesas Variáveis
             const variableByCategory = {};
             CATEGORIES.forEach(cat => {
                 variableByCategory[cat.name] = Array(12).fill(0);
@@ -2434,122 +2362,122 @@
                 });
             }
             
-            const variableTableData = Object.entries(variableByCategory)
+            const variableRows = Object.entries(variableByCategory)
                 .filter(([name, amounts]) => amounts.some(a => a > 0))
                 .map(([name, amounts]) => {
                     const total = amounts.reduce((sum, a) => sum + a, 0);
                     return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
                 });
             
-            const variableTotalRow = ['Total de Despesas Variáveis'];
+            const variableTotalRow = ['Total de Despesas Variaveis'];
             for (let i = 0; i < 12; i++) {
                 const monthTotal = Object.values(variableByCategory).reduce((sum, amounts) => sum + amounts[i], 0);
                 variableTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
             }
             variableTotalRow.push(totalVariableExpenses.toFixed(0));
-            variableTableData.push(variableTotalRow);
             
-            doc.autoTable({
-                startY: yPos,
-                head: [['Categoria', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
-                body: variableTableData,
-                theme: 'grid',
-                headStyles: { fillColor: [139, 92, 246], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 7, cellPadding: 2 },
-                columnStyles: {
-                    0: { cellWidth: 35, fontSize: 8 },
-                    13: { halign: 'right', fontStyle: 'bold', fillColor: [243, 232, 255] }
-                },
-                didParseCell: function(data) {
-                    if (data.row.index === variableTableData.length - 1) {
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.fillColor = [237, 233, 254];
-                    }
-                    if (data.column.index > 0 && data.column.index < 13) {
-                        data.cell.styles.halign = 'right';
-                    }
-                }
-            });
-            
-            yPos = doc.lastAutoTable.finalY + 15;
-            
-            // Total de Despesas
-            doc.setFontSize(14);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Total de Despesas da Familia', 14, yPos);
-            yPos += 10;
-            
-            // Montar linha com todos os 12 meses
-            const totalExpensesMonthlyRow = [];
+            // Preparar Total de Despesas
+            const totalExpensesRow = [];
             for (let i = 0; i < 12; i++) {
-                totalExpensesMonthlyRow.push(monthlyData[i].total > 0 ? monthlyData[i].total.toFixed(0) : '0');
+                totalExpensesRow.push(monthlyData[i].total > 0 ? monthlyData[i].total.toFixed(0) : '0');
             }
-            totalExpensesMonthlyRow.push(totalExpenses.toFixed(0));
+            totalExpensesRow.push(totalExpenses.toFixed(0));
             
-            const totalExpensesTableData = [
-                ['Total de Despesas da familia', ...totalExpensesMonthlyRow]
+            // Preparar Balanço
+            const balanceRow = [];
+            for (let i = 0; i < 12; i++) {
+                balanceRow.push(monthlyData[i].balance.toFixed(0));
+            }
+            balanceRow.push(totalBalance.toFixed(0));
+            
+            // Montar tabela unificada
+            const unifiedTableData = [
+                // Header de Rendimentos
+                [{ content: 'Rendimentos', colSpan: 14, styles: { fillColor: [34, 197, 94], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                ['Total de Renda da familia', ...incomeMonthlyRow],
+                
+                // Header de Despesas Fixas
+                [{ content: 'Despesas Fixas', colSpan: 14, styles: { fillColor: [251, 146, 60], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                ...fixedRows,
+                fixedTotalRow,
+                
+                // Header de Despesas Variáveis
+                [{ content: 'Despesas Variaveis', colSpan: 14, styles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                ...variableRows,
+                variableTotalRow,
+                
+                // Header de Total de Despesas
+                [{ content: 'Total de Despesas', colSpan: 14, styles: { fillColor: [239, 68, 68], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                ['Total de Despesas da familia', ...totalExpensesRow],
+                
+                // Header de Balanço
+                [{ content: 'Balanco', colSpan: 14, styles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+                ['Balanco', ...balanceRow]
             ];
+            
+            // Calcular índices das linhas especiais
+            const incomeHeaderIndex = 0;
+            const incomeTotalIndex = 1;
+            const fixedHeaderIndex = 2;
+            const fixedTotalIndex = 2 + fixedRows.length + 1;
+            const variableHeaderIndex = fixedTotalIndex + 1;
+            const variableTotalIndex = variableHeaderIndex + variableRows.length + 1;
+            const totalExpensesHeaderIndex = variableTotalIndex + 1;
+            const totalExpensesTotalIndex = totalExpensesHeaderIndex + 1;
+            const balanceHeaderIndex = totalExpensesTotalIndex + 1;
+            const balanceTotalIndex = balanceHeaderIndex + 1;
             
             doc.autoTable({
                 startY: yPos,
                 head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
-                body: totalExpensesTableData,
-                theme: 'grid',
-                headStyles: { fillColor: [239, 68, 68], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 8, cellPadding: 2 },
-                columnStyles: {
-                    0: { cellWidth: 45, fontSize: 8 },
-                    13: { halign: 'right', fontStyle: 'bold', fillColor: [254, 226, 226] }
-                },
-                didParseCell: function(data) {
-                    if (data.column.index > 0 && data.column.index < 13) {
-                        data.cell.styles.halign = 'right';
-                    }
-                }
-            });
-            
-            yPos = doc.lastAutoTable.finalY + 15;
-            
-            // Balanço Final
-            if (yPos > 170) {
-                doc.addPage();
-                yPos = 20;
-            }
-            
-            doc.setFontSize(14);
-            doc.setTextColor(102, 126, 234);
-            doc.text('Balanco Mensal', 14, yPos);
-            yPos += 10;
-            
-            // Montar linha com todos os 12 meses
-            const balanceMonthlyRow = [];
-            for (let i = 0; i < 12; i++) {
-                balanceMonthlyRow.push(monthlyData[i].balance.toFixed(0));
-            }
-            balanceMonthlyRow.push(totalBalance.toFixed(0));
-            
-            const balanceTableData = [
-                ['Balanco', ...balanceMonthlyRow]
-            ];
-            
-            doc.autoTable({
-                startY: yPos,
-                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Saldo Final']],
-                body: balanceTableData,
+                body: unifiedTableData,
                 theme: 'grid',
                 headStyles: { fillColor: [102, 126, 234], textColor: 255, fontSize: 8 },
-                styles: { fontSize: 8, cellPadding: 2 },
+                styles: { fontSize: 7, cellPadding: 2 },
                 columnStyles: {
-                    0: { cellWidth: 45, fontSize: 8 },
-                    13: { halign: 'right', fontStyle: 'bold', fillColor: totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226] }
+                    0: { cellWidth: 35, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold' }
                 },
                 didParseCell: function(data) {
-                    if (data.column.index > 0) {
+                    const rowIndex = data.row.index;
+                    const colIndex = data.column.index;
+                    
+                    // Alinhar números à direita (exceto primeira coluna e headers)
+                    if (colIndex > 0 && colIndex < 13 && data.cell.text[0] !== undefined) {
                         data.cell.styles.halign = 'right';
+                    }
+                    
+                    // Estilizar linha de totais de cada seção
+                    if (rowIndex === incomeTotalIndex) {
+                        data.cell.styles.fillColor = [240, 253, 244]; // Verde claro
+                        if (colIndex > 0) data.cell.styles.fontStyle = 'bold';
+                    }
+                    
+                    if (rowIndex === fixedTotalIndex) {
+                        data.cell.styles.fillColor = [255, 237, 213]; // Laranja claro
                         data.cell.styles.fontStyle = 'bold';
-                        // Colorir valores positivos e negativos
-                        const value = parseFloat(data.cell.text[0] || '0');
-                        data.cell.styles.textColor = value >= 0 ? [34, 197, 94] : [248, 113, 113];
+                    }
+                    
+                    if (rowIndex === variableTotalIndex) {
+                        data.cell.styles.fillColor = [237, 233, 254]; // Roxo claro
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    
+                    if (rowIndex === totalExpensesTotalIndex) {
+                        data.cell.styles.fillColor = [254, 226, 226]; // Vermelho claro
+                        if (colIndex > 0) data.cell.styles.fontStyle = 'bold';
+                    }
+                    
+                    if (rowIndex === balanceTotalIndex) {
+                        if (colIndex > 0) {
+                            data.cell.styles.fontStyle = 'bold';
+                            // Colorir valores de balanço
+                            const value = parseFloat(data.cell.text[0] || '0');
+                            data.cell.styles.textColor = value >= 0 ? [34, 197, 94] : [248, 113, 113];
+                        }
+                        if (colIndex === 13) {
+                            data.cell.styles.fillColor = totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226];
+                        }
                     }
                 }
             });
