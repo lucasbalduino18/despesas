@@ -2868,9 +2868,10 @@
                         const isOnTrack = yearlyEconomy >= 0;
                         
                         const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                        const currentMonth = new Date().getMonth() + 1;
-                        const monthsElapsed = currentMonth;
-                        const expectedEconomy = (state.yearlyGoal / 12) * monthsElapsed;
+                        
+                        // Usar quantidade de meses COM RENDIMENTO ao invés de meses decorridos
+                        const monthsWithIncome = monthsWithData.length;
+                        const expectedEconomy = (state.yearlyGoal / 12) * monthsWithIncome;
                         const isAhead = yearlyEconomy >= expectedEconomy;
                         
                         return `
@@ -2950,7 +2951,7 @@
                                                 ${isAhead ? '🚀 Acima do Esperado!' : '⏰ Atenção ao Ritmo'}
                                             </div>
                                             <div style="font-size: 0.75rem; opacity: 0.7;">
-                                                Esperado até ${monthNames[currentMonth - 1]}: ${formatAED(expectedEconomy)}
+                                                Esperado (${monthsWithIncome} ${monthsWithIncome === 1 ? 'mês' : 'meses'}): ${formatAED(expectedEconomy)}
                                             </div>
                                         </div>
                                         <div style="text-align: right;">
