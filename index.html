@@ -3797,7 +3797,7 @@
                                     const categoryId = catObj ? catObj[0] : 'outros';
                                     
                                     return `
-                                        <div class="category-bar" onclick="viewCategoryExpenses('${categoryId}')">
+                                        <div class="category-bar" onclick="showCategoryMerchants('${categoryId}', '${selectedMonth}')">
                                             <div class="category-bar-header">
                                                 <span>${stat.icon} ${stat.name}</span>
                                                 <span><strong>AED ${stat.total.toFixed(2)}</strong> (${stat.count})</span>
