@@ -1979,11 +1979,6 @@
             }
         }
         
-        function cancelEditFixed() {
-            state.editingFixed = null;
-            state.selectedCategory = null;
-            render();
-        }
 
         // Colar SMS da área de transferência
         async function pasteFromClipboard() {
@@ -3632,7 +3627,8 @@
                 `;
                 
                 // IMPORTANTE: Carregar fixas do mês selecionado se não estiver no state
-                if (!currentMonthFixed || currentMonthFixed.length === 0) {
+                // MAS NÃO durante edição (para não causar conflito)
+                if (!state.editingFixed && (!currentMonthFixed || currentMonthFixed.length === 0)) {
                     console.log('🔄 Carregando fixas do mês', state.selectedFixedMonth);
                     loadMonthlyFixed(state.selectedFixedMonth).then(() => {
                         console.log('✅ Fixas carregadas, re-renderizando...');
