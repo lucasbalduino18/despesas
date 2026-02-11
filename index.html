@@ -2182,7 +2182,11 @@
         
         async function generateAnnualReport(year) {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
             
             // Cores do tema
             const colors = {
@@ -2198,14 +2202,14 @@
             
             // Título
             doc.setFillColor(102, 126, 234);
-            doc.rect(0, 0, 210, 35, 'F');
+            doc.rect(0, 0, 297, 35, 'F'); // 297mm = largura A4 landscape
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(24);
             doc.setFont(undefined, 'bold');
-            doc.text(`Relatório Financeiro ${year}`, 105, 15, { align: 'center' });
+            doc.text(`Relatorio Financeiro ${year}`, 148.5, 15, { align: 'center' }); // centro = 297/2
             doc.setFontSize(12);
             doc.setFont(undefined, 'normal');
-            doc.text('Balanço Anual da Família', 105, 25, { align: 'center' });
+            doc.text('Balanco Anual da Familia', 148.5, 25, { align: 'center' });
             
             let yPos = 45;
             
@@ -2265,19 +2269,19 @@
             doc.setFontSize(16);
             doc.setTextColor(102, 126, 234);
             doc.setFont(undefined, 'bold');
-            doc.text('📊 Resumo Anual', 14, yPos);
+            doc.text('Resumo Anual', 14, yPos);
             yPos += 10;
             
             // Tabela de resumo
             doc.autoTable({
                 startY: yPos,
-                head: [['Descrição', 'Valor (AED)']],
+                head: [['Descricao', 'Valor (AED)']],
                 body: [
-                    ['💰 Total de Rendimentos', `${totalIncome.toFixed(2)}`],
-                    ['💳 Total de Despesas Fixas', `${totalFixedExpenses.toFixed(2)}`],
-                    ['💸 Total de Despesas Variáveis', `${totalVariableExpenses.toFixed(2)}`],
-                    ['📊 Total de Despesas', `${totalExpenses.toFixed(2)}`],
-                    ['💵 Balanço Final', `${totalBalance.toFixed(2)}`]
+                    ['Total de Rendimentos', `${totalIncome.toFixed(2)}`],
+                    ['Total de Despesas Fixas', `${totalFixedExpenses.toFixed(2)}`],
+                    ['Total de Despesas Variaveis', `${totalVariableExpenses.toFixed(2)}`],
+                    ['Total de Despesas', `${totalExpenses.toFixed(2)}`],
+                    ['Balanco Final', `${totalBalance.toFixed(2)}`]
                 ],
                 theme: 'grid',
                 headStyles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold' },
@@ -2296,14 +2300,14 @@
             yPos = doc.lastAutoTable.finalY + 15;
             
             // Seção 2: Rendimentos Mensais
-            if (yPos > 200) {
+            if (yPos > 170) {
                 doc.addPage();
                 yPos = 20;
             }
             
             doc.setFontSize(16);
             doc.setTextColor(102, 126, 234);
-            doc.text('💰 Rendimentos da Família (2026)', 14, yPos);
+            doc.text('Rendimentos da Familia (2026)', 14, yPos);
             yPos += 10;
             
             const incomeTableData = monthlyData.map(m => [
@@ -2334,14 +2338,14 @@
             yPos = doc.lastAutoTable.finalY + 15;
             
             // Seção 3: Despesas Fixas
-            if (yPos > 200) {
+            if (yPos > 170) {
                 doc.addPage();
                 yPos = 20;
             }
             
             doc.setFontSize(16);
             doc.setTextColor(102, 126, 234);
-            doc.text('💳 Despesas Fixas da Família (2026)', 14, yPos);
+            doc.text('Despesas Fixas da Familia (2026)', 14, yPos);
             yPos += 10;
             
             // Agrupar fixas por nome
@@ -2399,7 +2403,7 @@
             // Seção 4: Despesas Variáveis por Categoria
             doc.setFontSize(16);
             doc.setTextColor(102, 126, 234);
-            doc.text('💸 Despesas Variáveis da Família (2026)', 14, yPos);
+            doc.text('Despesas Variaveis da Familia (2026)', 14, yPos);
             yPos += 10;
             
             const variableByCategory = {};
@@ -2468,7 +2472,7 @@
             // Total de Despesas
             doc.setFontSize(14);
             doc.setTextColor(102, 126, 234);
-            doc.text('📊 Total de Despesas da Família', 14, yPos);
+            doc.text('Total de Despesas da Familia', 14, yPos);
             yPos += 10;
             
             const totalExpensesRow = monthlyData.map(m => [
@@ -2499,14 +2503,14 @@
             yPos = doc.lastAutoTable.finalY + 15;
             
             // Balanço Final
-            if (yPos > 220) {
+            if (yPos > 170) {
                 doc.addPage();
                 yPos = 20;
             }
             
             doc.setFontSize(14);
             doc.setTextColor(102, 126, 234);
-            doc.text('💵 Balanço Mensal', 14, yPos);
+            doc.text('Balanco Mensal', 14, yPos);
             yPos += 10;
             
             const balanceTableData = monthlyData.map(m => [
@@ -2544,8 +2548,8 @@
                 doc.setPage(i);
                 doc.setFontSize(8);
                 doc.setTextColor(150);
-                doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 14, 290);
-                doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: 'right' });
+                doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`, 14, 200);
+                doc.text(`Pagina ${i} de ${pageCount}`, 283, 200, { align: 'right' }); // 297 - 14 = 283
             }
             
             // Salvar PDF
