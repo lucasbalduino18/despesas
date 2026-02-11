@@ -577,6 +577,10 @@
             to { opacity: 1; }
         }
     </style>
+    
+    <!-- jsPDF para geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -2171,6 +2175,382 @@
             state.expandedMonths = {};
             render();
         }
+        
+        // ============================================
+        // FUNÇÃO - GERAR RELATÓRIO ANUAL EM PDF
+        // ============================================
+        
+        async function generateAnnualReport(year) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Cores do tema
+            const colors = {
+                primary: '#667eea',
+                secondary: '#764ba2',
+                green: '#22c55e',
+                red: '#f87171',
+                orange: '#fb923c',
+                yellow: '#fbbf24',
+                gray: '#6b7280',
+                lightGray: '#f3f4f6'
+            };
+            
+            // Título
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, 210, 35, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Relatório Financeiro ${year}`, 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text('Balanço Anual da Família', 105, 25, { align: 'center' });
+            
+            let yPos = 45;
+            
+            // Coletar dados do ano
+            const monthlyData = [];
+            const categoryTotals = {};
+            let totalIncome = 0;
+            let totalFixedExpenses = 0;
+            let totalVariableExpenses = 0;
+            
+            for (let month = 1; month <= 12; month++) {
+                const monthKey = `${month}/${year}`;
+                
+                // Rendimento
+                const income = state.monthlyIncome[monthKey] || 0;
+                totalIncome += income;
+                
+                // Fixas
+                const fixedList = state.monthlyFixedExpenses[monthKey] || [];
+                const fixedTotal = fixedList.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                totalFixedExpenses += fixedTotal;
+                
+                // Variáveis
+                const variableList = state.expenses.filter(e => {
+                    if (!e || !e.date) return false;
+                    const parts = e.date.split('/');
+                    if (parts.length < 3) return false;
+                    const expenseMonth = normalizeMonth(`${parts[1]}/${parts[2]}`);
+                    return expenseMonth === monthKey;
+                });
+                const variableTotal = variableList.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                totalVariableExpenses += variableTotal;
+                
+                // Por categoria
+                variableList.forEach(e => {
+                    const cat = e.category || 'outros';
+                    if (!categoryTotals[cat]) categoryTotals[cat] = 0;
+                    categoryTotals[cat] += parseFloat(e.amount) || 0;
+                });
+                
+                const balance = income - (fixedTotal + variableTotal);
+                
+                monthlyData.push({
+                    month: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][month - 1],
+                    income,
+                    fixed: fixedTotal,
+                    variable: variableTotal,
+                    total: fixedTotal + variableTotal,
+                    balance
+                });
+            }
+            
+            const totalExpenses = totalFixedExpenses + totalVariableExpenses;
+            const totalBalance = totalIncome - totalExpenses;
+            
+            // Seção 1: Resumo Anual
+            doc.setFontSize(16);
+            doc.setTextColor(102, 126, 234);
+            doc.setFont(undefined, 'bold');
+            doc.text('📊 Resumo Anual', 14, yPos);
+            yPos += 10;
+            
+            // Tabela de resumo
+            doc.autoTable({
+                startY: yPos,
+                head: [['Descrição', 'Valor (AED)']],
+                body: [
+                    ['💰 Total de Rendimentos', `${totalIncome.toFixed(2)}`],
+                    ['💳 Total de Despesas Fixas', `${totalFixedExpenses.toFixed(2)}`],
+                    ['💸 Total de Despesas Variáveis', `${totalVariableExpenses.toFixed(2)}`],
+                    ['📊 Total de Despesas', `${totalExpenses.toFixed(2)}`],
+                    ['💵 Balanço Final', `${totalBalance.toFixed(2)}`]
+                ],
+                theme: 'grid',
+                headStyles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold' },
+                styles: { fontSize: 10, cellPadding: 5 },
+                columnStyles: {
+                    0: { cellWidth: 100 },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold' }
+                },
+                didParseCell: function(data) {
+                    if (data.row.index === 4 && data.column.index === 1) {
+                        data.cell.styles.textColor = totalBalance >= 0 ? [34, 197, 94] : [248, 113, 113];
+                    }
+                }
+            });
+            
+            yPos = doc.lastAutoTable.finalY + 15;
+            
+            // Seção 2: Rendimentos Mensais
+            if (yPos > 200) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            doc.setFontSize(16);
+            doc.setTextColor(102, 126, 234);
+            doc.text('💰 Rendimentos da Família (2026)', 14, yPos);
+            yPos += 10;
+            
+            const incomeTableData = monthlyData.map(m => [
+                m.month,
+                m.income > 0 ? m.income.toFixed(2) : '0'
+            ]);
+            incomeTableData.push(['Total Ano', totalIncome.toFixed(2)]);
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['Mês', 'Rendimento (AED)']],
+                body: incomeTableData,
+                theme: 'grid',
+                headStyles: { fillColor: [34, 197, 94], textColor: 255 },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 50 },
+                    1: { cellWidth: 70, halign: 'right' }
+                },
+                didParseCell: function(data) {
+                    if (data.row.index === incomeTableData.length - 1) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [240, 253, 244];
+                    }
+                }
+            });
+            
+            yPos = doc.lastAutoTable.finalY + 15;
+            
+            // Seção 3: Despesas Fixas
+            if (yPos > 200) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            doc.setFontSize(16);
+            doc.setTextColor(102, 126, 234);
+            doc.text('💳 Despesas Fixas da Família (2026)', 14, yPos);
+            yPos += 10;
+            
+            // Agrupar fixas por nome
+            const fixedByName = {};
+            for (let month = 1; month <= 12; month++) {
+                const monthKey = `${month}/${year}`;
+                const fixedList = state.monthlyFixedExpenses[monthKey] || [];
+                fixedList.forEach(f => {
+                    if (!fixedByName[f.name]) {
+                        fixedByName[f.name] = Array(12).fill(0);
+                    }
+                    fixedByName[f.name][month - 1] = parseFloat(f.amount) || 0;
+                });
+            }
+            
+            const fixedTableData = Object.entries(fixedByName).map(([name, amounts]) => {
+                const total = amounts.reduce((sum, a) => sum + a, 0);
+                return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
+            });
+            
+            const fixedTotalRow = ['Total de Despesas Fixas'];
+            for (let i = 0; i < 12; i++) {
+                const monthTotal = Object.values(fixedByName).reduce((sum, amounts) => sum + amounts[i], 0);
+                fixedTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
+            }
+            fixedTotalRow.push(totalFixedExpenses.toFixed(0));
+            fixedTableData.push(fixedTotalRow);
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
+                body: fixedTableData,
+                theme: 'grid',
+                headStyles: { fillColor: [251, 146, 60], textColor: 255, fontSize: 8 },
+                styles: { fontSize: 7, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 35, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold', fillColor: [254, 243, 199] }
+                },
+                didParseCell: function(data) {
+                    if (data.row.index === fixedTableData.length - 1) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [255, 237, 213];
+                    }
+                    if (data.column.index > 0 && data.column.index < 13) {
+                        data.cell.styles.halign = 'right';
+                    }
+                }
+            });
+            
+            // Nova página para Variáveis
+            doc.addPage();
+            yPos = 20;
+            
+            // Seção 4: Despesas Variáveis por Categoria
+            doc.setFontSize(16);
+            doc.setTextColor(102, 126, 234);
+            doc.text('💸 Despesas Variáveis da Família (2026)', 14, yPos);
+            yPos += 10;
+            
+            const variableByCategory = {};
+            CATEGORIES.forEach(cat => {
+                variableByCategory[cat.name] = Array(12).fill(0);
+            });
+            
+            for (let month = 1; month <= 12; month++) {
+                const monthKey = `${month}/${year}`;
+                const variableList = state.expenses.filter(e => {
+                    if (!e || !e.date) return false;
+                    const parts = e.date.split('/');
+                    if (parts.length < 3) return false;
+                    const expenseMonth = normalizeMonth(`${parts[1]}/${parts[2]}`);
+                    return expenseMonth === monthKey;
+                });
+                
+                variableList.forEach(e => {
+                    const cat = CATEGORIES.find(c => c.id === e.category);
+                    const catName = cat ? cat.name : 'Outros';
+                    if (variableByCategory[catName]) {
+                        variableByCategory[catName][month - 1] += parseFloat(e.amount) || 0;
+                    }
+                });
+            }
+            
+            const variableTableData = Object.entries(variableByCategory)
+                .filter(([name, amounts]) => amounts.some(a => a > 0))
+                .map(([name, amounts]) => {
+                    const total = amounts.reduce((sum, a) => sum + a, 0);
+                    return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
+                });
+            
+            const variableTotalRow = ['Total de Despesas Variáveis'];
+            for (let i = 0; i < 12; i++) {
+                const monthTotal = Object.values(variableByCategory).reduce((sum, amounts) => sum + amounts[i], 0);
+                variableTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
+            }
+            variableTotalRow.push(totalVariableExpenses.toFixed(0));
+            variableTableData.push(variableTotalRow);
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['Categoria', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
+                body: variableTableData,
+                theme: 'grid',
+                headStyles: { fillColor: [139, 92, 246], textColor: 255, fontSize: 8 },
+                styles: { fontSize: 7, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 35, fontSize: 8 },
+                    13: { halign: 'right', fontStyle: 'bold', fillColor: [243, 232, 255] }
+                },
+                didParseCell: function(data) {
+                    if (data.row.index === variableTableData.length - 1) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [237, 233, 254];
+                    }
+                    if (data.column.index > 0 && data.column.index < 13) {
+                        data.cell.styles.halign = 'right';
+                    }
+                }
+            });
+            
+            yPos = doc.lastAutoTable.finalY + 15;
+            
+            // Total de Despesas
+            doc.setFontSize(14);
+            doc.setTextColor(102, 126, 234);
+            doc.text('📊 Total de Despesas da Família', 14, yPos);
+            yPos += 10;
+            
+            const totalExpensesRow = monthlyData.map(m => [
+                m.month,
+                m.total > 0 ? m.total.toFixed(0) : '0'
+            ]);
+            totalExpensesRow.push(['Total Ano', totalExpenses.toFixed(0)]);
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['Mês', 'Total (AED)']],
+                body: totalExpensesRow,
+                theme: 'grid',
+                headStyles: { fillColor: [239, 68, 68], textColor: 255 },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 50 },
+                    1: { cellWidth: 70, halign: 'right' }
+                },
+                didParseCell: function(data) {
+                    if (data.row.index === totalExpensesRow.length - 1) {
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.fillColor = [254, 226, 226];
+                    }
+                }
+            });
+            
+            yPos = doc.lastAutoTable.finalY + 15;
+            
+            // Balanço Final
+            if (yPos > 220) {
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            doc.setFontSize(14);
+            doc.setTextColor(102, 126, 234);
+            doc.text('💵 Balanço Mensal', 14, yPos);
+            yPos += 10;
+            
+            const balanceTableData = monthlyData.map(m => [
+                m.month,
+                m.balance.toFixed(0)
+            ]);
+            balanceTableData.push(['Saldo Final', totalBalance.toFixed(0)]);
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['Mês', 'Balanço (AED)']],
+                body: balanceTableData,
+                theme: 'grid',
+                headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+                styles: { fontSize: 9, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 50 },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold' }
+                },
+                didParseCell: function(data) {
+                    if (data.column.index === 1 && data.row.index < balanceTableData.length) {
+                        const value = parseFloat(data.cell.text[0].replace(',', ''));
+                        data.cell.styles.textColor = value >= 0 ? [34, 197, 94] : [248, 113, 113];
+                    }
+                    if (data.row.index === balanceTableData.length - 1) {
+                        data.cell.styles.fillColor = totalBalance >= 0 ? [240, 253, 244] : [254, 226, 226];
+                        data.cell.styles.fontSize = 11;
+                    }
+                }
+            });
+            
+            // Rodapé
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 14, 290);
+                doc.text(`Página ${i} de ${pageCount}`, 195, 290, { align: 'right' });
+            }
+            
+            // Salvar PDF
+            doc.save(`Relatorio_Financeiro_${year}.pdf`);
+        }
 
         function viewCategoryExpenses(categoryId) {
             state.viewingCategoryExpenses = categoryId;
@@ -3033,6 +3413,92 @@
                             </div>
                         `;
                     })()}
+                    
+                    <!-- Card de Relatório Anual -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            📄 Relatório Anual em PDF
+                        </h3>
+                        
+                        <div style="
+                            background: rgba(255,255,255,0.05);
+                            padding: 20px;
+                            border-radius: 12px;
+                            border: 1px solid rgba(255,255,255,0.1);
+                        ">
+                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 15px;">
+                                Gere um relatório completo com todos os rendimentos, despesas fixas, despesas variáveis e balanço do ano.
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 200px;">
+                                    <label style="display: block; font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
+                                        📅 Selecione o Ano:
+                                    </label>
+                                    <select 
+                                        id="reportYearSelect"
+                                        style="
+                                            width: 100%;
+                                            padding: 12px;
+                                            background: rgba(255,255,255,0.1);
+                                            border: 2px solid rgba(255,255,255,0.2);
+                                            border-radius: 8px;
+                                            color: white;
+                                            font-size: 1rem;
+                                            font-weight: 600;
+                                            cursor: pointer;
+                                        "
+                                    >
+                                        ${(() => {
+                                            const currentYear = new Date().getFullYear();
+                                            const years = [];
+                                            for (let y = currentYear; y >= currentYear - 5; y--) {
+                                                years.push(`<option value="${y}">${y}</option>`);
+                                            }
+                                            return years.join('');
+                                        })()}
+                                    </select>
+                                </div>
+                                
+                                <button 
+                                    onclick="generateAnnualReport(document.getElementById('reportYearSelect').value)"
+                                    style="
+                                        flex-shrink: 0;
+                                        padding: 12px 24px;
+                                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        border: none;
+                                        border-radius: 8px;
+                                        color: white;
+                                        font-size: 1rem;
+                                        font-weight: 700;
+                                        cursor: pointer;
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+                                        transition: 0.3s;
+                                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                                        margin-top: 20px;
+                                    "
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(102, 126, 234, 0.5)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                                >
+                                    📥 Gerar Relatório PDF
+                                </button>
+                            </div>
+                            
+                            <div style="
+                                margin-top: 15px;
+                                padding: 10px;
+                                background: rgba(59, 130, 246, 0.1);
+                                border-radius: 6px;
+                                border-left: 3px solid #3b82f6;
+                            ">
+                                <div style="font-size: 0.8rem; opacity: 0.9;">
+                                    💡 <strong>Dica:</strong> O relatório incluirá todas as despesas fixas e variáveis do ano selecionado, organizadas por mês e categoria.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
             } else if (state.tab === 'add') {
                 const monthExpenses = getMonthExpenses();
