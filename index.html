@@ -3453,6 +3453,160 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Card: Gráfico de Evolução Anual -->
+                    ${(() => {
+                        const currentYear = new Date().getFullYear();
+                        const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                        
+                        // Calcular totais por categoria por mês
+                        const catMonthlyTotals = {};
+                        CATEGORIES.forEach(cat => {
+                            catMonthlyTotals[cat.id] = Array(12).fill(0);
+                        });
+                        
+                        state.expenses.forEach(e => {
+                            if (!e || !e.date) return;
+                            const parts = e.date.split('/');
+                            if (parts.length < 3) return;
+                            const expYear = parseInt(parts[2]);
+                            if (expYear !== currentYear) return;
+                            const expMonth = parseInt(parts[1]) - 1;
+                            if (expMonth < 0 || expMonth > 11) return;
+                            const catId = e.category || 'outros';
+                            if (catMonthlyTotals[catId] !== undefined) {
+                                catMonthlyTotals[catId][expMonth] += parseFloat(e.amount) || 0;
+                            }
+                        });
+                        
+                        // Calcular total anual por categoria e pegar top 6
+                        const catAnnualTotals = CATEGORIES.map(cat => ({
+                            ...cat,
+                            total: catMonthlyTotals[cat.id].reduce((s,v) => s+v, 0),
+                            monthly: catMonthlyTotals[cat.id]
+                        })).filter(c => c.total > 0)
+                          .sort((a, b) => b.total - a.total)
+                          .slice(0, 6);
+                        
+                        if (catAnnualTotals.length === 0) {
+                            return `
+                                <div class="card" style="margin-top: 20px;">
+                                    <h3 style="margin-bottom: 10px;">📈 Evolução de Despesas ${currentYear}</h3>
+                                    <div style="text-align:center; opacity:0.6; padding: 40px 0; font-size:0.9rem;">
+                                        Nenhuma despesa registrada em ${currentYear}
+                                    </div>
+                                </div>`;
+                        }
+                        
+                        // Dimensões do gráfico
+                        const W = 600, H = 260;
+                        const padL = 58, padR = 20, padT = 20, padB = 40;
+                        const chartW = W - padL - padR;
+                        const chartH = H - padT - padB;
+                        
+                        // Máximo para escala Y
+                        const allValues = catAnnualTotals.flatMap(c => c.monthly);
+                        const maxVal = Math.max(...allValues, 1);
+                        const yMax = Math.ceil(maxVal / 500) * 500;
+                        
+                        // Helpers
+                        const xPos = i => padL + (i / 11) * chartW;
+                        const yPos2 = v => padT + chartH - (v / yMax) * chartH;
+                        
+                        // Grid lines Y (5 linhas)
+                        const yGridLines = [0, 0.25, 0.5, 0.75, 1].map(p => {
+                            const val = yMax * p;
+                            const y = yPos2(val);
+                            const label = val >= 1000 ? (val/1000).toFixed(1)+'k' : val.toFixed(0);
+                            return `
+                                <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" 
+                                      stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+                                <text x="${padL - 6}" y="${y + 4}" 
+                                      font-size="8" fill="rgba(255,255,255,0.45)" text-anchor="end">${label}</text>`;
+                        }).join('');
+                        
+                        // Labels X
+                        const xLabels = months.map((m, i) => `
+                            <text x="${xPos(i)}" y="${H - padB + 14}" 
+                                  font-size="8.5" fill="rgba(255,255,255,0.6)" text-anchor="middle">${m}</text>
+                        `).join('');
+                        
+                        // Linhas e pontos de cada categoria
+                        const lines = catAnnualTotals.map(cat => {
+                            // Só desenhar segmentos onde há dados consecutivos
+                            const pathPoints = cat.monthly.map((v, i) => `${xPos(i)},${yPos2(v)}`);
+                            const pathD = 'M ' + pathPoints.join(' L ');
+                            
+                            const dots = cat.monthly.map((v, i) => {
+                                if (v === 0) return '';
+                                const fmt = v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(0);
+                                return `
+                                    <circle cx="${xPos(i)}" cy="${yPos2(v)}" r="3.5" 
+                                            fill="${cat.color}" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+                                    <text x="${xPos(i)}" y="${yPos2(v) - 7}" 
+                                          font-size="7" fill="${cat.color}" text-anchor="middle" 
+                                          font-weight="600">${fmt}</text>`;
+                            }).join('');
+                            
+                            return `
+                                <path d="${pathD}" fill="none" stroke="${cat.color}" 
+                                      stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+                                      opacity="0.9"/>
+                                ${dots}`;
+                        }).join('');
+                        
+                        // Legenda
+                        const legendItems = catAnnualTotals.map((cat, i) => {
+                            const total = cat.total >= 1000 ? (cat.total/1000).toFixed(1)+'k' : cat.total.toFixed(0);
+                            return `
+                                <div style="display:flex; align-items:center; gap:5px; font-size:0.72rem; white-space:nowrap;">
+                                    <div style="width:20px; height:3px; border-radius:2px; background:${cat.color}; flex-shrink:0;"></div>
+                                    <span style="opacity:0.85;">${cat.icon} ${cat.name}</span>
+                                    <span style="font-weight:700; color:${cat.color};">${total}</span>
+                                </div>`;
+                        }).join('');
+                        
+                        return `
+                            <div class="card" style="margin-top: 20px;">
+                                <h3 style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
+                                    📈 Evolução de Despesas ${currentYear}
+                                    <span style="font-size:0.75rem; font-weight:400; opacity:0.65;">Top 6 categorias</span>
+                                </h3>
+                                
+                                <div style="overflow-x: auto;">
+                                    <svg width="100%" viewBox="0 0 ${W} ${H}" 
+                                         style="display:block; min-width:300px;"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        
+                                        <!-- Fundo -->
+                                        <rect x="${padL}" y="${padT}" width="${chartW}" height="${chartH}" 
+                                              fill="rgba(0,0,0,0.15)" rx="4"/>
+                                        
+                                        <!-- Grid -->
+                                        ${yGridLines}
+                                        
+                                        <!-- Labels X -->
+                                        ${xLabels}
+                                        
+                                        <!-- Linhas das categorias -->
+                                        ${lines}
+                                        
+                                        <!-- Eixo X -->
+                                        <line x1="${padL}" y1="${padT + chartH}" x2="${W - padR}" y2="${padT + chartH}" 
+                                              stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                                        <!-- Eixo Y -->
+                                        <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" 
+                                              stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Legenda -->
+                                <div style="display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:14px; 
+                                            padding-top:12px; border-top:1px solid rgba(255,255,255,0.1);">
+                                    ${legendItems}
+                                </div>
+                            </div>`;
+                    })()}
                 `;
             } else if (state.tab === 'add') {
                 const monthExpenses = getMonthExpenses();
