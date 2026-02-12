@@ -3550,12 +3550,18 @@
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     ${monthDays.passed > 0 ? `💸 ${formatNumberShort(total / monthDays.passed)}/d` : '💸 0/d'}
                                 </div>
+                                <div style="font-size: 0.55rem; opacity: 0.55; margin-top: 1px; white-space: nowrap;">
+                                    ${monthDays.passed} dia${monthDays.passed !== 1 ? 's' : ''} passado${monthDays.passed !== 1 ? 's' : ''}
+                                </div>
                             </div>
                             <div style="min-width: 0;">
                                 <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Restante</div>
                                 <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(remaining)}</div>
                                 <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                     ${monthDays.remaining > 0 ? `💰 ${formatNumberShort(dailyLimit)}/d` : '💰 0/d'}
+                                </div>
+                                <div style="font-size: 0.55rem; opacity: 0.55; margin-top: 1px; white-space: nowrap;">
+                                    ${monthDays.remaining} dia${monthDays.remaining !== 1 ? 's' : ''} restante${monthDays.remaining !== 1 ? 's' : ''}
                                 </div>
                             </div>
                             <div style="min-width: 0;">
