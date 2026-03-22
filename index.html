@@ -4104,19 +4104,30 @@
                                 html += '</div></div>';
                                 
                                 if (currentIncome > 0) {
-                                    const economy = currentIncome - total;
+                                    // ===== CORREÇÃO: Incluir despesas fixas no cálculo =====
+                                    const currentMonthFixed = state.monthlyFixedExpenses[currentMonthKey] || [];
+                                    const fixedTotal = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                                    const totalWithFixed = total + fixedTotal;
+                                    
+                                    const economy = currentIncome - totalWithFixed;
                                     const economyPercent = (economy / currentIncome * 100);
                                     const isPositive = economy > 0;
                                     
                                     html += '<div style="padding: 12px; ';
                                     html += 'background: ' + (isPositive ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)') + '; ';
                                     html += 'border-radius: 8px; margin-top: 10px;">';
-                                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
-                                    html += '<div><div style="opacity: 0.8;">Rendimento</div>';
+                                    html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
+                                    html += '<div><div style="opacity: 0.8;">💰 Rendimento</div>';
                                     html += '<div style="font-size: 1.1rem; font-weight: 700; color: #22c55e;">AED ' + currentIncome.toFixed(0) + '</div></div>';
-                                    html += '<div><div style="opacity: 0.8;">Despesas</div>';
+                                    html += '<div><div style="opacity: 0.8;">💸 Variáveis</div>';
                                     html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">AED ' + total.toFixed(0) + '</div></div>';
+                                    html += '<div><div style="opacity: 0.8;">🔒 Fixas</div>';
+                                    html += '<div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">AED ' + fixedTotal.toFixed(0) + '</div></div>';
                                     html += '<div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">';
+                                    html += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
+                                    html += '<div style="opacity: 0.8;">📊 Total Despesas</div>';
+                                    html += '<div style="font-weight: 700;">AED ' + totalWithFixed.toFixed(0) + '</div>';
+                                    html += '</div>';
                                     html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' Economia</div>';
                                     html += '<div style="font-size: 1.3rem; font-weight: 700; color: ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
                                     html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
