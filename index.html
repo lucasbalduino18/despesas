@@ -4980,6 +4980,27 @@
                             const economyForBadge = incomeForBadge - totalMonthWithFixed;
                             const hasIncomeBadge = incomeForBadge > 0;
                             
+                            // ===== SISTEMA DE CORES POR PERCENTUAL =====
+                            const spentPercent = incomeForBadge > 0 ? (totalMonthWithFixed / incomeForBadge * 100) : 0;
+                            let badgeColor, badgeBg, badgeIcon;
+                            
+                            if (spentPercent < 100) {
+                                // Verde - Gastou menos que o rendimento
+                                badgeColor = '#22c55e';
+                                badgeBg = 'rgba(34, 197, 94, 0.2)';
+                                badgeIcon = '💚';
+                            } else if (spentPercent === 100) {
+                                // Amarelo - Gastou exatamente o rendimento
+                                badgeColor = '#f59e0b';
+                                badgeBg = 'rgba(245, 158, 11, 0.2)';
+                                badgeIcon = '⚠️';
+                            } else {
+                                // Vermelho - Gastou mais que o rendimento
+                                badgeColor = '#ef4444';
+                                badgeBg = 'rgba(239, 68, 68, 0.2)';
+                                badgeIcon = '🔴';
+                            }
+                            
                             return `
                                 <div class="month-group">
                                     <div class="month-header" onclick="toggleMonth('${monthYear}')">
@@ -4989,17 +5010,17 @@
                                                 <span style="
                                                     font-size: 0.7rem;
                                                     padding: 4px 8px;
-                                                    background: ${economyForBadge > 0 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
-                                                    border: 1px solid ${economyForBadge > 0 ? '#22c55e' : '#ef4444'};
+                                                    background: ${badgeBg};
+                                                    border: 1px solid ${badgeColor};
                                                     border-radius: 12px;
-                                                    color: ${economyForBadge > 0 ? '#22c55e' : '#ef4444'};
+                                                    color: ${badgeColor};
                                                     font-weight: 700;
                                                     white-space: nowrap;
                                                     display: flex;
                                                     align-items: center;
                                                     gap: 4px;
-                                                " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)}">
-                                                    ${economyForBadge > 0 ? '💚' : '⚠️'}
+                                                " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)} (${spentPercent.toFixed(1)}%)">
+                                                    ${badgeIcon}
                                                     ${economyForBadge > 0 ? '+' : ''}${(economyForBadge / 1000).toFixed(1)}K
                                                 </span>
                                             ` : ''}
