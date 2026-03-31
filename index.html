@@ -4980,22 +4980,22 @@
                             const economyForBadge = incomeForBadge - totalMonthWithFixed;
                             const hasIncomeBadge = incomeForBadge > 0;
                             
-                            // ===== SISTEMA DE CORES POR PERCENTUAL =====
-                            const spentPercent = incomeForBadge > 0 ? (totalMonthWithFixed / incomeForBadge * 100) : 0;
+                            // ===== SISTEMA DE CORES BASEADO NOS LIMITES =====
+                            const totalLimit = state.goal + state.goalFixed;  // Limite total (variável + fixa)
                             let badgeColor, badgeBg, badgeIcon;
                             
-                            if (spentPercent < 100) {
-                                // Verde - Gastou menos que o rendimento
+                            if (totalMonthWithFixed < totalLimit) {
+                                // Verde - Abaixo do limite
                                 badgeColor = '#22c55e';
                                 badgeBg = 'rgba(34, 197, 94, 0.2)';
                                 badgeIcon = '💚';
-                            } else if (spentPercent === 100) {
-                                // Amarelo - Gastou exatamente o rendimento
+                            } else if (totalMonthWithFixed === totalLimit) {
+                                // Amarelo - Exatamente no limite
                                 badgeColor = '#f59e0b';
                                 badgeBg = 'rgba(245, 158, 11, 0.2)';
                                 badgeIcon = '⚠️';
                             } else {
-                                // Vermelho - Gastou mais que o rendimento
+                                // Vermelho - Acima do limite
                                 badgeColor = '#ef4444';
                                 badgeBg = 'rgba(239, 68, 68, 0.2)';
                                 badgeIcon = '🔴';
