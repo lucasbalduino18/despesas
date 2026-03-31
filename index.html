@@ -4980,6 +4980,9 @@
                             const economyForBadge = incomeForBadge - totalMonthWithFixed;
                             const hasIncomeBadge = incomeForBadge > 0;
                             
+                            // Calcular percentual do rendimento (para tooltip)
+                            const economyPercent = hasIncomeBadge ? (economyForBadge / incomeForBadge * 100) : 0;
+                            
                             // ===== SISTEMA DE CORES BASEADO NOS LIMITES =====
                             const totalLimit = state.goal + state.goalFixed;  // Limite total (variável + fixa)
                             let badgeColor, badgeBg, badgeIcon;
@@ -5019,7 +5022,7 @@
                                                     display: flex;
                                                     align-items: center;
                                                     gap: 4px;
-                                                " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)} (${spentPercent.toFixed(1)}%)">
+                                                " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} AED ${Math.abs(economyForBadge).toFixed(0)} (${Math.abs(economyPercent).toFixed(1)}% do rendimento)">
                                                     ${badgeIcon}
                                                     ${economyForBadge > 0 ? '+' : ''}${(economyForBadge / 1000).toFixed(1)}K
                                                 </span>
