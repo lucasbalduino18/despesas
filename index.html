@@ -4954,18 +4954,21 @@
                             let statusColor = '';
                             let statusTitle = '';
                             
-                            if (totalMonthWithFixed > (state.goal + state.goalFixed)) {
-                                statusIcon = '🔴';
-                                statusColor = '#ef4444';
-                                statusTitle = 'Acima do limite';
-                            } else if (totalMonthWithFixed > (state.goal + state.goalFixed) * 0.9) {
-                                statusIcon = '🟡';
-                                statusColor = '#fbbf24';
-                                statusTitle = 'Próximo do limite';
-                            } else {
+                            // ===== USAR MESMA LÓGICA DOS BADGES =====
+                            const totalLimitForStatus = state.goal + state.goalFixed;
+                            
+                            if (totalMonthWithFixed < totalLimitForStatus) {
                                 statusIcon = '🟢';
                                 statusColor = '#22c55e';
                                 statusTitle = 'Abaixo do limite';
+                            } else if (totalMonthWithFixed === totalLimitForStatus) {
+                                statusIcon = '🟡';
+                                statusColor = '#fbbf24';
+                                statusTitle = 'No limite';
+                            } else {
+                                statusIcon = '🔴';
+                                statusColor = '#ef4444';
+                                statusTitle = 'Acima do limite';
                             }
                             
                             // Calcular economia para o badge
