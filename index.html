@@ -583,7 +583,6 @@
 <!-- jsPDF para geração de PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-```
 
 </head>
 <body>
@@ -3895,7 +3894,9 @@
                         </div>
                         <div style="min-width: 0;">
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Hoje</div>
-                            <div style="font-size: 1.05rem; font-weight: 700; color: ${todayRemaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(Math.max(0, todayRemaining))}</div>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${monthDays.isLastDay ? formatNumberShort(Math.max(0, remaining)) : formatNumberShort(Math.max(0, todayRemaining))}
+                            </div>
                             <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 💸 ${formatNumberShort(todayTotal)}
                             </div>
@@ -5213,7 +5214,6 @@
     // Inicializar
     loadData();
 </script>
-```
 
 </body>
 </html>
