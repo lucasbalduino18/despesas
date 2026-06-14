@@ -3445,8 +3445,8 @@
                                             ${monthsWithData.length} ${monthsWithData.length === 1 ? 'mês' : 'meses'} com dados
                                         </div>
                                     </div>
-                                    <div style="text-align: right;">
-                                        <div style="font-size: 2rem; font-weight: 700; color: ${isOnTrack ? '#22c55e' : '#ef4444'};">
+                                    <div style="text-align: right; min-width: 0;">
+                                        <div style="font-size: 1.3rem; font-weight: 700; color: ${isOnTrack ? '#22c55e' : '#ef4444'}; word-break: break-all;">
                                             ${formatAED(yearlyEconomy)}
                                         </div>
                                         <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
@@ -3477,9 +3477,10 @@
                                         Meta: ${formatAED(state.yearlyGoal)}
                                     </div>
                                     <div style="
-                                        font-size: 0.9rem;
+                                        font-size: 0.8rem;
                                         font-weight: 700;
                                         color: ${remaining > 0 ? '#fbbf24' : '#22c55e'};
+                                        text-align: right;
                                     ">
                                         ${remaining > 0 ? 'Faltam' : 'Superou em'}: ${formatAED(Math.abs(remaining))}
                                     </div>
