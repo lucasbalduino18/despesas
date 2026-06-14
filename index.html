@@ -691,7 +691,7 @@
     // CACHE SYSTEM
     // ============================================
     const CACHE_KEY = 'despesas_app_cache';
-    const CACHE_DURATION = 2 * 60 * 1000; // 2 minutos
+    const CACHE_DURATION = 10 * 60 * 1000; // 10 minutos (mutations atualizam o cache localmente)
 
     function saveCache(data) {
         try {
@@ -1213,12 +1213,13 @@
         const success = await addExpenseToSheets(parsed);
         
         if (success) {
-            // Recarregar dados do servidor em vez de adicionar localmente
-            await loadData(true); // ← FORÇAR REFRESH
+            // ✅ OTIMIZAÇÃO: Atualizar state localmente sem recarregar tudo do servidor
+            state.expenses.push(parsed);
+            updateCache();
+
             state.sms = '';
             state.obs = '';
             state.selectedCategory = null;
-            // Mantém na aba 'add' em vez de ir para 'dash'
             alert('✅ Despesa salva automaticamente no Google Sheets!');
             render();
         } else {
@@ -1235,8 +1236,9 @@
             const success = await deleteExpenseFromSheets(id);
             
             if (success) {
-                // Recarregar dados do servidor em vez de filtrar localmente
-                await loadData(true); // ← FORÇAR REFRESH
+                // ✅ OTIMIZAÇÃO: Remover localmente sem recarregar tudo
+                state.expenses = state.expenses.filter(e => e.id !== id);
+                updateCache();
                 render();
             } else {
                 alert('❌ Erro ao deletar. Tente novamente.');
@@ -1263,10 +1265,17 @@
         const success = await updateExpenseInSheets(state.editingExpense);
         
         if (success) {
-            // Recarregar dados do servidor em vez de atualizar localmente
-            await loadData(true); // ← FORÇAR REFRESH
+            // ✅ OTIMIZAÇÃO: Atualizar localmente sem recarregar tudo
+            const idx = state.expenses.findIndex(e => e.id === state.editingExpense.id);
+            if (idx !== -1) state.expenses[idx] = { ...state.editingExpense };
+            updateCache();
             state.editingExpense = null;
             alert('✅ Despesa atualizada com sucesso!');
+            render();
+        } else {
+            alert('❌ Erro ao atualizar. Tente novamente.');
+        }
+    }
             render();
         } else {
             alert('❌ Erro ao atualizar. Tente novamente.');
@@ -1646,8 +1655,10 @@
             const result = await response.json();
             
             if (result.success) {
+                // ✅ OTIMIZAÇÃO: Inserir fixa localmente sem recarregar tudo
+                state.fixedExpenses.push(fixedExpense);
+                updateCache();
                 alert('✅ Despesa fixa adicionada!');
-                await loadData(true); // ← FORÇAR REFRESH
                 
                 // Limpar campos
                 document.getElementById('fixedName').value = '';
