@@ -1227,6 +1227,7 @@
         
         if (success) {
             // ✅ OTIMIZAÇÃO: Atualizar state localmente sem recarregar tudo do servidor
+            parsed.id = String(parsed.id); // Garantir mesmo tipo que vem do servidor
             state.expenses.push(parsed);
             updateCache();
 
@@ -2097,6 +2098,7 @@
 
         if (success) {
             // ✅ OTIMIZAÇÃO: Atualizar state localmente sem recarregar tudo do servidor
+            expense.id = String(expense.id); // Garantir mesmo tipo que vem do servidor
             state.expenses.push(expense);
             updateCache();
             // Limpar campos
