@@ -1156,9 +1156,9 @@
         // ── Aba 4: Configurações ─────────────────────────────────────────
         const configRows = [
             ['Parâmetro', 'Valor'],
-            ['Limite Variáveis (AED)', state.goal || 0],
-            ['Limite Fixas (AED)', state.goalFixed || 0],
-            ['Meta Anual (AED)', state.yearlyGoal || 0],
+            [`Limite Variáveis (${state.currency || 'AED'})`, state.goal || 0],
+            [`Limite Fixas (${state.currency || 'AED'})`, state.goalFixed || 0],
+            [`Meta Anual (${state.currency || 'AED'})`, state.yearlyGoal || 0],
         ];
         const wsConfig = XLSX.utils.aoa_to_sheet(configRows);
         wsConfig['!cols'] = [24, 16].map(w => ({ wch: w }));
@@ -1241,7 +1241,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💸 Despesas Variáveis (AED)
+                                    💸 Despesas Variáveis (${state.currency || 'AED'})
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalInput" value="${state.goal}"
@@ -1272,7 +1272,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💳 Despesas Fixas (AED)
+                                    💳 Despesas Fixas (${state.currency || 'AED'})
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalFixedInput" value="${state.goalFixed}"
@@ -1299,7 +1299,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    🎯 Meta de Economia Anual (AED)
+                                    🎯 Meta de Economia Anual (${state.currency || 'AED'})
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsYearlyGoalInput" value="${state.yearlyGoal}"
@@ -2668,7 +2668,7 @@
         // Tabela de resumo
         doc.autoTable({
             startY: yPos,
-            head: [['Descricao', 'Valor (AED)']],
+            head: [['Descricao', `Valor (${state.currency || 'AED'})`]],
             body: [
                 ['Total de Rendimentos', `${totalIncome.toFixed(2)}`],
                 ['Total de Despesas Fixas', `${totalFixedExpenses.toFixed(2)}`],
@@ -3433,7 +3433,7 @@
                         <div class="ritmo-detail-item">
                             <div class="ritmo-detail-label">Diferença</div>
                             <div class="ritmo-detail-value" style="color: ${ritmo.diferenca > 0 ? '#ef4444' : '#22c55e'}">
-                                ${ritmo.diferenca > 0 ? '+' : ''}${ritmo.diferenca.toFixed(0)} AED
+                                ${ritmo.diferenca > 0 ? '+' : ''}${ritmo.diferenca.toFixed(0)} ${state.currency || 'AED'}
                             </div>
                         </div>
                         <div class="ritmo-detail-item">
@@ -4373,7 +4373,7 @@
                         </div>
                         
                         <div class="input-group">
-                            <label class="label">Valor (AED):</label>
+                            <label class="label">${state.currency || 'AED'} — Valor:</label>
                             <input type="number" id="manualAmount" class="input-field" placeholder="Ex: 150.50" step="0.01" />
                         </div>
                         
@@ -4611,7 +4611,7 @@
                     
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
                         <div class="input-group">
-                            <label class="label">Valor (AED):</label>
+                            <label class="label">${state.currency || 'AED'} — Valor:</label>
                             <input type="number" id="fixedAmount" class="input-field" placeholder="Ex: 150.00" step="0.01" />
                         </div>
                         <div class="input-group">
@@ -5453,7 +5453,7 @@
                             </div>
                             
                             <div class="input-group">
-                                <label class="label">Valor (AED):</label>
+                                <label class="label">${state.currency || 'AED'} — Valor:</label>
                                 <input type="number" step="0.01" class="input-field" value="${state.editingExpense.amount}" 
                                        onchange="state.editingExpense.amount = parseFloat(this.value)">
                             </div>
