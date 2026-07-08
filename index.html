@@ -1075,20 +1075,81 @@
         }
     }
 
-    function downloadBackup() {
+    async function downloadBackup() {
+        showToast('⏳ Preparando backup...', 'success');
+
         const now = new Date();
         const dd = String(now.getDate()).padStart(2,'0');
         const mm = String(now.getMonth()+1).padStart(2,'0');
         const yyyy = now.getFullYear();
-        const filename = `despesas_backup_${dd}-${mm}-${yyyy}.html`;
+        const filename = `despesas_backup_${dd}-${mm}-${yyyy}.xlsx`;
 
-        const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Carregar SheetJS dinamicamente
+        await new Promise((resolve, reject) => {
+            if (window.XLSX) { resolve(); return; }
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+
+        const wb = XLSX.utils.book_new();
+
+        // ── Aba 1: Despesas ──────────────────────────────────────────────
+        const despesasRows = [['ID', 'Valor', 'Data', 'Hora', 'Estabelecimento', 'Categoria', 'Observação']];
+        (state.expenses || []).forEach(e => {
+            despesasRows.push([
+                e.id || '',
+                parseFloat(e.amount) || 0,
+                e.date || '',
+                e.time || '',
+                e.merchant || '',
+                e.category || '',
+                e.obs || ''
+            ]);
+        });
+        const wsDespesas = XLSX.utils.aoa_to_sheet(despesasRows);
+        wsDespesas['!cols'] = [14,10,12,10,30,14,20].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsDespesas, 'Despesas');
+
+        // ── Aba 2: Despesas Fixas ────────────────────────────────────────
+        const fixasRows = [['Nome', 'Valor', 'Dia Vencimento', 'Categoria']];
+        (state.fixedExpenses || []).forEach(f => {
+            fixasRows.push([f.name || '', parseFloat(f.amount) || 0, f.day || '', f.category || '']);
+        });
+        const wsFixas = XLSX.utils.aoa_to_sheet(fixasRows);
+        wsFixas['!cols'] = [30,10,16,14].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsFixas, 'Fixas');
+
+        // ── Aba 3: Rendimentos Mensais ───────────────────────────────────
+        const rendRows = [['Mês', 'Rendimento (AED)']];
+        Object.entries(state.monthlyIncome || {})
+            .sort(([a], [b]) => {
+                const [ma, ya] = a.split('/').map(Number);
+                const [mb, yb] = b.split('/').map(Number);
+                return ya !== yb ? yb - ya : mb - ma;
+            })
+            .forEach(([month, value]) => {
+                rendRows.push([month, parseFloat(value) || 0]);
+            });
+        const wsRend = XLSX.utils.aoa_to_sheet(rendRows);
+        wsRend['!cols'] = [12, 18].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsRend, 'Rendimentos');
+
+        // ── Aba 4: Configurações ─────────────────────────────────────────
+        const configRows = [
+            ['Parâmetro', 'Valor'],
+            ['Limite Variáveis (AED)', state.goal || 0],
+            ['Limite Fixas (AED)', state.goalFixed || 0],
+            ['Meta Anual (AED)', state.yearlyGoal || 0],
+        ];
+        const wsConfig = XLSX.utils.aoa_to_sheet(configRows);
+        wsConfig['!cols'] = [24, 16].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsConfig, 'Configurações');
+
+        // Download
+        XLSX.writeFile(wb, filename);
         showToast('✅ Backup baixado: ' + filename);
     }
 
