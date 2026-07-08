@@ -1164,10 +1164,6 @@
         `;
 
         const now = new Date();
-        const currentMonthKey = `${now.getMonth() + 1}/${now.getFullYear()}`;
-        const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
-        const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
         modal.innerHTML = `
             <div style="
                 background: #0F1729;
@@ -1247,54 +1243,6 @@
                                 </span>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Separador -->
-                    <div style="border-top: 1px solid rgba(255,255,255,0.07);"></div>
-
-                    <!-- Secção Rendimento -->
-                    <div>
-                        <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">Rendimento Mensal</div>
-                        <label style="display: block; font-size: 0.78rem; color: #94A3B8;
-                                      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            💰 ${monthNames[now.getMonth()]} ${now.getFullYear()}
-                        </label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="number" id="settingsIncomeInput" value="${currentIncome || ''}"
-                                   placeholder="Ex: 20000"
-                                   style="flex: 1; padding: 11px 14px; background: #162035;
-                                          border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-                                          color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;">
-                            <button onclick="
-                                const inp = document.getElementById('settingsIncomeInput');
-                                const origHTML = this.innerHTML;
-                                const origBg = this.style.background;
-                                document.getElementById('monthlyIncomeInput') && (document.getElementById('monthlyIncomeInput').value = inp.value);
-                                this.disabled = true; this.innerHTML = '⏳';
-                                const v = parseFloat(inp.value) || 0;
-                                const mk = '${currentMonthKey}';
-                                fetch(SHEETS_URL + '?action=saveIncome&month=' + encodeURIComponent(mk) + '&value=' + v)
-                                    .then(r => r.json())
-                                    .then(res => {
-                                        if (res.success) {
-                                            state.monthlyIncome[mk] = v;
-                                            updateCache();
-                                            inp.style.borderColor = '#00D4AA';
-                                            this.innerHTML = '✓'; this.style.background = '#00D4AA'; this.style.color = '#080D1A';
-                                            setTimeout(() => { inp.style.borderColor = ''; this.innerHTML = origHTML; this.style.background = origBg; this.style.color = '#080D1A'; this.disabled = false; render(); }, 1500);
-                                            showToast('✅ Rendimento salvo: AED ' + v.toFixed(0));
-                                        } else { this.innerHTML = origHTML; this.disabled = false; showToast('❌ Erro ao salvar', 'error'); }
-                                    }).catch(() => { this.innerHTML = origHTML; this.disabled = false; showToast('❌ Erro ao salvar', 'error'); });
-                            " style="padding: 11px 16px; background: #22c55e; border: none; border-radius: 8px;
-                                     color: #080D1A; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem;">💾</button>
-                        </div>
-                        <button onclick="this.closest('.modal-overlay').remove(); toggleIncomeManager();"
-                                style="margin-top: 10px; width: 100%; padding: 10px; background: transparent;
-                                       border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
-                                       color: #94A3B8; font-size: 0.8rem; cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;">
-                            📋 Gerir Todos os Meses
-                        </button>
                     </div>
 
                     <!-- Separador -->
@@ -4332,6 +4280,55 @@
                     </button>
                 </div>
                 
+                <!-- Rendimento Mensal -->
+                ${(() => {
+                    const now = new Date();
+                    const currentMonthKey = now.getMonth() + 1 + '/' + now.getFullYear();
+                    const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
+                    const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                    const monthExpenses = getMonthExpenses();
+                    const total = monthExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+
+                    let html = '<div style="margin-top: 16px; padding: 20px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15); border-radius: 12px; border-left: 3px solid #22c55e;">';
+                    html += '<div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">';
+                    html += '<span style="color: #F0F4FF;">💰 Rendimento Mensal</span>';
+                    html += '<button onclick="toggleIncomeManager()" style="padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94A3B8; font-weight: 600; cursor: pointer; font-size: 0.8rem;">📋 Gerir Todos</button>';
+                    html += '</div>';
+                    html += '<label style="display: block; font-size: 0.78rem; color: #94A3B8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">';
+                    html += 'Rendimento de ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
+                    html += '</label>';
+                    html += '<div style="display: flex; gap: 8px; align-items: center;">';
+                    html += '<input type="number" id="monthlyIncomeInput" placeholder="Ex: 20000" ';
+                    html += 'value="' + (currentIncome || '') + '" ';
+                    html += 'style="flex: 1; padding: 11px 14px; border: 1px solid rgba(34,197,94,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;" />';
+                    html += '<button onclick="saveMonthlyIncome()" style="padding: 11px 18px; background: #22c55e; border: none; border-radius: 8px; color: #080D1A; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem;">💾 Salvar</button>';
+                    html += '</div>';
+
+                    if (currentIncome > 0) {
+                        const currentMonthFixed = state.monthlyFixedExpenses[currentMonthKey] || [];
+                        const fixedTotal = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+                        const totalWithFixed = total + fixedTotal;
+                        const economy = currentIncome - totalWithFixed;
+                        const spentPercent = (totalWithFixed / currentIncome * 100);
+                        let statusColor, statusIcon, statusText;
+                        if (spentPercent < 100) { statusColor = '#22c55e'; statusIcon = '🎉'; statusText = 'Guardou ' + (100 - spentPercent).toFixed(1) + '% do rendimento'; }
+                        else if (spentPercent === 100) { statusColor = '#f59e0b'; statusIcon = '⚠️'; statusText = 'Gastou exactamente 100% do rendimento'; }
+                        else { statusColor = '#ef4444'; statusIcon = '🚨'; statusText = 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais (' + spentPercent.toFixed(1) + '%)'; }
+                        html += '<div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">';
+                        html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 10px;">';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">💰 Rendimento</div><div style="font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums;">AED ' + currentIncome.toFixed(0) + '</div></div>';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">💸 Variáveis</div><div style="font-weight: 700; color: #ef4444; font-variant-numeric: tabular-nums;">AED ' + total.toFixed(0) + '</div></div>';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">🔒 Fixas</div><div style="font-weight: 700; color: #f59e0b; font-variant-numeric: tabular-nums;">AED ' + fixedTotal.toFixed(0) + '</div></div>';
+                        html += '</div>';
+                        html += '<div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center;">';
+                        html += '<div style="font-size: 0.8rem; color: #94A3B8;">' + statusIcon + ' ' + statusText + '</div>';
+                        html += '<div style="font-size: 1.1rem; font-weight: 700; color: ' + statusColor + '; font-variant-numeric: tabular-nums;">' + (economy >= 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
+                        html += '</div></div>';
+                    }
+
+                    html += '</div>';
+                    return html;
+                })()}
             `;
             setTimeout(() => {
                 const smsInput = document.getElementById('smsInput');
