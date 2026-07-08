@@ -1240,6 +1240,48 @@
         return true;
     }
 
+    function renderFilteredExpenses(expenses) {
+        // Filtrar despesas do mês pelo período seleccionado
+        const visibleExpenses = (state.histDateStart || state.histDateEnd)
+            ? expenses.filter(e => {
+                if (!e.date) return false;
+                const p = e.date.split('/');
+                if (p.length < 3) return false;
+                const eDate = p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+                const afterStart = !state.histDateStart || eDate >= state.histDateStart;
+                const beforeEnd  = !state.histDateEnd   || eDate <= state.histDateEnd;
+                return afterStart && beforeEnd;
+            })
+            : expenses;
+
+        return visibleExpenses.map(e => {
+            const amount   = parseFloat(e.amount) || 0;
+            const merchant = e.merchant || 'Sem nome';
+            const date     = e.date || '';
+            const time     = e.time || '';
+            const category = e.category || 'outros';
+            const obs      = e.obs || '';
+            const catColor = getCategoryColor(category);
+            const catIcon  = getCategoryIcon(category);
+            const catName  = getCategoryName(category);
+            const cur      = state.currency || 'AED';
+
+            return '<div class="expense-item">' +
+                '<div class="expense-info">' +
+                    '<div class="expense-merchant">' + merchant + '</div>' +
+                    '<div class="expense-date">' + date + ' às ' + time + '</div>' +
+                    (obs ? '<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ' + obs + '</div>' : '') +
+                    '<span class="expense-category" style="background: ' + catColor + '">' + catIcon + ' ' + catName + '</span>' +
+                '</div>' +
+                '<div style="display:flex; align-items:center;">' +
+                    '<div class="expense-amount">' + cur + ' ' + amount.toFixed(2) + '</div>' +
+                    '<button class="edit-btn" onclick="startEditExpense(\"' + e.id + '\")">✏️</button>' +
+                    '<button class="delete-btn" onclick="deleteExpense(\"' + e.id + '\")">🗑️</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
     function renderPeriodSummary(months, expensesByMonth) {
         if (!state.histDateStart && !state.histDateEnd) return '';
 
@@ -5456,7 +5498,8 @@
                         // Total real do mês (variáveis + fixas)
                         const totalMonthWithFixed = totalMonth + fixedMonthTotal;
                         
-                        const isExpanded = state.expandedMonths[monthYear];
+                        // Auto-expandir quando há filtro de data activo
+                        const isExpanded = (state.histDateStart || state.histDateEnd) ? true : state.expandedMonths[monthYear];
                         
                         // Determinar se ficou acima ou abaixo do limite
                         let statusIcon = '';
@@ -5543,7 +5586,28 @@
                                     <span style="display: flex; align-items: center; gap: 15px;">
                                         <span style="display: flex; align-items: center; gap: 8px;">
                                             <span title="${statusTitle}" style="font-size: 0.9rem;">${statusIcon}</span>
-                                            <span>${state.currency || 'AED'} ${totalMonth.toFixed(2)}</span>
+                                            <span>${(() => {
+                                            if (state.histDateStart || state.histDateEnd) {
+                                                const filtTotal = expenses.filter(e => {
+                                                    if (!e.date) return false;
+                                                    const p = e.date.split('/');
+                                                    if (p.length < 3) return false;
+                                                    const eDate = p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+                                                    return (!state.histDateStart || eDate >= state.histDateStart) &&
+                                                           (!state.histDateEnd   || eDate <= state.histDateEnd);
+                                                }).reduce((s, e) => s + (parseFloat(e.amount)||0), 0);
+                                                const filtCount = expenses.filter(e => {
+                                                    if (!e.date) return false;
+                                                    const p = e.date.split('/');
+                                                    if (p.length < 3) return false;
+                                                    const eDate = p[2] + '-' + p[1].padStart(2,'0') + '-' + p[0].padStart(2,'0');
+                                                    return (!state.histDateStart || eDate >= state.histDateStart) &&
+                                                           (!state.histDateEnd   || eDate <= state.histDateEnd);
+                                                }).length;
+                                                return (state.currency || 'AED') + ' ' + filtTotal.toFixed(2) + ' (' + filtCount + ')';
+                                            }
+                                            return (state.currency || 'AED') + ' ' + totalMonth.toFixed(2);
+                                        })()}</span>
                                         </span>
                                         <span class="month-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
                                     </span>
@@ -5620,31 +5684,7 @@
                                         return '';
                                     })()}
                                     
-                                    ${expenses.map(e => {
-                                        const amount = parseFloat(e.amount) || 0;
-                                        const merchant = e.merchant || 'Sem nome';
-                                        const date = e.date || '';
-                                        const time = e.time || '';
-                                        const category = e.category || 'outros';
-                                        const obs = e.obs || '';
-                                        
-                                        return `
-                                        <div class="expense-item">
-                                            <div class="expense-info">
-                                                <div class="expense-merchant">${merchant}</div>
-                                                <div class="expense-date">${date} às ${time}</div>
-                                                ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
-                                                <span class="expense-category" style="background: ${getCategoryColor(category)}">
-                                                    ${getCategoryIcon(category)} ${getCategoryName(category)}
-                                                </span>
-                                            </div>
-                                            <div style="display:flex; align-items:center;">
-                                                <div class="expense-amount">${state.currency || 'AED'} ${amount.toFixed(2)}</div>
-                                                <button class="edit-btn" onclick="startEditExpense('${e.id}')">✏️</button>
-                                                <button class="delete-btn" onclick="deleteExpense('${e.id}')">🗑️</button>
-                                            </div>
-                                        </div>
-                                    `}).join('')}
+                                    ${renderFilteredExpenses(expenses)}
                                 </div>
                             </div>
                         `;
