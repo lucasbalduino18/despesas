@@ -1113,6 +1113,7 @@
         const wb = XLSX.utils.book_new();
 
         // ── Aba 1: Despesas ──────────────────────────────────────────────
+        // Estrutura idêntica à planilha: ID, Valor, Data, Hora, Estabelecimento, Categoria, Observação
         const despesasRows = [['ID', 'Valor', 'Data', 'Hora', 'Estabelecimento', 'Categoria', 'Observação']];
         (state.expenses || []).forEach(e => {
             despesasRows.push([
@@ -1129,17 +1130,32 @@
         wsDespesas['!cols'] = [14,10,12,10,30,14,20].map(w => ({ wch: w }));
         XLSX.utils.book_append_sheet(wb, wsDespesas, 'Despesas');
 
-        // ── Aba 2: Despesas Fixas ────────────────────────────────────────
-        const fixasRows = [['Nome', 'Valor', 'Dia Vencimento', 'Categoria']];
-        (state.fixedExpenses || []).forEach(f => {
-            fixasRows.push([f.name || '', parseFloat(f.amount) || 0, f.day || '', f.category || '']);
-        });
-        const wsFixas = XLSX.utils.aoa_to_sheet(fixasRows);
-        wsFixas['!cols'] = [30,10,16,14].map(w => ({ wch: w }));
-        XLSX.utils.book_append_sheet(wb, wsFixas, 'Fixas');
+        // ── Aba 2: FixasPorMes ───────────────────────────────────────────
+        // Estrutura: Mês + todas as despesas fixas desse mês
+        const fixasPorMesRows = [['Mês', 'Nome', 'Valor', 'Categoria']];
+        Object.entries(state.monthlyFixedExpenses || {})
+            .sort(([a], [b]) => {
+                const [ma, ya] = a.split('/').map(Number);
+                const [mb, yb] = b.split('/').map(Number);
+                return ya !== yb ? yb - ya : mb - ma;
+            })
+            .forEach(([month, fixas]) => {
+                (fixas || []).forEach(f => {
+                    fixasPorMesRows.push([
+                        month,
+                        f.name || '',
+                        parseFloat(f.amount) || 0,
+                        f.category || ''
+                    ]);
+                });
+            });
+        const wsFixasPorMes = XLSX.utils.aoa_to_sheet(fixasPorMesRows);
+        wsFixasPorMes['!cols'] = [12,30,10,14].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsFixasPorMes, 'FixasPorMes');
 
-        // ── Aba 3: Rendimentos Mensais ───────────────────────────────────
-        const rendRows = [['Mês', `Rendimento (${state.currency || 'AED'})`]];
+        // ── Aba 3: Rendimentos ───────────────────────────────────────────
+        // Estrutura: Mês, Valor — ordenado mais recente primeiro
+        const rendRows = [['Mês', 'Valor']];
         Object.entries(state.monthlyIncome || {})
             .sort(([a], [b]) => {
                 const [ma, ya] = a.split('/').map(Number);
@@ -1150,19 +1166,31 @@
                 rendRows.push([month, parseFloat(value) || 0]);
             });
         const wsRend = XLSX.utils.aoa_to_sheet(rendRows);
-        wsRend['!cols'] = [12, 18].map(w => ({ wch: w }));
+        wsRend['!cols'] = [12, 14].map(w => ({ wch: w }));
         XLSX.utils.book_append_sheet(wb, wsRend, 'Rendimentos');
 
-        // ── Aba 4: Configurações ─────────────────────────────────────────
-        const configRows = [
-            ['Parâmetro', 'Valor'],
-            [`Limite Variáveis (${state.currency || 'AED'})`, state.goal || 0],
-            [`Limite Fixas (${state.currency || 'AED'})`, state.goalFixed || 0],
-            [`Meta Anual (${state.currency || 'AED'})`, state.yearlyGoal || 0],
+        // ── Aba 4: Fixas ─────────────────────────────────────────────────
+        // Estrutura idêntica à planilha: Nome, Valor, Dia, Categoria
+        const fixasRows = [['Nome', 'Valor', 'Dia', 'Categoria']];
+        (state.fixedExpenses || []).forEach(f => {
+            fixasRows.push([f.name || '', parseFloat(f.amount) || 0, f.day || '', f.category || '']);
+        });
+        const wsFixas = XLSX.utils.aoa_to_sheet(fixasRows);
+        wsFixas['!cols'] = [30,10,8,14].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsFixas, 'Fixas');
+
+        // ── Aba 5: Meta ──────────────────────────────────────────────────
+        // Estrutura idêntica à planilha: linha 1 vazia, B2=Budget Variavel, B3=Budget Fixo, B4=Meta Economia, B5=Moeda
+        const metaRows = [
+            ['', ''],
+            ['Budget Variavel', state.goal || 0],
+            ['Budget Fixo',     state.goalFixed || 0],
+            ['Meta Economia',   state.yearlyGoal || 0],
+            ['Moeda',           state.currency || 'AED'],
         ];
-        const wsConfig = XLSX.utils.aoa_to_sheet(configRows);
-        wsConfig['!cols'] = [24, 16].map(w => ({ wch: w }));
-        XLSX.utils.book_append_sheet(wb, wsConfig, 'Configurações');
+        const wsMeta = XLSX.utils.aoa_to_sheet(metaRows);
+        wsMeta['!cols'] = [18, 14].map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, wsMeta, 'Meta');
 
         // Download
         XLSX.writeFile(wb, filename);
