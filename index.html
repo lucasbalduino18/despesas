@@ -1075,6 +1075,23 @@
         }
     }
 
+    function downloadBackup() {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2,'0');
+        const mm = String(now.getMonth()+1).padStart(2,'0');
+        const yyyy = now.getFullYear();
+        const filename = `despesas_backup_${dd}-${mm}-${yyyy}.html`;
+
+        const blob = new Blob([document.documentElement.outerHTML], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('✅ Backup baixado: ' + filename);
+    }
+
     function showToast(msg, type = 'success') {
         let toast = document.getElementById('appToast');
         if (!toast) {
@@ -3838,6 +3855,30 @@
                             </div>
                         </div>`;
                 })()}
+                <!-- Botão de Backup -->
+                <div style="margin-top: 16px;">
+                    <button onclick="downloadBackup()" style="
+                        width: 100%;
+                        padding: 13px;
+                        background: transparent;
+                        border: 1px solid rgba(255,255,255,0.12);
+                        border-radius: 8px;
+                        color: #94A3B8;
+                        font-size: 0.85rem;
+                        font-weight: 600;
+                        cursor: pointer;
+                        letter-spacing: 0.04em;
+                        text-transform: uppercase;
+                        transition: all 0.2s;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                    " onmouseover="this.style.borderColor='rgba(0,212,170,0.4)'; this.style.color='#00D4AA';"
+                       onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#94A3B8';">
+                        💾 Backup
+                    </button>
+                </div>
             `;
         } else if (state.tab === 'add') {
             const monthExpenses = getMonthExpenses();
