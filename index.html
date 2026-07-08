@@ -520,17 +520,32 @@
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1 style="margin: 0;">💰 Minhas Despesas</h1>
-            <button onclick="refreshData()" id="mainRefreshBtn" style="
-                background: rgba(0,212,170,0.1);
-                border: 1px solid rgba(0,212,170,0.3);
-                color: #00D4AA;
-                width: 44px;
-                height: 44px;
-                border-radius: 8px;
-                font-size: 20px;
-                cursor: pointer;
-                transition: all 0.2s;
-            " onmouseover="this.style.background='rgba(0,212,170,0.2)'; this.style.transform='rotate(180deg)'" onmouseout="this.style.background='rgba(0,212,170,0.1)'; this.style.transform='rotate(0deg)'">↻</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button onclick="openSettings()" title="Configurações" style="
+                    background: rgba(255,255,255,0.04);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    color: #94A3B8;
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex; align-items: center; justify-content: center;
+                " onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#F0F4FF';"
+                   onmouseout="this.style.background='rgba(255,255,255,0.04)'; this.style.color='#94A3B8';">⚙️</button>
+                <button onclick="refreshData()" id="mainRefreshBtn" style="
+                    background: rgba(0,212,170,0.1);
+                    border: 1px solid rgba(0,212,170,0.3);
+                    color: #00D4AA;
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 8px;
+                    font-size: 20px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                " onmouseover="this.style.background='rgba(0,212,170,0.2)'; this.style.transform='rotate(180deg)'" onmouseout="this.style.background='rgba(0,212,170,0.1)'; this.style.transform='rotate(0deg)'">↻</button>
+            </div>
         </div>
 
     <div id="app"></div>
@@ -1134,6 +1149,179 @@
         // Download
         XLSX.writeFile(wb, filename);
         showToast('✅ Backup baixado: ' + filename);
+    }
+
+    function openSettings() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px;
+            animation: fadeIn 0.2s;
+            backdrop-filter: blur(4px);
+        `;
+
+        const now = new Date();
+        const currentMonthKey = `${now.getMonth() + 1}/${now.getFullYear()}`;
+        const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
+        const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+        modal.innerHTML = `
+            <div style="
+                background: #0F1729;
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: 16px;
+                max-width: 500px; width: 100%;
+                max-height: 90vh; overflow-y: auto;
+                box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+            ">
+                <!-- Header -->
+                <div style="padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.07);
+                            display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">⚙️ Configurações</h3>
+                    </div>
+                    <button onclick="this.closest('.modal-overlay').remove()" style="
+                        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+                        color: #94A3B8; width: 32px; height: 32px; border-radius: 8px;
+                        font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+                </div>
+
+                <!-- Body -->
+                <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+
+                    <!-- Secção Limites -->
+                    <div>
+                        <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">Limites Mensais</div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; color: #94A3B8;
+                                              margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    💸 Despesas Variáveis (AED)
+                                </label>
+                                <input type="number" id="settingsGoalInput" value="${state.goal}"
+                                       onblur="updateGoal(this.value)"
+                                       style="width: 100%; padding: 11px 14px; background: #162035;
+                                              border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+                                              color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;">
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Mercado, restaurante, transporte, etc.</div>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; color: #94A3B8;
+                                              margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    💳 Despesas Fixas (AED)
+                                </label>
+                                <input type="number" id="settingsGoalFixedInput" value="${state.goalFixed}"
+                                       onblur="updateGoalFixed(this.value)"
+                                       style="width: 100%; padding: 11px 14px; background: #162035;
+                                              border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+                                              color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;">
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Aluguel, contas, assinaturas, etc.</div>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 0.78rem; color: #94A3B8;
+                                              margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    🎯 Meta de Economia Anual (AED)
+                                </label>
+                                <input type="number" id="settingsYearlyGoalInput" value="${state.yearlyGoal}"
+                                       onblur="updateYearlyGoal(this.value)"
+                                       style="width: 100%; padding: 11px 14px; background: #162035;
+                                              border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+                                              color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;">
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Quanto deseja economizar este ano?</div>
+                            </div>
+
+                            <!-- Total -->
+                            <div style="padding: 12px 14px; background: rgba(0,212,170,0.06);
+                                        border: 1px solid rgba(0,212,170,0.15); border-radius: 8px;
+                                        display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.8rem; color: #94A3B8;">📊 Limite Total Mensal</span>
+                                <span style="font-size: 1.1rem; font-weight: 700; color: #00D4AA; font-variant-numeric: tabular-nums;">
+                                    AED ${formatAEDShort(state.goal + state.goalFixed)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Separador -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.07);"></div>
+
+                    <!-- Secção Rendimento -->
+                    <div>
+                        <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">Rendimento Mensal</div>
+                        <label style="display: block; font-size: 0.78rem; color: #94A3B8;
+                                      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            💰 ${monthNames[now.getMonth()]} ${now.getFullYear()}
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="settingsIncomeInput" value="${currentIncome || ''}"
+                                   placeholder="Ex: 20000"
+                                   style="flex: 1; padding: 11px 14px; background: #162035;
+                                          border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+                                          color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;">
+                            <button onclick="
+                                const inp = document.getElementById('settingsIncomeInput');
+                                const origHTML = this.innerHTML;
+                                const origBg = this.style.background;
+                                document.getElementById('monthlyIncomeInput') && (document.getElementById('monthlyIncomeInput').value = inp.value);
+                                this.disabled = true; this.innerHTML = '⏳';
+                                const v = parseFloat(inp.value) || 0;
+                                const mk = '${currentMonthKey}';
+                                fetch(SHEETS_URL + '?action=saveIncome&month=' + encodeURIComponent(mk) + '&value=' + v)
+                                    .then(r => r.json())
+                                    .then(res => {
+                                        if (res.success) {
+                                            state.monthlyIncome[mk] = v;
+                                            updateCache();
+                                            inp.style.borderColor = '#00D4AA';
+                                            this.innerHTML = '✓'; this.style.background = '#00D4AA'; this.style.color = '#080D1A';
+                                            setTimeout(() => { inp.style.borderColor = ''; this.innerHTML = origHTML; this.style.background = origBg; this.style.color = '#080D1A'; this.disabled = false; render(); }, 1500);
+                                            showToast('✅ Rendimento salvo: AED ' + v.toFixed(0));
+                                        } else { this.innerHTML = origHTML; this.disabled = false; showToast('❌ Erro ao salvar', 'error'); }
+                                    }).catch(() => { this.innerHTML = origHTML; this.disabled = false; showToast('❌ Erro ao salvar', 'error'); });
+                            " style="padding: 11px 16px; background: #22c55e; border: none; border-radius: 8px;
+                                     color: #080D1A; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem;">💾</button>
+                        </div>
+                        <button onclick="this.closest('.modal-overlay').remove(); toggleIncomeManager();"
+                                style="margin-top: 10px; width: 100%; padding: 10px; background: transparent;
+                                       border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+                                       color: #94A3B8; font-size: 0.8rem; cursor: pointer; letter-spacing: 0.04em; text-transform: uppercase;">
+                            📋 Gerir Todos os Meses
+                        </button>
+                    </div>
+
+                    <!-- Separador -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.07);"></div>
+
+                    <!-- Secção Backup -->
+                    <div>
+                        <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">Dados</div>
+                        <button onclick="this.closest('.modal-overlay').remove(); downloadBackup();"
+                                style="width: 100%; padding: 13px; background: transparent;
+                                       border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+                                       color: #94A3B8; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+                                       letter-spacing: 0.04em; text-transform: uppercase; transition: all 0.2s;
+                                       display: flex; align-items: center; justify-content: center; gap: 8px;"
+                                onmouseover="this.style.borderColor='rgba(0,212,170,0.4)'; this.style.color='#00D4AA';"
+                                onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#94A3B8';">
+                            💾 Download Backup (XLSX)
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        `;
+
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        document.body.appendChild(modal);
     }
 
     function showToast(msg, type = 'success') {
@@ -3899,30 +4087,6 @@
                             </div>
                         </div>`;
                 })()}
-                <!-- Botão de Backup -->
-                <div style="margin-top: 16px;">
-                    <button onclick="downloadBackup()" style="
-                        width: 100%;
-                        padding: 13px;
-                        background: transparent;
-                        border: 1px solid rgba(255,255,255,0.12);
-                        border-radius: 8px;
-                        color: #94A3B8;
-                        font-size: 0.85rem;
-                        font-weight: 600;
-                        cursor: pointer;
-                        letter-spacing: 0.04em;
-                        text-transform: uppercase;
-                        transition: all 0.2s;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        gap: 8px;
-                    " onmouseover="this.style.borderColor='rgba(0,212,170,0.4)'; this.style.color='#00D4AA';"
-                       onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#94A3B8';">
-                        💾 Backup
-                    </button>
-                </div>
             `;
         } else if (state.tab === 'add') {
             const monthExpenses = getMonthExpenses();
@@ -4168,156 +4332,6 @@
                     </button>
                 </div>
                 
-                <!-- Card de Configuração de Limites -->
-                <div class="card">
-                    <h3 style="margin-bottom: 20px;">⚙️ Configuração de Limites</h3>
-                    
-                    <div class="input-group">
-                        <label class="label">💸 Limite Mensal - Despesas Variáveis (AED):</label>
-                        <input type="number" id="goalInput" value="${state.goal}" 
-                               onblur="updateGoal(this.value)" 
-                               style="font-size: 1.1rem; font-weight: 600;">
-                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                            Mercado, restaurante, transporte, etc.
-                        </div>
-                    </div>
-                    
-                    <div class="input-group" style="margin-top: 15px;">
-                        <label class="label">💳 Limite Mensal - Despesas Fixas (AED):</label>
-                        <input type="number" id="goalFixedInput" value="${state.goalFixed}" 
-                               onblur="updateGoalFixed(this.value)"
-                               style="font-size: 1.1rem; font-weight: 600;">
-                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                            Aluguel, contas, assinaturas, etc.
-                        </div>
-                    </div>
-                    
-                    <div style="
-                        margin-top: 20px;
-                        padding: 15px;
-                        background: rgba(59, 130, 246, 0.1);
-                        border-radius: 8px;
-                        border-left: 4px solid #3b82f6;
-                    ">
-                        <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">
-                            📊 Limite Total Mensal
-                        </div>
-                        <div style="font-size: 1.8rem; font-weight: 700; color: #ffffff;">
-                            AED ${formatAEDShort(state.goal + state.goalFixed)}
-                        </div>
-                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                            Variáveis (${formatAEDShort(state.goal)}) + Fixas (${formatAEDShort(state.goalFixed)})
-                        </div>
-                    </div>
-                    
-                    <!-- Card de Meta Anual de Economia -->
-                    <div class="input-group" style="margin-top: 20px;">
-                        <label class="label">🎯 Meta de Economia Anual (AED):</label>
-                        <input type="number" id="yearlyGoalInput" value="${state.yearlyGoal}" 
-                               onblur="updateYearlyGoal(this.value)" 
-                               style="font-size: 1.1rem; font-weight: 600;">
-                        <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                            Quanto você deseja economizar este ano?
-                        </div>
-                    </div>
-                    
-                    <!-- Card de Rendimento Mensal -->
-                    <div style="
-                        margin-top: 20px;
-                        padding: 20px;
-                        background: rgba(34, 197, 94, 0.1);
-                        border-radius: 12px;
-                        border-left: 4px solid #22c55e;
-                    ">
-                        <div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-                            <span>💰 Rendimento Mensal</span>
-                            <button onclick="toggleIncomeManager()" 
-                                style="padding: 8px 16px; background: rgba(255,255,255,0.2); border: none; 
-                                border-radius: 6px; color: white; font-weight: 600; cursor: pointer; font-size: 0.85rem;">
-                                📋 Gerenciar Todos
-                            </button>
-                        </div>
-                        ${(() => {
-                            const now = new Date();
-                            const currentMonthKey = now.getMonth() + 1 + '/' + now.getFullYear();
-                            const currentIncome = state.monthlyIncome[currentMonthKey] || 0;
-                            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                            
-                            let html = '<div style="margin-bottom: 15px;">';
-                            html += '<label style="display: block; font-size: 0.85rem; opacity: 0.9; margin-bottom: 8px;">';
-                            html += 'Rendimento de ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
-                            html += '</label>';
-                            html += '<div style="display: flex; gap: 10px; align-items: center;">';
-                            html += '<input type="number" id="monthlyIncomeInput" placeholder="Ex: 15000" ';
-                            html += 'value="' + (currentIncome || '') + '" ';
-                            html += 'style="flex: 1; padding: 12px; border: 2px solid rgba(34, 197, 94, 0.3); ';
-                            html += 'border-radius: 8px; background: rgba(255,255,255,0.1); color: white; ';
-                            html += 'font-size: 1rem; font-weight: 600;" />';
-                            html += '<button onclick="saveMonthlyIncome()" ';
-                            html += 'style="padding: 12px 20px; background: #22c55e; border: none; ';
-                            html += 'border-radius: 8px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap;">';
-                            html += '💾 Salvar</button>';
-                            html += '</div></div>';
-                            
-                            if (currentIncome > 0) {
-                                // ===== CORREÇÃO: Incluir despesas fixas no cálculo =====
-                                const currentMonthFixed = state.monthlyFixedExpenses[currentMonthKey] || [];
-                                const fixedTotal = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
-                                const totalWithFixed = total + fixedTotal;
-                                
-                                const economy = currentIncome - totalWithFixed;
-                                const economyPercent = (economy / currentIncome * 100);
-                                const spentPercent = (totalWithFixed / currentIncome * 100);
-                                
-                                // Nova lógica de cores baseada no percentual gasto
-                                let statusColor, statusBg, statusIcon, statusText;
-                                if (spentPercent < 100) {
-                                    // Verde - Gastou menos que o rendimento (economia positiva)
-                                    statusColor = '#22c55e';
-                                    statusBg = 'rgba(34, 197, 94, 0.15)';
-                                    statusIcon = '🎉';
-                                    statusText = 'Você guardou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
-                                } else if (spentPercent === 100) {
-                                    // Amarelo - Gastou exatamente o rendimento
-                                    statusColor = '#f59e0b';
-                                    statusBg = 'rgba(245, 158, 11, 0.15)';
-                                    statusIcon = '⚠️';
-                                    statusText = 'Você gastou exatamente 100% do seu rendimento';
-                                } else {
-                                    // Vermelho - Gastou mais que o rendimento
-                                    statusColor = '#ef4444';
-                                    statusBg = 'rgba(239, 68, 68, 0.15)';
-                                    statusIcon = '🚨';
-                                    statusText = 'Gastou AED ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento (' + spentPercent.toFixed(1) + '%)';
-                                }
-                                
-                                html += '<div style="padding: 12px; ';
-                                html += 'background: ' + statusBg + '; ';
-                                html += 'border-radius: 8px; margin-top: 10px;">';
-                                html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
-                                html += '<div><div style="opacity: 0.8;">💰 Rendimento</div>';
-                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #22c55e;">AED ' + currentIncome.toFixed(0) + '</div></div>';
-                                html += '<div><div style="opacity: 0.8;">💸 Variáveis</div>';
-                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">AED ' + total.toFixed(0) + '</div></div>';
-                                html += '<div><div style="opacity: 0.8;">🔒 Fixas</div>';
-                                html += '<div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">AED ' + fixedTotal.toFixed(0) + '</div></div>';
-                                html += '<div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">';
-                                html += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
-                                html += '<div style="opacity: 0.8;">📊 Total Despesas</div>';
-                                html += '<div style="font-weight: 700;">AED ' + totalWithFixed.toFixed(0) + '</div>';
-                                html += '</div>';
-                                html += '<div style="opacity: 0.8;">' + statusIcon + ' Economia</div>';
-                                html += '<div style="font-size: 1.3rem; font-weight: 700; color: ' + statusColor + ';">';
-                                html += (economy > 0 ? '+' : '') + 'AED ' + economy.toFixed(0) + '</div>';
-                                html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
-                                html += statusText;
-                                html += '</div></div></div></div>';
-                            }
-                            
-                            return html;
-                        })()}
-                    </div>
-                </div>
             `;
             setTimeout(() => {
                 const smsInput = document.getElementById('smsInput');
