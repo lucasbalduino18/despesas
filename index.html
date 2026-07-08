@@ -704,6 +704,7 @@
                 state.expenses = cached.expenses || [];
                 state.goal = cached.goal || 5000;
                 state.goalFixed = cached.goalFixed || 0;
+                state.yearlyGoal = cached.yearlyGoal || 0;
                 state.fixedExpenses = cached.fixedExpenses || [];
                 
                 // Filtrar fixas mensais inválidas do cache
@@ -737,97 +738,87 @@
             }
         }
         
+        // Função auxiliar: fetch com retry automático
+        async function fetchWithRetry(url, retries = 3, delayMs = 1000) {
+            for (let attempt = 1; attempt <= retries; attempt++) {
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    return { ok: true, data };
+                } catch (err) {
+                    console.warn(`⚠️ Tentativa ${attempt}/${retries} falhou para ${url.split('action=')[1]}: ${err.message}`);
+                    if (attempt < retries) await new Promise(r => setTimeout(r, delayMs * attempt));
+                }
+            }
+            return { ok: false, data: null };
+        }
+
         try {
             console.log('=== INICIANDO CARREGAMENTO ===');
-            console.log('URL:', SHEETS_URL);
-            console.log('Force Refresh:', forceRefresh);
-            
-            // REQUESTS PARALELOS - Todas ao mesmo tempo
-            const [despesasResult, metaResult, fixedResult, incomeResult, monthlyFixedResult] = await Promise.allSettled([
-                fetch(`${SHEETS_URL}?action=getDespesas`).then(r => r.json()),
-                fetch(`${SHEETS_URL}?action=getMeta`).then(r => r.json()),
-                fetch(`${SHEETS_URL}?action=getFixedExpenses`).then(r => r.json()),
-                fetch(`${SHEETS_URL}?action=getIncome`).then(r => r.json()),
-                fetch(`${SHEETS_URL}?action=getAllMonthlyFixed`).then(r => r.json())
-            ]);
-            
-            // Processar despesas
-            if (despesasResult.status === 'fulfilled') {
-                const despesasData = despesasResult.value;
-                state.expenses = despesasData.expenses || despesasData || [];
+
+            // ── Fase 1: Despesas (maior payload — primeiro) ──────────────
+            const despesasRes = await fetchWithRetry(`${SHEETS_URL}?action=getDespesas`);
+            if (despesasRes.ok) {
+                const d = despesasRes.data;
+                state.expenses = d.expenses || d || [];
                 console.log('✅ Despesas:', state.expenses.length);
             } else {
-                console.error('❌ Erro despesas:', despesasResult.reason);
-                state.expenses = [];
+                console.error('❌ Despesas falharam após retries');
+                state.expenses = state.expenses || [];
             }
-            
+
+            // ── Fase 2: Meta + Fixas + Rendimentos em paralelo ──────────
+            // Agora com menos pressão no servidor (despesas já terminaram)
+            const [metaRes, fixedRes, incomeRes, monthlyFixedRes] = await Promise.all([
+                fetchWithRetry(`${SHEETS_URL}?action=getMeta`),
+                fetchWithRetry(`${SHEETS_URL}?action=getFixedExpenses`),
+                fetchWithRetry(`${SHEETS_URL}?action=getIncome`),
+                fetchWithRetry(`${SHEETS_URL}?action=getAllMonthlyFixed`)
+            ]);
+
             // Processar meta
-            if (metaResult.status === 'fulfilled') {
-                const metaData = metaResult.value;
-                console.log('📥 Dados recebidos do getMeta:', JSON.stringify(metaData));
-                console.log('📥 metaData.meta:', metaData.meta);
-                console.log('📥 metaData.metaFixed:', metaData.metaFixed);
-                console.log('📥 metaData.yearlyGoal:', metaData.yearlyGoal);
-                
-                state.goal = metaData.meta || 5000;
-                state.goalFixed = metaData.metaFixed || 0;
-                state.yearlyGoal = metaData.yearlyGoal || 0;
-                console.log('✅ Limite Variáveis carregado:', state.goal);
-                console.log('✅ Limite Fixas carregado:', state.goalFixed);
-                console.log('✅ Meta Anual carregada:', state.yearlyGoal);
+            if (metaRes.ok) {
+                const m = metaRes.data;
+                state.goal       = (m.meta       != null && m.meta       !== '') ? Number(m.meta)       : (state.goal       || 5000);
+                state.goalFixed  = (m.metaFixed  != null && m.metaFixed  !== '') ? Number(m.metaFixed)  : (state.goalFixed  || 0);
+                state.yearlyGoal = (m.yearlyGoal != null && m.yearlyGoal !== '') ? Number(m.yearlyGoal) : (state.yearlyGoal || 0);
+                console.log('✅ Meta:', state.goal, '| Fixas:', state.goalFixed, '| Anual:', state.yearlyGoal);
             } else {
-                console.error('❌ Erro meta:', metaResult.reason);
-                state.goal = 5000;
-                state.goalFixed = 0;
-                state.yearlyGoal = 0;
+                console.error('❌ Meta falhou após retries — mantendo valores actuais');
             }
-            
+
             // Processar fixas
-            if (fixedResult.status === 'fulfilled') {
-                const fixedData = fixedResult.value;
-                state.fixedExpenses = fixedData.fixedExpenses || [];
+            if (fixedRes.ok) {
+                state.fixedExpenses = fixedRes.data.fixedExpenses || [];
                 console.log('✅ Fixas:', state.fixedExpenses.length);
             } else {
-                console.log('⚠️ Fixas não disponíveis');
-                state.fixedExpenses = [];
+                console.error('❌ Fixas falharam após retries — mantendo valores actuais');
+                state.fixedExpenses = state.fixedExpenses || [];
             }
-            
+
             // Processar rendimentos
-            if (incomeResult.status === 'fulfilled') {
-                const incomeData = incomeResult.value;
-                state.monthlyIncome = incomeData.income || {};
+            if (incomeRes.ok) {
+                state.monthlyIncome = incomeRes.data.income || {};
                 console.log('✅ Rendimentos:', Object.keys(state.monthlyIncome).length, 'meses');
             } else {
-                console.log('⚠️ Rendimentos não disponíveis');
-                state.monthlyIncome = {};
+                console.error('❌ Rendimentos falharam após retries — mantendo valores actuais');
+                state.monthlyIncome = state.monthlyIncome || {};
             }
-            
-            // Processar fixas mensais (NOVO)
-            if (monthlyFixedResult.status === 'fulfilled') {
-                const monthlyFixedData = monthlyFixedResult.value;
-                if (monthlyFixedData.success) {
-                    // Filtrar meses inválidos
-                    const cleanedFixed = {};
-                    Object.keys(monthlyFixedData.monthlyFixed || {}).forEach(month => {
-                        if (month && 
-                            !month.includes('undefined') && 
-                            !month.includes('NaN') && 
-                            month !== '0/0' &&
-                            month.includes('/')) {
-                            cleanedFixed[month] = monthlyFixedData.monthlyFixed[month];
-                        } else {
-                            console.warn('⚠️ Mês inválido ignorado:', month);
-                        }
-                    });
-                    
-                    state.monthlyFixedExpenses = cleanedFixed;
-                    console.log('✅ Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses válidos');
-                } else {
-                    state.monthlyFixedExpenses = {};
-                }
+
+            // Processar fixas mensais
+            if (monthlyFixedRes.ok && monthlyFixedRes.data.success) {
+                const cleanedFixed = {};
+                Object.keys(monthlyFixedRes.data.monthlyFixed || {}).forEach(month => {
+                    if (month && !month.includes('undefined') && !month.includes('NaN') &&
+                        month !== '0/0' && month.includes('/')) {
+                        cleanedFixed[month] = monthlyFixedRes.data.monthlyFixed[month];
+                    }
+                });
+                state.monthlyFixedExpenses = cleanedFixed;
+                console.log('✅ Fixas Mensais:', Object.keys(state.monthlyFixedExpenses).length, 'meses');
             } else {
-                console.log('⚠️ Fixas mensais não disponíveis');
-                state.monthlyFixedExpenses = {};
+                console.error('❌ Fixas mensais falharam após retries — mantendo valores actuais');
+                state.monthlyFixedExpenses = state.monthlyFixedExpenses || {};
             }
 
             // Salvar cache
@@ -837,26 +828,18 @@
                 monthlyFixedExpenses: state.monthlyFixedExpenses,
                 goal: state.goal,
                 goalFixed: state.goalFixed,
+                yearlyGoal: state.yearlyGoal,
                 monthlyIncome: state.monthlyIncome
             });
             console.log('💾 Cache salvo');
 
             state.loading = false;
-            
-            // Só renderiza se for a primeira carga
-            if (wasLoading) {
-                render();
-            }
+            if (wasLoading) render();
+
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            console.error('URL sendo usada:', SHEETS_URL);
-            if (wasLoading) {
-                alert(`❌ Erro ao carregar dados.\n\nDetalhes: ${error.message}\n\nVerifique:\n1. Apps Script foi reimplantado?\n2. URL está correta?\n3. Planilha tem aba "Despesas"?`);
-            }
             state.loading = false;
-            if (wasLoading) {
-                render();
-            }
+            if (wasLoading) render();
         }
     }
 
