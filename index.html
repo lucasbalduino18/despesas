@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Minhas Despesas</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -552,6 +555,18 @@
 </div>
 
 <script>
+    // Global error handler — captura erros de runtime
+    window.addEventListener('error', function(e) {
+        console.error('❌ RUNTIME ERROR:', e.message, 'at', e.filename, 'line', e.lineno);
+        const app = document.getElementById('app');
+        if (app && app.innerHTML.trim() === '') {
+            app.innerHTML = '<div style="padding:20px;color:#ef4444;font-family:monospace;font-size:0.85rem;">' +
+                '❌ Erro ao carregar o app:<br><br>' + e.message + '<br>Linha: ' + e.lineno +
+                '<br><br><button onclick="location.reload()" style="padding:8px 16px;background:#00D4AA;border:none;border-radius:8px;color:#080D1A;font-weight:700;cursor:pointer;">↻ Recarregar</button>' +
+                '</div>';
+        }
+    });
+
     // ⚠️ IMPORTANTE: COLE SUA URL DO GOOGLE SHEETS AQUI
     const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxVLkLhhtW9wsGJfHx07y6trLtjYZJvFbq4oriMQ6gnGCMC4rfhZIkNAbP7Y2vKY4q-4w/exec';
 
