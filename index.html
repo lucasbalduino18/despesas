@@ -1241,7 +1241,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💸 Despesas Variáveis (${state.currency || 'AED'})
+                                    💸 Despesas Variáveis (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalInput" value="${state.goal}"
@@ -1272,7 +1272,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💳 Despesas Fixas (${state.currency || 'AED'})
+                                    💳 Despesas Fixas (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalFixedInput" value="${state.goalFixed}"
@@ -1299,7 +1299,7 @@
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    🎯 Meta de Economia Anual (${state.currency || 'AED'})
+                                    🎯 Meta de Economia Anual (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsYearlyGoalInput" value="${state.yearlyGoal}"
@@ -1402,6 +1402,13 @@
 
         modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
         document.body.appendChild(modal);
+
+        // Actualizar labels com a moeda actual após o modal ser inserido no DOM
+        requestAnimationFrame(() => {
+            modal.querySelectorAll('.settings-currency-label').forEach(el => {
+                el.textContent = state.currency || 'AED';
+            });
+        });
     }
 
     function showToast(msg, type = 'success') {
