@@ -997,13 +997,15 @@
     
     function updateCache() {
         try {
-            
             saveCache({
                 expenses: state.expenses,
                 fixedExpenses: state.fixedExpenses,
                 monthlyFixedExpenses: state.monthlyFixedExpenses,
                 goal: state.goal,
                 goalFixed: state.goalFixed,
+                yearlyGoal: state.yearlyGoal,
+                currency: state.currency,
+                lang: state.lang,
                 monthlyIncome: state.monthlyIncome
             });
         } catch (e) {
@@ -4837,7 +4839,7 @@
                                     📋 Colar
                                 </button>
                             </div>
-                            <textarea id="smsInput" placeholder="Cole aqui o SMS..." oninput="state.sms=this.value">${state.sms}</textarea>
+                            <textarea id="smsInput" placeholder="${t('smsPlaceholder')}" oninput="state.sms=this.value">${state.sms}</textarea>
                             <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
                             <div style="font-size:0.8rem; opacity:0.7; margin-top:8px;">
                                 Exemplo: Purchase of AED 716.55 with Credit Card ending xxxx at e& Digital App, Abu Dhabi. Avl Cr.......
