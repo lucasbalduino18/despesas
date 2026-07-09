@@ -773,6 +773,10 @@
             totalGeralVariaveis: 'Total Geral de Despesas Variáveis',
             transacoesEm: 'transações em', estabelecimentos: 'estabelecimentos', transacoesLabel: 'transações',
             ritmoIdeal: 'Você está no ritmo ideal!',
+            ritmoBemMenos: 'Você está gastando BEM MENOS que poderia!',
+            ritmoLevemente: 'Levemente acima do esperado',
+            ritmoMais: 'Você está gastando mais que poderia',
+            ritmoMuito: 'Gastos MUITO acima do esperado!',
             poderiaGastarLabel: 'Poderia Gastar',
             progressoMes: 'Progresso do Mês',
             visualizarMes: '📅 Visualizar Mês:',
@@ -931,6 +935,10 @@
             totalGeralVariaveis: 'Total Variable Expenses',
             transacoesEm: 'transactions in', estabelecimentos: 'merchants', transacoesLabel: 'transactions',
             ritmoIdeal: 'You are on track!',
+            ritmoBemMenos: 'You are spending MUCH LESS than expected!',
+            ritmoLevemente: 'Slightly above expected',
+            ritmoMais: 'You are spending more than expected',
+            ritmoMuito: 'Spending MUCH more than expected!',
             poderiaGastarLabel: 'Should Spend',
             progressoMes: 'Month Progress',
             visualizarMes: '📅 View Month:',
@@ -4088,11 +4096,11 @@
                         <div class="ritmo-status-emoji">${ritmo.emoji}</div>
                         <div class="ritmo-status-text" style="color: ${ritmo.cor}">${ritmo.status}</div>
                         <div class="ritmo-status-desc">
-                            ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que poderia!' :
+                            ${ritmo.ritmo < 80 ? t('ritmoBemMenos') :
                               ritmo.ritmo < 100 ? t('ritmoIdeal') :
-                              ritmo.ritmo < 110 ? 'Levemente acima do esperado' :
-                              ritmo.ritmo < 120 ? 'Você está gastando mais que poderia' :
-                              'Gastos MUITO acima do esperado!'}
+                              ritmo.ritmo < 110 ? t('ritmoLevemente') :
+                              ritmo.ritmo < 120 ? t('ritmoMais') :
+                              t('ritmoMuito')}
                         </div>
                     </div>
                     
@@ -4963,8 +4971,8 @@
                             <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 💸 ${formatNumberShort(todayTotal)}
                             </div>
-                            <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                ${t('gastoLabel')}
+                            <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px;">
+                                ${t('gastoLabel').toLowerCase()}
                             </div>
                         </div>
                     </div>
