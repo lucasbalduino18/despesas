@@ -835,7 +835,7 @@
 
     // Função de tradução
     function t(key) {
-        const lang = state ? (state.lang || 'pt') : 'pt';
+        const lang = (typeof state !== 'undefined' && state && state.lang) ? state.lang : 'pt';
         return (I18N[lang] && I18N[lang][key]) || I18N['pt'][key] || key;
     }
 
