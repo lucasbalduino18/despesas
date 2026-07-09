@@ -1626,6 +1626,60 @@
         return true;
     }
 
+    function renderEditModal() {
+        if (!state.editingExpense) return '';
+        const e = state.editingExpense;
+        const cur = state.currency || 'AED';
+        const editLabel = state.lang === 'en' ? 'Edit Expense' : 'Editar Despesa';
+        const dateLabel = state.lang === 'en' ? 'Date (DD/MM/YYYY)' : 'Data (DD/MM/YYYY)';
+        const timeLabel = state.lang === 'en' ? 'Time (HH:MM:SS)' : 'Hora (HH:MM:SS)';
+        const cancelLabel = state.lang === 'en' ? 'Cancel' : 'Cancelar';
+        const saveLabel = state.lang === 'en' ? 'Save' : 'Salvar';
+
+        let catOptions = '';
+        getCategories().forEach(cat => {
+            const selected = e.category === cat.id ? 'selected' : '';
+            catOptions += '<div class="category-item ' + selected + '" onclick="state.editingExpense.category=&quot;' + cat.id + '&quot;; render()">'  +
+                '<div class="category-icon">' + cat.icon + '</div>' +
+                '<div class="category-name">' + cat.name + '</div>' +
+                '</div>';
+        });
+
+        return '<div class="modal" onclick="if(event.target===this)cancelEditExpense()">' +
+            '<div class="modal-content">' +
+                '<div class="modal-header">✏️ ' + editLabel + '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + t('estabelecimento') + ':</label>' +
+                    '<input type="text" class="input-field" value="' + (e.merchant||'') + '" onchange="state.editingExpense.merchant=this.value">' +
+                '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + t('valor') + ' (' + cur + '):</label>' +
+                    '<input type="number" step="0.01" class="input-field" value="' + (e.amount||0) + '" onchange="state.editingExpense.amount=parseFloat(this.value)">' +
+                '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + dateLabel + ':</label>' +
+                    '<input type="text" class="input-field" value="' + (e.date||'') + '" onchange="state.editingExpense.date=this.value">' +
+                '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + timeLabel + ':</label>' +
+                    '<input type="text" class="input-field" value="' + (e.time||'') + '" onchange="state.editingExpense.time=this.value">' +
+                '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + t('observacaoLabel') + '</label>' +
+                    '<input type="text" class="input-field" value="' + (e.obs||'') + '" onchange="state.editingExpense.obs=this.value">' +
+                '</div>' +
+                '<div class="input-group">' +
+                    '<label class="label">' + t('categoriaLabel') + ':</label>' +
+                    '<div class="category-list">' + catOptions + '</div>' +
+                '</div>' +
+                '<div class="modal-buttons">' +
+                    '<button class="btn btn-secondary" onclick="cancelEditExpense()">' + cancelLabel + '</button>' +
+                    '<button class="btn" onclick="saveEditExpense()">' + saveLabel + '</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+
     // Utilitário: converte DD/MM/YYYY → YYYY-MM-DD
     function dateToISO(dateStr) {
         if (!dateStr) return '';
@@ -6105,61 +6159,7 @@
                     }).join('')
                 }
                 
-                ${state.editingExpense ? `
-                    <div class="modal" onclick="if(event.target === this) cancelEditExpense()">
-                        <div class="modal-content">
-                            <div class="modal-header">✏️ Editar Despesa</div>
-                            
-                            <div class="input-group">
-                                <label class="label">${t('estabelecimento')}:</label>
-                                <input type="text" class="input-field" value="${state.editingExpense.merchant}" 
-                                       onchange="state.editingExpense.merchant = this.value">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label class="label">${t('valor')} (${state.currency || 'AED'}):</label>
-                                <input type="number" step="0.01" class="input-field" value="${state.editingExpense.amount}" 
-                                       onchange="state.editingExpense.amount = parseFloat(this.value)">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label class="label">Data (DD/MM/YYYY):</label>
-                                <input type="text" class="input-field" value="${state.editingExpense.date}" 
-                                       onchange="state.editingExpense.date = this.value">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label class="label">Hora (HH:MM:SS):</label>
-                                <input type="text" class="input-field" value="${state.editingExpense.time}" 
-                                       onchange="state.editingExpense.time = this.value">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label class="label">${t('observacaoLabel')}</label>
-                                <input type="text" class="input-field" placeholder="Ex: Presente, Dividido..." value="${state.editingExpense.obs || ''}" 
-                                       onchange="state.editingExpense.obs = this.value">
-                            </div>
-                            
-                            <div class="input-group">
-                                <label class="label">${t('categoriaLabel')}:</label>
-                                <div class="category-list">
-                                    ${CATEGORIES.map(cat => `
-                                        <div class="category-item ${state.editingExpense.category === cat.id ? 'selected' : ''}" 
-                                             onclick="state.editingExpense.category = '${cat.id}'; render()">
-                                            <div class="category-icon">${cat.icon}</div>
-                                            <div class="category-name">${cat.name}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            
-                            <div class="modal-buttons">
-                                <button class="btn btn-secondary" onclick="cancelEditExpense()">Cancelar</button>
-                                <button class="btn" onclick="saveEditExpense()">Salvar</button>
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
+                ${renderEditModal()}
             `;
         }
     }
