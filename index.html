@@ -2103,25 +2103,33 @@
                    String(d.getSeconds()).padStart(2,'0');
         }
 
+        // Detectar moeda no texto do SMS
+        function detectCurrency(text) {
+            const m = text.match(/\b(AED|USD|EUR|GBP|BRL|CHF|CAD|AUD|JPY|CNY)\b/i);
+            return m ? m[1].toUpperCase() : null;
+        }
+
         // ── Padrão 1 (Lucas/Etihad): "Purchase of AED 355.00 with Credit Card ending 3783 at MIYABI SUSHI, DUBAI"
         // Sem data no SMS — usa data/hora actual
-        const m1 = text.match(/Purchase\s+of\s+AED\s*([\d,\.]+).*?at\s+([^,]+)/i);
+        const m1 = text.match(/Purchase\s+of\s+([A-Z]{3})\s*([\d,\.]+).*?at\s+([^,]+)/i);
         if (m1) {
             return {
-                amount: parseFloat(m1[1].replace(/,/g, '')),
+                amount: parseFloat(m1[2].replace(/,/g, '')),
+                smsCurrency: m1[1].toUpperCase(),
                 date: todayDate(),
                 time: nowTime(),
-                merchant: m1[2].trim(),
+                merchant: m1[3].trim(),
                 id: Date.now()
             };
         }
 
         // ── Padrão 2 (André/ADCB): "Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at MERCHANT"
         // Tem data e hora no SMS
-        const m2 = text.match(/(?:AED|aed)\s*([\d,\.]+).*?on\s+([\d\/]+)\s+([\d:]+).*?at\s+([^,]+)/i);
+        const m2 = text.match(/(?:AED|aed|USD|EUR|GBP|BRL)\s*([\d,\.]+).*?on\s+([\d\/]+)\s+([\d:]+).*?at\s+([^,]+)/i);
         if (m2) {
             return {
                 amount: parseFloat(m2[1].replace(/,/g, '')),
+                smsCurrency: detectCurrency(text.substring(0, text.indexOf(m2[1]))) || 'AED',
                 date: m2[2],
                 time: m2[3],
                 merchant: m2[4].trim(),
@@ -2130,13 +2138,15 @@
         }
 
         // ── Padrão 3: R$/USD/EUR com data e hora
-        const m3 = text.match(/(?:R\$|USD|EUR)\s*([\d,\.]+).*?(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2}:\d{2}).*?(?:at|em)\s+([^,\.]+)/i);
+        const m3 = text.match(/(R\$|USD|EUR|GBP|CHF)\s*([\d,\.]+).*?(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2}:\d{2}).*?(?:at|em)\s+([^,\.]+)/i);
         if (m3) {
+            const currMap = {'R$':'BRL','USD':'USD','EUR':'EUR','GBP':'GBP','CHF':'CHF'};
             return {
-                amount: parseFloat(m3[1].replace(/,/g, '')),
-                date: m3[2],
-                time: m3[3],
-                merchant: m3[4].trim(),
+                amount: parseFloat(m3[2].replace(/,/g, '')),
+                smsCurrency: currMap[m3[1].toUpperCase()] || m3[1].toUpperCase(),
+                date: m3[3],
+                time: m3[4],
+                merchant: m3[5].trim(),
                 id: Date.now()
             };
         }
@@ -2165,6 +2175,18 @@
         event.target.closest('.category-item').classList.add('selected');
     }
 
+    // Busca taxa de câmbio via frankfurter.app (gratuito, sem chave)
+    async function fetchExchangeRate(from, to) {
+        if (from === to) return 1;
+        try {
+            const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+            const data = await res.json();
+            return data.rates[to] || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     async function addExpense() {
         // Lock para evitar duplo envio
         if (state.saving) return;
@@ -2189,11 +2211,26 @@
             return;
         }
 
-        // ✅ ID único gerado no momento do clique — cada tentativa tem ID diferente,
-        // evitando duplicações com o mesmo ID em caso de retentativa com internet lenta
+        // ✅ ID único gerado no momento do clique
         parsed.id = String(Date.now());
         parsed.category = state.selectedCategory;
         parsed.obs = state.obs || '';
+
+        // ── Conversão de moeda se o SMS usa moeda diferente ──────────────
+        const smsCur = parsed.smsCurrency || state.currency;
+        const sysCur = state.currency || 'AED';
+        if (smsCur !== sysCur) {
+            const btn2 = document.querySelector('.btn-add-expense');
+            if (btn2) { btn2.disabled = true; btn2.textContent = '🔄 Converting...'; }
+            const rate = await fetchExchangeRate(smsCur, sysCur);
+            if (rate) {
+                const originalAmount = parsed.amount;
+                parsed.amount = Math.round(parsed.amount * rate * 100) / 100;
+                showToast(`💱 ${smsCur} ${originalAmount.toFixed(2)} → ${sysCur} ${parsed.amount.toFixed(2)} (rate: ${rate.toFixed(4)})`);
+            } else {
+                showToast(`⚠️ Could not fetch rate ${smsCur}→${sysCur}. Using original value.`, 'error');
+            }
+        }
 
         const btn = document.querySelector('.btn-add-expense');
         if (btn) { btn.disabled = true; btn.textContent = t('salvando'); }
