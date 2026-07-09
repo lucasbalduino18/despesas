@@ -2175,16 +2175,41 @@
         event.target.closest('.category-item').classList.add('selected');
     }
 
-    // Busca taxa de câmbio via frankfurter.app (gratuito, sem chave)
+    // Busca taxa de câmbio — tenta múltiplas APIs em fallback
     async function fetchExchangeRate(from, to) {
         if (from === to) return 1;
+        from = from.toUpperCase();
+        to = to.toUpperCase();
+
+        // API 1: frankfurter.app (BCE — gratuito, CORS ok)
         try {
             const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
-            const data = await res.json();
-            return data.rates[to] || null;
-        } catch (e) {
-            return null;
-        }
+            if (res.ok) {
+                const data = await res.json();
+                if (data.rates && data.rates[to]) return data.rates[to];
+            }
+        } catch(e) {}
+
+        // API 2: open.er-api.com (gratuito, sem chave, CORS ok)
+        try {
+            const res = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.rates && data.rates[to]) return data.rates[to];
+            }
+        } catch(e) {}
+
+        // API 3: fawazahmed0 (GitHub-hosted, CORS ok)
+        try {
+            const f = from.toLowerCase(), t2 = to.toLowerCase();
+            const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${f}.json`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data[f] && data[f][t2]) return data[f][t2];
+            }
+        } catch(e) {}
+
+        return null;
     }
 
     async function addExpense() {
@@ -2217,18 +2242,19 @@
         parsed.obs = state.obs || '';
 
         // ── Conversão de moeda se o SMS usa moeda diferente ──────────────
-        const smsCur = parsed.smsCurrency || state.currency;
-        const sysCur = state.currency || 'AED';
+        const smsCur = (parsed.smsCurrency || state.currency || 'AED').toUpperCase();
+        const sysCur = (state.currency || 'AED').toUpperCase();
         if (smsCur !== sysCur) {
-            const btn2 = document.querySelector('.btn-add-expense');
-            if (btn2) { btn2.disabled = true; btn2.textContent = '🔄 Converting...'; }
+            const btnConv = document.querySelector('.btn-add-expense');
+            if (btnConv) { btnConv.disabled = true; btnConv.textContent = '💱 ' + smsCur + '→' + sysCur + '...'; }
             const rate = await fetchExchangeRate(smsCur, sysCur);
             if (rate) {
                 const originalAmount = parsed.amount;
-                parsed.amount = Math.round(parsed.amount * rate * 100) / 100;
-                showToast(`💱 ${smsCur} ${originalAmount.toFixed(2)} → ${sysCur} ${parsed.amount.toFixed(2)} (rate: ${rate.toFixed(4)})`);
+                parsed.amount = Math.round(originalAmount * rate * 100) / 100;
+                showToast('💱 ' + smsCur + ' ' + originalAmount.toFixed(2) + ' → ' + sysCur + ' ' + parsed.amount.toFixed(2) + ' (1 ' + smsCur + ' = ' + rate.toFixed(4) + ' ' + sysCur + ')');
             } else {
-                showToast(`⚠️ Could not fetch rate ${smsCur}→${sysCur}. Using original value.`, 'error');
+                // Fallback: ask user to enter amount manually
+                showToast('⚠️ ' + smsCur + '→' + sysCur + ': taxa não disponível. Verifique o valor manualmente.', 'error');
             }
         }
 
