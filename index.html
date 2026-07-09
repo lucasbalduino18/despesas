@@ -763,6 +763,7 @@
             estabelecimentosLabel: '🏪 Estabelecimentos', vezLabel: 'vez', vezesLabel: 'vezes',
             doTotalLabel: 'do total', abaixoLimite: 'Abaixo do limite',
             guardouTooltip: 'Guardou', deficitTooltip: 'Déficit',
+            doRendimento: 'do rendimento', gastaExactamente: 'Gastou exactamente 100% do rendimento',
             as: 'às', rendimentoLabel: '💰 Rendimento',
             fixasLabel2: '🔒 Fixas', totalDespesasLabel: '📊 Total Despesas',
             economiaLabel: 'Economia', guardouRendimento: 'Você guardou',
@@ -920,6 +921,7 @@
             estabelecimentosLabel: '🏪 Merchants', vezLabel: 'time', vezesLabel: 'times',
             doTotalLabel: 'of total', abaixoLimite: 'Below limit',
             guardouTooltip: 'Saved', deficitTooltip: 'Deficit',
+            doRendimento: 'of income', gastaExactamente: 'Spent exactly 100% of income',
             as: 'at', rendimentoLabel: '💰 Income',
             fixasLabel2: '🔒 Fixed', totalDespesasLabel: '📊 Total Expenses',
             economiaLabel: 'Savings', guardouRendimento: 'You saved',
@@ -1941,7 +1943,7 @@
                             <div style="padding: 12px 14px; background: rgba(0,212,170,0.06);
                                         border: 1px solid rgba(0,212,170,0.15); border-radius: 8px;
                                         display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.8rem; color: #94A3B8;">📊 Limite Total Mensal</span>
+                                <span style="font-size: 0.8rem; color: #94A3B8;">${t('limiteTotalMensal')}</span>
                                 <span style="font-size: 1.1rem; font-weight: 700; color: #00D4AA; font-variant-numeric: tabular-nums;">
                                     ${formatAEDShort(state.goal + state.goalFixed)}
                                 </span>
@@ -1955,7 +1957,7 @@
                     <!-- Secção Moeda -->
                     <div>
                         <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">Moeda</div>
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">${t('moeda')}</div>
                         <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
                             ${t('moedaSistema')}
@@ -5117,7 +5119,7 @@
                         const spentPercent = (totalWithFixed / currentIncome * 100);
                         let statusColor, statusIcon, statusText;
                         if (spentPercent < 100) { statusColor = '#22c55e'; statusIcon = '🎉'; statusText = t('guardouTooltip') + ' ' + (100 - spentPercent).toFixed(1) + '% ' + t('doSeuRendimento'); }
-                        else if (spentPercent === 100) { statusColor = '#f59e0b'; statusIcon = '⚠️'; statusText = 'Gastou exactamente 100% do rendimento'; }
+                        else if (spentPercent === 100) { statusColor = '#f59e0b'; statusIcon = '⚠️'; statusText = t('gastaExactamente'); }
                         else { statusColor = '#ef4444'; statusIcon = '🚨'; statusText = (state.currency || 'AED') + ' ' + Math.abs(economy).toFixed(0) + ' a mais (' + spentPercent.toFixed(1) + '%)'; }
                         html += '<div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">';
                         html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 10px;">';
@@ -6058,7 +6060,7 @@
                                                 display: flex;
                                                 align-items: center;
                                                 gap: 4px;
-                                            " title="${economyForBadge > 0 ? t('guardouTooltip') : t('deficitTooltip')} ${state.currency || 'AED'} ${Math.abs(economyForBadge).toFixed(0)} (${Math.abs(economyPercent).toFixed(1)}% do rendimento)">
+                                            " title="${economyForBadge > 0 ? t('guardouTooltip') : t('deficitTooltip')} ${state.currency || 'AED'} ${Math.abs(economyForBadge).toFixed(0)} (${Math.abs(economyPercent).toFixed(1)}% ${t('doRendimento')})">
                                                 ${badgeIcon}
                                                 ${economyForBadge > 0 ? '+' : ''}${(economyForBadge / 1000).toFixed(1)}K
                                             </span>
