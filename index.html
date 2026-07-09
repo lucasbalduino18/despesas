@@ -565,6 +565,18 @@
 
 </head>
 <body>
+    <!-- Inline loading overlay — shown immediately, removed by render() -->
+    <div id="loadingOverlay" class="loading">
+        <div class="loading-logo">💰</div>
+        <div class="loading-bars">
+            <div class="loading-bar"></div>
+            <div class="loading-bar"></div>
+            <div class="loading-bar"></div>
+            <div class="loading-bar"></div>
+            <div class="loading-bar"></div>
+        </div>
+        <div class="loading-text">Loading...</div>
+    </div>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h1 id="appTitle" style="margin: 0; opacity: 0; transition: opacity 0.15s ease;">💰 Minhas Despesas</h1>
@@ -3833,8 +3845,13 @@
         }
 
         if (state.loading) {
-            app.innerHTML = `
-                <div class="loading">
+            // Show loading overlay directly on body (not inside #app container)
+            let overlay = document.getElementById('loadingOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'loadingOverlay';
+                overlay.className = 'loading';
+                overlay.innerHTML = `
                     <div class="loading-logo">💰</div>
                     <div class="loading-bars">
                         <div class="loading-bar"></div>
@@ -3844,9 +3861,17 @@
                         <div class="loading-bar"></div>
                     </div>
                     <div class="loading-text">${t('carregando').replace('⏳ ','')}</div>
-                </div>
-            `;
+                `;
+                document.body.appendChild(overlay);
+            }
             return;
+        }
+        // Remove loading overlay when data is ready
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.transition = 'opacity 0.3s ease';
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.remove(), 300);
         }
 
         if (SHEETS_URL === 'COLE_SUA_URL_AQUI') {
