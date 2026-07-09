@@ -525,7 +525,7 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="margin: 0;">💰 ' + t('appTitle') + '</h1>
+            <h1 style="margin: 0;">💰 ${t('appTitle')}</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="openSettings()" title="Configurações" style="
                     background: rgba(255,255,255,0.04);
@@ -1534,7 +1534,7 @@
                 <div style="padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.07);
                             display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">' + t('configuracoes') + '</h3>
+                        <h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">${t('configuracoes')}</h3>
                     </div>
                     <button onclick="this.closest('.modal-overlay').remove()" style="
                         background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
@@ -1548,7 +1548,7 @@
                     <!-- Secção Limites -->
                     <div>
                         <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">' + t('limitesMensais') + '</div>
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">${t('limitesMensais')}</div>
 
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div>
@@ -1579,7 +1579,7 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('mercadoRestaurante') + '</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">${t('mercadoRestaurante')}</div>
                             </div>
 
                             <div>
@@ -1606,7 +1606,7 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('aluguelContas') + '</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">${t('aluguelContas')}</div>
                             </div>
 
                             <div>
@@ -1633,7 +1633,7 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('quantoEconomizar') + '</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">${t('quantoEconomizar')}</div>
                             </div>
 
                             <!-- Total -->
@@ -1686,7 +1686,7 @@
                                      cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                         </div>
                         <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">
-                            ' + t('afetaTodos') + '
+                            ${t('afetaTodos')}
                         </div>
                     </div>
 
@@ -1699,7 +1699,7 @@
                                     letter-spacing: 0.08em; margin-bottom: 12px;">${t('idioma')}</div>
                         <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            ' + t('idiomaLabel') + '
+                            ${t('idiomaLabel')}
                         </label>
                         <div style="display: flex; gap: 8px;">
                             <button onclick="updateLang('pt'); this.closest('.modal-overlay').remove();"
@@ -1727,7 +1727,7 @@
                     <!-- Secção Backup -->
                     <div>
                         <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">' + t('dados') + '</div>
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">${t('dados')}</div>
                         <button onclick="this.closest('.modal-overlay').remove(); downloadBackup();"
                                 style="width: 100%; padding: 13px; background: transparent;
                                        border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
@@ -1736,7 +1736,7 @@
                                        display: flex; align-items: center; justify-content: center; gap: 8px;"
                                 onmouseover="this.style.borderColor='rgba(0,212,170,0.4)'; this.style.color='#00D4AA';"
                                 onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#94A3B8';">
-                            ' + t('downloadBackup') + '
+                            ${t('downloadBackup')}
                         </button>
                     </div>
 
@@ -3720,11 +3720,11 @@
         if (state.tab === 'dash') {
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab active" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
-                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
-                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
+                    <button class="tab active" onclick="state.tab='dash'; render()">${t('dashboard')}</button>
+                    <button class="tab" onclick="state.tab='add'; render()">${t('variavel')}</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">${t('fixas')}</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">${t('categorias')}</button>
+                    <button class="tab" onclick="state.tab='list'; render()">${t('historico')}</button>
                 </div>
                 
                 <!-- Card do Termômetro de Ritmo -->
@@ -3873,7 +3873,7 @@
                         <div class="stat-value">${formatAEDShort(largest)}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">' + t('categorias') + '</div>
+                        <div class="stat-label">${t('categorias')}</div>
                         <div class="stat-value">${Object.values(getCategoryStats()).filter(s => s.count > 0).length}</div>
                     </div>
                 </div>
@@ -4543,11 +4543,11 @@
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
-                    <button class="tab active" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
-                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">${t('dashboard')}</button>
+                    <button class="tab active" onclick="state.tab='add'; render()">${t('variavel')}</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">${t('fixas')}</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">${t('categorias')}</button>
+                    <button class="tab" onclick="state.tab='list'; render()">${t('historico')}</button>
                 </div>
                 <div class="card">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -4620,7 +4620,7 @@
                             </div>
                         </div>
                         <div style="min-width: 0;">
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">' + t('hoje') + '</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">${t('hoje')}</div>
                             <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 ${monthDays.isLastDay ? formatNumberShort(Math.max(0, remaining)) : formatNumberShort(Math.max(0, todayRemaining))}
                             </div>
@@ -4707,7 +4707,7 @@
                         </div>
                     ` : `
                         <div class="input-group">
-                            <label class="label">' + t('estabelecimento') + ':</label>
+                            <label class="label">${t('estabelecimento')}:</label>
                             <input type="text" id="manualMerchant" class="input-field" placeholder="Ex: Carrefour, Subway..." />
                         </div>
                         
@@ -4718,7 +4718,7 @@
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div class="input-group">
-                                <label class="label">' + t('data') + ':</label>
+                                <label class="label">${t('data')}:</label>
                                 <input type="date" id="manualDate" class="input-field" />
                             </div>
                             <div class="input-group">
@@ -4899,11 +4899,11 @@
             
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
-                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
-                    <button class="tab active" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
-                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">${t('dashboard')}</button>
+                    <button class="tab" onclick="state.tab='add'; render()">${t('variavel')}</button>
+                    <button class="tab active" onclick="state.tab='fixed'; render()">${t('fixas')}</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">${t('categorias')}</button>
+                    <button class="tab" onclick="state.tab='list'; render()">${t('historico')}</button>
                 </div>
                 
                 <!-- Seletor de Mês -->
@@ -4948,7 +4948,7 @@
                     
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
                         <div class="input-group">
-                            <label class="label">' + t('valor') + ' (${state.currency || 'AED'}):</label>
+                            <label class="label">${t('valor')} (${state.currency || 'AED'}):</label>
                             <input type="number" id="fixedAmount" class="input-field" placeholder="Ex: 150.00" step="0.01" />
                         </div>
                         <div class="input-group">
@@ -5157,11 +5157,11 @@
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
-                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
-                    <button class="tab active" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
-                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">${t('dashboard')}</button>
+                    <button class="tab" onclick="state.tab='add'; render()">${t('variavel')}</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">${t('fixas')}</button>
+                    <button class="tab active" onclick="state.tab='categories'; render()">${t('categorias')}</button>
+                    <button class="tab" onclick="state.tab='list'; render()">${t('historico')}</button>
                 </div>
                 
                 <!-- Título da Seção -->
@@ -5547,18 +5547,18 @@
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
-                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
-                    <button class="tab active" onclick="state.tab='list'; render()">' + t('historico') + '</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">${t('dashboard')}</button>
+                    <button class="tab" onclick="state.tab='add'; render()">${t('variavel')}</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">${t('fixas')}</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">${t('categorias')}</button>
+                    <button class="tab active" onclick="state.tab='list'; render()">${t('historico')}</button>
                 </div>
                 ${state.expenses.length === 0 ? 
                     '<div class="card"><div class="empty">📊<br>' + t('nenhumaDespesaAinda') + '</div></div>' :
                     `<!-- Card de Filtro de Período -->
                     <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden;">
                         <div style="position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: var(--amber); border-radius: 0 3px 3px 0; opacity: 0.7;"></div>
-                        <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">' + t('filtrarPeriodo') + '</div>
+                        <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">${t('filtrarPeriodo')}</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                             <div>
                                 <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">${t('de')}</label>
@@ -5568,7 +5568,7 @@
                                     style="width: 100%; padding: 9px 10px; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.85rem; font-family: inherit; color-scheme: dark;">
                             </div>
                             <div>
-                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">' + t('ate') + '</label>
+                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">${t('ate')}</label>
                                 <input type="date" id="histDateEnd"
                                     value="${state.histDateEnd}"
                                     onchange="state.histDateEnd = this.value; render();"
@@ -5582,31 +5582,31 @@
                                 state.histDateStart = s(n); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('hoje') + '</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">${t('hoje')}</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 const day = n.getDay(); const mon = new Date(n); mon.setDate(n.getDate() - (day === 0 ? 6 : day - 1));
                                 state.histDateStart = s(mon); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('semana') + '</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">${t('semana')}</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 const first = new Date(n.getFullYear(), n.getMonth(), 1);
                                 state.histDateStart = s(first); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('mes') + '</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">${t('mes')}</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 state.histDateStart = n.getFullYear() + '-01-01'; state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('ano') + '</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">${t('ano')}</button>
                             <button onclick="state.histDateStart = ''; state.histDateEnd = ''; render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='#ef4444'; this.style.color='#ef4444';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('limpar') + '</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">${t('limpar')}</button>
                         </div>
                     </div>
 
@@ -5839,7 +5839,7 @@
                             <div class="modal-header">✏️ Editar Despesa</div>
                             
                             <div class="input-group">
-                                <label class="label">' + t('estabelecimento') + ':</label>
+                                <label class="label">${t('estabelecimento')}:</label>
                                 <input type="text" class="input-field" value="${state.editingExpense.merchant}" 
                                        onchange="state.editingExpense.merchant = this.value">
                             </div>
