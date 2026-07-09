@@ -3166,10 +3166,10 @@
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
         doc.setFont(undefined, 'bold');
-        doc.text(`Relatorio Financeiro ${year}`, 148.5, 15, { align: 'center' }); // centro = 297/2
+        doc.text((state.lang==='en'?`Financial Report ${year}`:`Relatório Financeiro ${year}`), 148.5, 15, { align: 'center' }); // centro = 297/2
         doc.setFontSize(12);
         doc.setFont(undefined, 'normal');
-        doc.text('Balanco Anual da Familia', 148.5, 25, { align: 'center' });
+        doc.text(state.lang==='en'?'Annual Family Balance':'Balanço Anual da Família', 148.5, 25, { align: 'center' });
         
         let yPos = 45;
         
@@ -3213,7 +3213,7 @@
             const balance = income - (fixedTotal + variableTotal);
             
             monthlyData.push({
-                month: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][month - 1],
+                month: t('monthNames')[month - 1],
                 income,
                 fixed: fixedTotal,
                 variable: variableTotal,
@@ -3229,19 +3229,19 @@
         doc.setFontSize(16);
         doc.setTextColor(102, 126, 234);
         doc.setFont(undefined, 'bold');
-        doc.text('Resumo Anual', 14, yPos);
+        doc.text(state.lang==='en'?'Annual Summary':'Resumo Anual', 14, yPos);
         yPos += 10;
         
         // Tabela de resumo
         doc.autoTable({
             startY: yPos,
-            head: [['Descricao', `Valor (${state.currency || 'AED'})`]],
+            head: [[state.lang==='en'?'Description':'Descrição', `Valor (${state.currency || 'AED'})`]],
             body: [
-                ['Total de Rendimentos', `${totalIncome.toFixed(2)}`],
+                [state.lang==='en'?'Total Income':'Total de Rendimentos', `${totalIncome.toFixed(2)}`],
                 [t('totalDespesasFixas'), `${totalFixedExpenses.toFixed(2)}`],
-                ['Total de Despesas Variaveis', `${totalVariableExpenses.toFixed(2)}`],
-                ['Total de Despesas', `${totalExpenses.toFixed(2)}`],
-                ['Balanco Final', `${totalBalance.toFixed(2)}`]
+                [state.lang==='en'?'Total Variable Expenses':'Total de Despesas Variáveis', `${totalVariableExpenses.toFixed(2)}`],
+                [state.lang==='en'?'Total Expenses':'Total de Despesas', `${totalExpenses.toFixed(2)}`],
+                [state.lang==='en'?'Final Balance':'Balanço Final', `${totalBalance.toFixed(2)}`]
             ],
             theme: 'grid',
             headStyles: { fillColor: [102, 126, 234], textColor: 255, fontStyle: 'bold' },
@@ -3313,7 +3313,7 @@
             
             variableList.forEach(e => {
                 const cat = CATEGORIES.find(c => c.id === e.category);
-                const catName = cat ? cat.name : 'Outros';
+                const catName = cat ? cat.name : t('outros');
                 if (variableByCategory[catName]) {
                     variableByCategory[catName][month - 1] += parseFloat(e.amount) || 0;
                 }
@@ -3327,7 +3327,7 @@
                 return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
             });
         
-        const variableTotalRow = ['Total de Despesas Variaveis'];
+        const variableTotalRow = [state.lang==='en'?'Total Variable Expenses':'Total de Despesas Variáveis'];
         for (let i = 0; i < 12; i++) {
             const monthTotal = Object.values(variableByCategory).reduce((sum, amounts) => sum + amounts[i], 0);
             variableTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
@@ -3351,23 +3351,23 @@
         // Montar tabela unificada
         const unifiedTableData = [
             // Header de Rendimentos COM valores
-            ['Rendimentos', ...incomeMonthlyRow],
+            [(state.lang==='en'?'Income':'Rendimentos'), ...incomeMonthlyRow],
             
             // Header de Despesas Fixas
-            [{ content: 'Despesas Fixas', colSpan: 14, styles: { fillColor: [251, 146, 60], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+            [{ content: state.lang==='en'?'Fixed Expenses':'Despesas Fixas', colSpan: 14, styles: { fillColor: [251, 146, 60], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
             ...fixedRows,
             fixedTotalRow,
             
             // Header de Despesas Variáveis
-            [{ content: 'Despesas Variaveis', colSpan: 14, styles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
+            [{ content: state.lang==='en'?'Variable Expenses':'Despesas Variáveis', colSpan: 14, styles: { fillColor: [139, 92, 246], textColor: 255, fontStyle: 'bold', halign: 'left' }}],
             ...variableRows,
             variableTotalRow,
             
             // Header de Total de Despesas COM valores
-            ['Total de Despesas', ...totalExpensesRow],
+            [state.lang==='en'?'Total Expenses':'Total de Despesas', ...totalExpensesRow],
             
             // Header de Balanço COM valores
-            ['Balanco', ...balanceRow]
+            [(state.lang==='en'?'Balance':'Balanço'), ...balanceRow]
         ];
         
         // Calcular índices das linhas especiais (ajustados após remover linhas)
@@ -3382,7 +3382,7 @@
         
         doc.autoTable({
             startY: yPos,
-            head: [['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', 'Total Ano']],
+            head: [['', ...t('monthNames').map(m=>m.toLowerCase()), state.lang==='en'?'Year Total':'Total Ano']],
             body: unifiedTableData,
             theme: 'grid',
             headStyles: { fillColor: [102, 126, 234], textColor: 255, fontSize: 7, cellPadding: 1 },
@@ -3462,7 +3462,7 @@
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
-        doc.text(`Evolucao de Despesas ${year} - Top 6 Categorias`, 148.5, 12, { align: 'center' });
+        doc.text(state.lang==='en'?`Expense Evolution ${year} - Top 6 Categories`:`Evolução de Despesas ${year} - Top 6 Categorias`, 148.5, 12, { align: 'center' });
         
         // Preparar dados do gráfico (meses ativos com despesas)
         const chartCatTotals = {};
@@ -4098,7 +4098,7 @@
                                 📅 ${monthDays.passed} ${monthDays.passed === 1 ? 'dia' : 'dias'} passado${monthDays.passed === 1 ? '' : 's'}
                             </div>
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
-                                ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}/dia` : '💸 ' + (state.currency || 'AED') + ' 0/dia'}
+                                ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}${t('porDia')}` : '💸 ' + (state.currency || 'AED') + ' 0' + t('porDia')}
                             </div>
                         </div>
                         <div class="meta-item">
@@ -4110,7 +4110,7 @@
                                 ${monthDays.isLastDay ? '📅 Último dia!' : `📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? 'dia' : 'dias'} restante${monthDays.remaining === 1 ? '' : 's'}`}
                             </div>
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
-                                ${monthDays.isLastDay ? (state.lang==='en'?'💰 All today':'💰 Tudo hoje') : (monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}/dia` : '💰 ' + (state.currency || 'AED') + ' 0/dia')}
+                                ${monthDays.isLastDay ? (state.lang==='en'?'💰 All today':'💰 Tudo hoje') : (monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}${t('porDia')}` : '💰 ' + (state.currency || 'AED') + ' 0' + t('porDia'))}
                             </div>
                         </div>
                     </div>
@@ -4272,7 +4272,7 @@
                                     <!-- Fixas -->
                                     <div style="margin-bottom: 15px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                            <span style="font-size: 0.8rem; opacity: 0.7;">💳 Fixas</span>
+                                            <span style="font-size: 0.8rem; opacity: 0.7;">${t('fixasLabel')}</span>
                                             <span style="font-size: 0.75rem; opacity: 0.6;">
                                                 ${formatAED(totalFixas)} / ${formatAED(state.goalFixed)}
                                             </span>
