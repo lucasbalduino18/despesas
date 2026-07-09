@@ -2125,7 +2125,7 @@
 
         // ── Padrão 2 (André/ADCB): "Your Cr.Card XXXXX was used for AED34.65 on 03/12/2025 16:20:26 at MERCHANT"
         // Tem data e hora no SMS
-        const m2 = text.match(/(?:AED|aed|USD|EUR|GBP|BRL)\s*([\d,\.]+).*?on\s+([\d\/]+)\s+([\d:]+).*?at\s+([^,]+)/i);
+        const m2 = text.match(/(?:AED|aed|USD|EUR|GBP|BRL)\s*([\d,\.]+).*?on\s+([\d\/]+)\s+([\d:]+).*?at\s+([^,\.]+)/i);
         if (m2) {
             return {
                 amount: parseFloat(m2[1].replace(/,/g, '')),
@@ -2175,22 +2175,11 @@
         event.target.closest('.category-item').classList.add('selected');
     }
 
-    // Busca taxa de câmbio — tenta múltiplas APIs em fallback
+    // Busca taxa de câmbio via open.er-api.com (gratuito, sem chave, CORS ok)
     async function fetchExchangeRate(from, to) {
         if (from === to) return 1;
         from = from.toUpperCase();
         to = to.toUpperCase();
-
-        // API 1: frankfurter.app (BCE — gratuito, CORS ok)
-        try {
-            const res = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.rates && data.rates[to]) return data.rates[to];
-            }
-        } catch(e) {}
-
-        // API 2: open.er-api.com (gratuito, sem chave, CORS ok)
         try {
             const res = await fetch(`https://open.er-api.com/v6/latest/${from}`);
             if (res.ok) {
@@ -2198,17 +2187,6 @@
                 if (data.rates && data.rates[to]) return data.rates[to];
             }
         } catch(e) {}
-
-        // API 3: fawazahmed0 (GitHub-hosted, CORS ok)
-        try {
-            const f = from.toLowerCase(), t2 = to.toLowerCase();
-            const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${f}.json`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data[f] && data[f][t2]) return data[f][t2];
-            }
-        } catch(e) {}
-
         return null;
     }
 
