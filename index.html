@@ -525,7 +525,7 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 id="appTitle" style="margin: 0;">💰 Minhas Despesas</h1>
+            <h1 id="appTitle" style="margin: 0; opacity: 0; transition: opacity 0.15s ease;">💰 Minhas Despesas</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="openSettings()" title="Configurações" style="
                     background: rgba(255,255,255,0.04);
@@ -1029,6 +1029,14 @@
                 
                 state.monthlyIncome = cached.monthlyIncome || {};
                 state.loading = false;
+
+                // Aplicar idioma do cache imediatamente, antes do render
+                const titleElCache = document.getElementById('appTitle');
+                if (titleElCache) {
+                    titleElCache.innerHTML = '💰 ' + t('appTitle');
+                    titleElCache.style.opacity = '1';
+                }
+                document.title = t('appTitle');
                 
                 if (wasLoading) {
                     render();
@@ -3760,7 +3768,10 @@
         // Actualizar título e h1 dinamicamente com o idioma actual
         document.title = t('appTitle');
         const titleEl = document.getElementById('appTitle');
-        if (titleEl) titleEl.innerHTML = '💰 ' + t('appTitle');
+        if (titleEl) {
+            titleEl.innerHTML = '💰 ' + t('appTitle');
+            titleEl.style.opacity = '1';
+        }
 
         if (state.loading) {
             app.innerHTML = ('<div class="loading">' + t('carregando') + '</div>');
