@@ -759,6 +759,10 @@
             diasPassados: 'dias passados', diasRestantes: 'dias restantes',
             diaPassado: 'dia passado', diaRestante: 'dia restante',
             carregando: '⏳ Carregando dados...',
+            as: 'às', rendimentoLabel: t('rendimentoLabel'),
+            fixasLabel2: t('fixasLabel2'), totalDespesasLabel: t('totalDespesasLabel'),
+            economiaLabel: 'Economia', guardouRendimento: 'Você guardou',
+            doSeuRendimento: 'do seu rendimento!', aMaisQueRendimento: 'a mais que o rendimento',
             atual: 'Atual', despesasVariaveisCat: '💸 Despesas Variáveis por Categoria',
             gastosPorCat: '📊 Gastos por Categoria', distribuicaoCat: '🍕 Distribuição por Categoria',
             totalGeralVariaveis: 'Total Geral de Despesas Variáveis',
@@ -908,6 +912,10 @@
             diasPassados: 'days elapsed', diasRestantes: 'days remaining',
             diaPassado: 'day elapsed', diaRestante: 'day remaining',
             carregando: '⏳ Loading data...',
+            as: 'at', rendimentoLabel: '💰 Income',
+            fixasLabel2: '🔒 Fixed', totalDespesasLabel: '📊 Total Expenses',
+            economiaLabel: 'Savings', guardouRendimento: 'You saved',
+            doSeuRendimento: 'of your income!', aMaisQueRendimento: 'over your income',
             atual: 'Current', despesasVariaveisCat: '💸 Variable Expenses by Category',
             gastosPorCat: '📊 Spending by Category', distribuicaoCat: '🍕 Distribution by Category',
             totalGeralVariaveis: 'Total Variable Expenses',
@@ -1653,7 +1661,7 @@
             return '<div class="expense-item">' +
                 '<div class="expense-info">' +
                     '<div class="expense-merchant">' + merchant + '</div>' +
-                    '<div class="expense-date">' + date + ' às ' + time + '</div>' +
+                    '<div class="expense-date">' + date + ' ' + t('as') + ' ' + time + '</div>' +
                     (obs ? '<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ' + obs + '</div>' : '') +
                     '<span class="expense-category" style="background: ' + getCategoryColor(category) + '">' + getCategoryIcon(category) + ' ' + getCategoryName(category) + '</span>' +
                 '</div>' +
@@ -1723,7 +1731,7 @@
             html += '<div class="expense-item">' +
                 '<div class="expense-info">' +
                     '<div class="expense-merchant">' + merchant + '</div>' +
-                    '<div class="expense-date">' + date + ' às ' + time + '</div>' +
+                    '<div class="expense-date">' + date + ' ' + t('as') + ' ' + time + '</div>' +
                     (obs ? '<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ' + obs + '</div>' : '') +
                     '<span class="expense-category" style="background: ' + getCategoryColor(category) + '">' + getCategoryIcon(category) + ' ' + getCategoryName(category) + '</span>' +
                 '</div>' +
@@ -5051,9 +5059,9 @@
                         else { statusColor = '#ef4444'; statusIcon = '🚨'; statusText = (state.currency || 'AED') + ' ' + Math.abs(economy).toFixed(0) + ' a mais (' + spentPercent.toFixed(1) + '%)'; }
                         html += '<div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">';
                         html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 10px;">';
-                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">💰 Rendimento</div><div style="font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + currentIncome.toFixed(0) + '</div></div>';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">'+t('rendimentoLabel')+'</div><div style="font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + currentIncome.toFixed(0) + '</div></div>';
                         html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">'+t('variaveis')+'</div><div style="font-weight: 700; color: #ef4444; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + total.toFixed(0) + '</div></div>';
-                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">🔒 Fixas</div><div style="font-weight: 700; color: #f59e0b; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + fixedTotal.toFixed(0) + '</div></div>';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">'+t('fixasLabel2')+'</div><div style="font-weight: 700; color: #f59e0b; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + fixedTotal.toFixed(0) + '</div></div>';
                         html += '</div>';
                         html += '<div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center;">';
                         html += '<div style="font-size: 0.8rem; color: #94A3B8;">' + statusIcon + ' ' + statusText + '</div>';
@@ -5724,7 +5732,7 @@
                                                 <div class="expense-item" style="margin-bottom: 10px;">
                                                     <div class="expense-info">
                                                         <div class="expense-merchant">${merchant}</div>
-                                                        <div class="expense-date">${date} às ${time}</div>
+                                                        <div class="expense-date">${date} ${t('as')} ${time}</div>
                                                         ${obs ? `<div class="expense-date" style="font-style: italic; margin-top: 4px;">💬 ${obs}</div>` : ''}
                                                     </div>
                                                     <div style="display:flex; align-items:center;">
@@ -6057,7 +6065,7 @@
                                             html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 0.85rem;">';
                                             
                                             // Rendimento
-                                            html += '<div><div style="opacity: 0.8;">💰 Rendimento</div>';
+                                            html += '<div><div style="opacity: 0.8;">'+t('rendimentoLabel')+'</div>';
                                             html += '<div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">' + (state.currency || 'AED') + ' ' + monthIncome.toFixed(0) + '</div></div>';
                                             
                                             // Despesas Variáveis
@@ -6065,7 +6073,7 @@
                                             html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">' + (state.currency || 'AED') + ' ' + totalMonth.toFixed(0) + '</div></div>';
                                             
                                             // Despesas Fixas
-                                            html += '<div><div style="opacity: 0.8;">🔒 Fixas</div>';
+                                            html += '<div><div style="opacity: 0.8;">'+t('fixasLabel2')+'</div>';
                                             html += '<div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">' + (state.currency || 'AED') + ' ' + fixedMonthTotal.toFixed(0) + '</div></div>';
                                             
                                             // Total e Economia
@@ -6074,14 +6082,14 @@
                                             html += '<div style="opacity: 0.8;">📊 Total Despesas</div>';
                                             html += '<div style="font-weight: 700;">' + (state.currency || 'AED') + ' ' + totalMonthWithFixed.toFixed(0) + '</div>';
                                             html += '</div>';
-                                            html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' Economia</div>';
+                                            html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' ' + t('economiaLabel') + '</div>';
                                             html += '<div style="font-size: 1.3rem; font-weight: 700; color: ' + (isPositive ? '#22c55e' : '#ef4444') + ';">';
                                             html += (economy > 0 ? '+' : '') + (state.currency || 'AED') + ' ' + economy.toFixed(0) + '</div>';
                                             html += '<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">';
                                             if (isPositive) {
-                                                html += 'Você guardou ' + economyPercent.toFixed(1) + '% do seu rendimento!';
+                                                html += t('guardouRendimento') + ' ' + economyPercent.toFixed(1) + '% ' + t('doSeuRendimento');
                                             } else {
-                                                html += (state.currency || 'AED') + ' ' + Math.abs(economy).toFixed(0) + ' a mais que o rendimento';
+                                                html += (state.currency || 'AED') + ' ' + Math.abs(economy).toFixed(0) + ' ' + t('aMaisQueRendimento');
                                             }
                                             html += '</div></div></div></div>';
                                             
