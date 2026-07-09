@@ -620,6 +620,15 @@
             // Fixas tab
             despesasFixas: 'Despesas Fixas', adicionarFixa: 'Adicionar Nova Despesa Fixa',
             nome: 'Nome', diaVencimento: 'Dia Vencimento', editar: 'Editar',
+            selecioneMes: '📅 Selecione o Mês:', novaFixa: 'Nova', editarFixa: 'Editar',
+            nomeDaDespesa: 'Nome da despesa', diaMes: 'Dia do mês', categoriaLabel: 'Categoria',
+            nenhumaFixaCadastrada: 'Nenhuma despesa fixa cadastrada neste mês',
+            totalDespesasFixas: 'Total de Despesas Fixas', fixasListTitle: 'Despesas Fixas',
+            despesaFixaTitulo: 'Despesa Fixa', mesesComDespesas: 'meses com despesas',
+            mesComDespesas: 'mês com despesas', topCategorias: 'Top 6 categorias',
+            gerarRelatorio: 'Gere um relatório completo com todos os rendimentos, despesas fixas, despesas variáveis e balanço do ano.',
+            dicaRelatorio: 'O relatório incluirá todas as despesas fixas e variáveis do ano selecionado, organizadas por mês e categoria.',
+            despesasCount: 'despesas', despesaCount: 'despesa',
             cancelar: 'Cancelar', salvarFixa: 'Salvar', adicionarFixaBtn: '➕ Adicionar Despesa Fixa',
             copiarMesAnterior: '📋 Copiar do Mês Anterior', nomeFixa: 'Nome da despesa fixa',
             // Categorias tab
@@ -741,6 +750,15 @@
             salvar: '💾 Save',
             despesasFixas: 'Fixed Expenses', adicionarFixa: 'Add New Fixed Expense',
             nome: 'Name', diaVencimento: 'Due Day', editar: 'Edit',
+            selecioneMes: '📅 Select Month:', novaFixa: 'New', editarFixa: 'Edit',
+            nomeDaDespesa: 'Expense name', diaMes: 'Day of month', categoriaLabel: 'Category',
+            nenhumaFixaCadastrada: 'No fixed expenses for this month',
+            totalDespesasFixas: 'Total Fixed Expenses', fixasListTitle: 'Fixed Expenses',
+            despesaFixaTitulo: 'Fixed Expense', mesesComDespesas: 'months with expenses',
+            mesComDespesas: 'month with expenses', topCategorias: 'Top 6 categories',
+            gerarRelatorio: 'Generate a complete report with all income, fixed expenses, variable expenses and annual balance.',
+            dicaRelatorio: 'The report will include all fixed and variable expenses for the selected year, organised by month and category.',
+            despesasCount: 'expenses', despesaCount: 'expense',
             cancelar: 'Cancel', salvarFixa: 'Save', adicionarFixaBtn: '➕ Add Fixed Expense',
             copiarMesAnterior: '📋 Copy from Previous Month', nomeFixa: 'Fixed expense name',
             todasCategorias: 'All', semDespesas: 'No expenses in this period',
@@ -3091,7 +3109,7 @@
             head: [['Descricao', `Valor (${state.currency || 'AED'})`]],
             body: [
                 ['Total de Rendimentos', `${totalIncome.toFixed(2)}`],
-                ['Total de Despesas Fixas', `${totalFixedExpenses.toFixed(2)}`],
+                [t('totalDespesasFixas'), `${totalFixedExpenses.toFixed(2)}`],
                 ['Total de Despesas Variaveis', `${totalVariableExpenses.toFixed(2)}`],
                 ['Total de Despesas', `${totalExpenses.toFixed(2)}`],
                 ['Balanco Final', `${totalBalance.toFixed(2)}`]
@@ -3141,7 +3159,7 @@
             return [name, ...amounts.map(a => a > 0 ? a.toFixed(0) : ''), total.toFixed(0)];
         });
         
-        const fixedTotalRow = ['Total de Despesas Fixas'];
+        const fixedTotalRow = [t('totalDespesasFixas')];
         for (let i = 0; i < 12; i++) {
             const monthTotal = Object.values(fixedByName).reduce((sum, amounts) => sum + amounts[i], 0);
             fixedTotalRow.push(monthTotal > 0 ? monthTotal.toFixed(0) : '0');
@@ -4003,7 +4021,7 @@
                                         ${t('despesasFixasCard')}
                                     </div>
                                     <div style="font-size: 0.75rem; opacity: 0.6;">
-                                        ${monthlyFixed.length} despesas fixas
+                                        ${monthlyFixed.length} ${t('despesasFixas')}
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
@@ -4360,7 +4378,7 @@
                         border: 1px solid rgba(255,255,255,0.1);
                     ">
                         <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 15px;">
-                            Gere um relatório completo com todos os rendimentos, despesas fixas, despesas variáveis e balanço do ano.
+                            ${t('gerarRelatorio')}
                         </div>
                         
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -4427,7 +4445,7 @@
                             border-left: 3px solid #3b82f6;
                         ">
                             <div style="font-size: 0.8rem; opacity: 0.9;">
-                                💡 <strong>Dica:</strong> O relatório incluirá todas as despesas fixas e variáveis do ano selecionado, organizadas por mês e categoria.
+                                💡 <strong>Dica:</strong> ${t('dicaRelatorio')}
                             </div>
                         </div>
                     </div>
@@ -4564,7 +4582,7 @@
                         <div class="card" style="margin-top: 20px;">
                             <h3 style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
                                 📈 Evolução de Despesas ${currentYear}
-                                <span style="font-size:0.75rem; font-weight:400; opacity:0.65;">Top 6 categorias · ${nActive} ${nActive===1?'mês':'meses'} com despesas</span>
+                                <span style="font-size:0.75rem; font-weight:400; opacity:0.65;">${t('topCategorias')} · ${nActive} ${nActive===1 ? t('mesComDespesas') : t('mesesComDespesas')}</span>
                             </h3>
                             <div style="overflow-x: auto;">
                                 <svg width="100%" viewBox="0 0 ${W} ${H}"
@@ -4853,7 +4871,7 @@
                     html += '<input type="number" id="monthlyIncomeInput" placeholder="Ex: 20000" ';
                     html += 'value="' + (currentIncome || '') + '" ';
                     html += 'style="flex: 1; padding: 11px 14px; border: 1px solid rgba(34,197,94,0.2); border-radius: 8px; background: rgba(255,255,255,0.05); color: #F0F4FF; font-size: 1rem; font-weight: 600; font-family: inherit;" />';
-                    html += '<button onclick="saveMonthlyIncome()" style="padding: 11px 18px; background: #22c55e; border: none; border-radius: 8px; color: #080D1A; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem;">💾 Salvar</button>';
+                    html += '<button onclick="saveMonthlyIncome()" style="padding: 11px 18px; background: #22c55e; border: none; border-radius: 8px; color: #080D1A; font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 0.85rem;">'+t('salvarFixa')+'</button>';
                     html += '</div>';
 
                     if (currentIncome > 0) {
@@ -4991,7 +5009,7 @@
                 <div class="card" style="padding: 15px;">
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 200px;">
-                            <label style="display: block; font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">📅 Selecione o Mês:</label>
+                            <label style="display: block; font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">${t('selecioneMes')}</label>
                             <select 
                                 style="width: 100%; padding: 10px; background: #162035; border: 1px solid rgba(0,212,170,0.3); border-radius: 8px; font-size: 1rem; color: #F0F4FF; font-weight: 600;"
                                 onchange="state.selectedFixedMonth = this.value; loadMonthlyFixed(this.value);"
@@ -5012,7 +5030,7 @@
                                 class="btn"
                                 style="background: rgba(139,92,246,0.8); padding: 10px 20px; white-space: nowrap;"
                             >
-                                📋 Copiar do Mês Anterior
+                                ${t('copiarMesAnteriorBtn')}
                             </button>
                         ` : ''}
                     </div>
@@ -5020,10 +5038,10 @@
                 
                 <!-- Formulário de Adicionar/Editar -->
                 <div class="card">
-                    <h3 style="margin-bottom: 20px;">💳 ${state.editingFixed ? 'Editar' : 'Nova'} Despesa Fixa - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
+                    <h3 style="margin-bottom: 20px;">💳 ${state.editingFixed ? t('editarFixa') : t('novaFixa')} ${t('despesaFixaTitulo')} - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
                     
                     <div class="input-group">
-                        <label class="label">Nome da despesa:</label>
+                        <label class="label">${t('nomeDaDespesa')}:</label>
                         <input type="text" id="fixedName" class="input-field" placeholder="Ex: Aluguel, Internet, Netflix..." />
                     </div>
                     
@@ -5033,13 +5051,13 @@
                             <input type="number" id="fixedAmount" class="input-field" placeholder="Ex: 150.00" step="0.01" />
                         </div>
                         <div class="input-group">
-                            <label class="label">Dia do mês:</label>
+                            <label class="label">${t('diaMes')}:</label>
                             <input type="number" id="fixedDay" class="input-field" placeholder="1-31" min="1" max="31" />
                         </div>
                     </div>
                     
                     <div class="input-group">
-                        <label class="label">Categoria:</label>
+                        <label class="label">${t('categoriaLabel')}:</label>
                         <div class="category-grid">
                             ${CATEGORIES.map(cat => `
                                 <div 
@@ -5056,37 +5074,37 @@
                     
                     ${state.editingFixed ? `
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-                            <button class="btn" onclick="saveMonthlyFixedExpense()" style="background: #22c55e;">💾 Salvar</button>
-                            <button class="btn" onclick="cancelEditFixed()" style="background: #6b7280;">❌ Cancelar</button>
+                            <button class="btn" onclick="saveMonthlyFixedExpense()" style="background: #22c55e;">${t('salvarFixa')}</button>
+                            <button class="btn" onclick="cancelEditFixed()" style="background: #6b7280;">${t('cancelar')}</button>
                         </div>
                     ` : `
-                        <button id="addFixedBtn" class="btn" onclick="addMonthlyFixedExpense()" style="margin-top: 15px;">➕ Adicionar Despesa Fixa</button>
+                        <button id="addFixedBtn" class="btn" onclick="addMonthlyFixedExpense()" style="margin-top: 15px;">${t('adicionarFixaBtn')}</button>
                     `}
                 </div>
                 
                 <!-- Lista de Despesas Fixas do Mês -->
                 <div class="card">
-                    <h3 style="margin-bottom: 15px;">📋 Despesas Fixas - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
+                    <h3 style="margin-bottom: 15px;">📋 ${t('fixasListTitle')} - ${monthNames[currentMonthNum - 1]} ${currentYearNum}</h3>
                     
                     ${currentMonthFixed.length === 0 ? `
                         <div class="empty" style="padding: 40px 20px;">
                             📭<br>
-                            <div style="font-size: 1rem; margin-top: 10px;">Nenhuma despesa fixa cadastrada neste mês</div>
+                            <div style="font-size: 1rem; margin-top: 10px;">${t('nenhumaFixaCadastrada')}</div>
                             ${hasPreviousMonth ? `
                                 <button 
                                     onclick="copyFromPrevMonth()"
                                     class="btn"
                                     style="margin-top: 15px; background: rgba(139,92,246,0.8);"
                                 >
-                                    📋 Copiar do Mês Anterior
+                                    ${t('copiarMesAnteriorBtn')}
                                 </button>
                             ` : ''}
                         </div>
                     ` : `
                         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Total de Despesas Fixas</div>
+                            <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">${t('totalDespesasFixas')}</div>
                             <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">${state.currency || 'AED'} ${totalFixed.toFixed(2)}</div>
-                            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;">${currentMonthFixed.length} despesa${currentMonthFixed.length !== 1 ? 's' : ''}</div>
+                            <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;">${currentMonthFixed.length} ${currentMonthFixed.length !== 1 ? t('despesasCount') : t('despesaCount')}</div>
                         </div>
                         
                         <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -5950,7 +5968,7 @@
                             </div>
                             
                             <div class="input-group">
-                                <label class="label">Categoria:</label>
+                                <label class="label">${t('categoriaLabel')}:</label>
                                 <div class="category-list">
                                     ${CATEGORIES.map(cat => `
                                         <div class="category-item ${state.editingExpense.category === cat.id ? 'selected' : ''}" 
