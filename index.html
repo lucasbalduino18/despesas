@@ -731,8 +731,8 @@
             excelente: 'Excelente', bom: 'Bom', atencao: 'Atenção',
             cuidado: 'Cuidado', critico: 'Crítico',
             // Income manager
-            gerirRendimentos: '💰 Gerir Rendimentos',
-            futurosMeses: '↑ futuros · mês actual ao centro · passados ↓',
+            gerirRendimentos: '💰 Manage Income',
+            futurosMeses: '↑ future · current month centred · past ↓',
             atual: 'ATUAL', futuro: 'futuro', rendimentoPlaceholder: 'Rendimento...',
             mesesFuturos: '6 meses futuros · mês actual · 12 meses passados',
             // Dashboard
@@ -2215,7 +2215,7 @@
                     if (btn) { btn.innerHTML = originalText; btn.style.background = ''; btn.disabled = false; }
                 }, 1500);
 
-                showToast(`✅ Rendimento de ${state.currency || 'AED'} ${value.toFixed(0)} salvo com sucesso!`);
+                showToast(t('rendimentoSalvo') + ' ' + (state.currency || 'AED') + ' ' + value.toFixed(0) + ' ' + t('rendimentoSalvoSufixo'));
                 render();
             } else {
                 throw new Error(result.error || 'Erro desconhecido');
@@ -2272,7 +2272,7 @@
         html += 'display: flex; justify-content: space-between; align-items: center;">';
         html += '<div>';
         html += '<h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em;">💰 Gerir Rendimentos</h3>';
-        html += '<div style="font-size: 0.72rem; color: #4E627A; margin-top: 3px;">↑ futuros &nbsp;·&nbsp; mês actual ao centro &nbsp;·&nbsp; passados ↓</div>';
+        html += '<div style="font-size: 0.72rem; color: #4E627A; margin-top: 3px;">'+ t('futurosMeses') +'</div>';
         html += '</div>';
         html += '<button onclick="this.closest(' + "'.modal-overlay').remove()" + '" ';
         html += 'style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #94A3B8; ';
@@ -2385,7 +2385,7 @@
 
                 const monthNames = t('monthNames');
                 const [m, y] = monthKey.split('/');
-                showToast(`✅ Rendimento de ${monthNames[parseInt(m)-1]} ${y} salvo: ${state.currency || 'AED'} ${value.toFixed(0)}`);
+                showToast(t('rendimentoSalvo') + ' ' + monthNames[parseInt(m)-1] + ' ' + y + ' ' + t('rendimentoSalvoSufixo') + ' ' + (state.currency || 'AED') + ' ' + value.toFixed(0));
             } else {
                 throw new Error(result.error || 'Erro desconhecido');
             }
@@ -4049,7 +4049,7 @@
                                 ${monthDays.isLastDay ? '📅 Último dia!' : `📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? 'dia' : 'dias'} restante${monthDays.remaining === 1 ? '' : 's'}`}
                             </div>
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
-                                ${monthDays.isLastDay ? '💰 Tudo hoje' : (monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}/dia` : '💰 ' + (state.currency || 'AED') + ' 0/dia')}
+                                ${monthDays.isLastDay ? (state.lang==='en'?'💰 All today':'💰 Tudo hoje') : (monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}/dia` : '💰 ' + (state.currency || 'AED') + ' 0/dia')}
                             </div>
                         </div>
                     </div>
@@ -4759,7 +4759,7 @@
                                 </svg>
                                 <div class="gauge-text">
                                     <div class="gauge-percent" style="font-size: 2rem;">${Math.min(percent, 100).toFixed(0)}%</div>
-                                    <div class="gauge-label" style="font-size: 0.7rem;">do limite</div>
+                                    <div class="gauge-label" style="font-size: 0.7rem;">${t('doLimite').toLowerCase()}</div>
                                 </div>
                             </div>
                             <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
@@ -4780,7 +4780,7 @@
                                 </svg>
                                 <div class="gauge-text">
                                     <div class="gauge-percent" style="font-size: 2rem;">${Math.min(todayPercent, 100).toFixed(0)}%</div>
-                                    <div class="gauge-label" style="font-size: 0.7rem;">de hoje</div>
+                                    <div class="gauge-label" style="font-size: 0.7rem;">${t('deHoje').toLowerCase()}</div>
                                 </div>
                             </div>
                             <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
@@ -4801,17 +4801,17 @@
                                 ${monthDays.passed > 0 ? `💸 ${formatNumberShort(total / monthDays.passed)}/d` : '💸 0/d'}
                             </div>
                             <div style="font-size: 0.55rem; opacity: 0.55; margin-top: 1px; white-space: nowrap;">
-                                ${monthDays.passed} dia${monthDays.passed !== 1 ? 's' : ''} passado${monthDays.passed !== 1 ? 's' : ''}
+                                ${monthDays.passed} ${monthDays.passed !== 1 ? t('diasPassados') : t('diaPassado')}
                             </div>
                         </div>
                         <div style="min-width: 0;">
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">${t('restante')}</div>
                             <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(remaining)}</div>
                             <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                ${monthDays.isLastDay ? '💰 Tudo hoje' : (monthDays.remaining > 0 ? `💰 ${formatNumberShort(dailyLimit)}/d` : '💰 0/d')}
+                                ${monthDays.isLastDay ? (state.lang==='en'?'💰 All today':'💰 Tudo hoje') : (monthDays.remaining > 0 ? `💰 ${formatNumberShort(dailyLimit)}/d` : '💰 0/d')}
                             </div>
                             <div style="font-size: 0.55rem; opacity: 0.55; margin-top: 1px; white-space: nowrap;">
-                                ${monthDays.isLastDay ? 'Último dia!' : `${monthDays.remaining} dia${monthDays.remaining !== 1 ? 's' : ''} restante${monthDays.remaining !== 1 ? 's' : ''}`}
+                                ${monthDays.isLastDay ? (state.lang==='en'?'Last day!':'Último dia!') : monthDays.remaining + ' ' + (monthDays.remaining !== 1 ? t('diasRestantes') : t('diaRestante'))}
                             </div>
                         </div>
                         <div style="min-width: 0;">
@@ -4864,7 +4864,7 @@
                                 transition: 0.3s;
                             "
                         >
-                            ${state.manualEntry ? '📱 SMS' : '✏️ Manual'}
+                            ${state.manualEntry ? '📱 SMS' : '✏️ ' + t('manual')}
                         </button>
                     </div>
                     
@@ -4890,7 +4890,7 @@
                                     onmouseover="this.style.background='rgba(0,212,170,0.15)'; this.style.color='#00D4AA';"
                                     onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='rgba(255,255,255,0.5)';"
                                 >
-                                    📋 Colar
+                                    📋 ${t('colar')}
                                 </button>
                             </div>
                             <textarea id="smsInput" placeholder="${t('smsPlaceholder')}" oninput="state.sms=this.value">${state.sms}</textarea>
@@ -4961,7 +4961,7 @@
                     html += '<button onclick="toggleIncomeManager()" style="padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94A3B8; font-weight: 600; cursor: pointer; font-size: 0.8rem;">' + t('gerirTodos') + '</button>';
                     html += '</div>';
                     html += '<label style="display: block; font-size: 0.78rem; color: #94A3B8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">';
-                    html += 'Rendimento de ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
+                    html += t('rendimentoMensal').replace('💰 ','') + ' ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
                     html += '</label>';
                     html += '<div style="display: flex; gap: 8px; align-items: center;">';
                     html += '<input type="number" id="monthlyIncomeInput" placeholder="Ex: 20000" ';
