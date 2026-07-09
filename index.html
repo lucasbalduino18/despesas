@@ -525,7 +525,7 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="margin: 0;">💰 ${t('appTitle')}</h1>
+            <h1 id="appTitle" style="margin: 0;">💰 Minhas Despesas</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="openSettings()" title="Configurações" style="
                     background: rgba(255,255,255,0.04);
@@ -620,7 +620,7 @@
             // Fixas tab
             despesasFixas: 'Despesas Fixas', adicionarFixa: 'Adicionar Nova Despesa Fixa',
             nome: 'Nome', diaVencimento: 'Dia Vencimento', editar: 'Editar',
-            cancelar: 'Cancelar', salvarFixa: 'Salvar', adicionarFixaBtn: '➕ Adicionar Despesa Fixa',
+            cancelar: 'Cancelar', salvarFixa: 'Salvar', adicionarFixaBtn: ('➕ ' + t('adicionarFixaMonthly').replace('➕ ','')),
             copiarMesAnterior: '📋 Copiar do Mês Anterior', nomeFixa: 'Nome da despesa fixa',
             // Categorias tab
             todasCategorias: 'Todas', semDespesas: 'Sem despesas neste período',
@@ -679,6 +679,44 @@
             futurosMeses: '↑ futuros · mês actual ao centro · passados ↓',
             atual: 'ATUAL', futuro: 'futuro', rendimentoPlaceholder: 'Rendimento...',
             mesesFuturos: '6 meses futuros · mês actual · 12 meses passados',
+            // Dashboard
+            termometro: '🌡️ Termômetro de Gastos do Mês',
+            limiteMensalLabel: 'Limite Mensal', limiteDiario: 'Limite Diário',
+            restante: 'Restante', disponivelLabel: t('disponivelLabel'), acima: t('acima'),
+            gastoAtualLabel: 'Gasto atual', poderiaGastarLabel: 'Poderia gastar',
+            diferencaLabel: 'Diferença', totalMes: '💰 Total do Mês',
+            fixasVariaveis: 'Fixas + Variáveis', totalGeral: '💰 Total Geral',
+            despesasFixasCard: '💳 Despesas Fixas', despesasVariaveisCard: '💸 Variáveis',
+            doLimite: 'DO LIMITE', deHoje: 'DE HOJE',
+            diasPassados: 'dias passados', diasRestantes: 'dias restantes',
+            diaPassado: 'dia passado', diaRestante: 'dia restante',
+            carregando: '⏳ Carregando dados...',
+            // Variavel
+            coleOSMS: 'COLE O SMS DO BANCO:', observacaoLabel: 'OBSERVAÇÃO (OPCIONAL):',
+            selecioneCatLabel: 'SELECIONE A CATEGORIA:',
+            exPlaceholder: 'Ex: Presente, Dividido com amigos...',
+            colado: t('colado'), erroPermissao: t('erroPermissao'),
+            erroClipboard: '⚠️ Não foi possível acessar a área de transferência.\n\nPor favor, cole manualmente usando Ctrl+V (ou Command+V).',
+            // Fixas
+            copiarMesAnteriorBtn: '📋 Copiar do Mês Anterior',
+            adicionarFixaMonthly: ('➕ ' + t('adicionarFixaMonthly').replace('➕ ','')),
+            erroMesAnterior: '❌ Mês anterior não possui despesas fixas cadastradas.',
+            erroJaPossui: '❌ Este mês já possui despesas fixas cadastradas. Delete-as primeiro se quiser copiar do mês anterior.',
+            confirmarCopiar: 'Tem certeza que deseja copiar as despesas fixas de',
+            para: 'para',
+            fixaCopiada: '✅ Despesas fixas copiadas com sucesso!',
+            erroCopiar: '❌ Erro ao copiar despesas fixas.',
+            fixaAdicionada: '✅ Despesa fixa adicionada!',
+            fixaAtualizada: '✅ Despesa fixa atualizada com sucesso!',
+            fixaExcluida: '✅ Despesa fixa excluída com sucesso!',
+            confirmarExcluirFixa: 'Tem certeza que deseja excluir esta despesa fixa deste mês?',
+            erroPreencha: 'Por favor, preencha todos os campos!',
+            erroJaExiste: '⚠️ Esta despesa fixa já existe neste mês!',
+            erroExcluirFixa: '❌ Erro ao excluir despesa fixa. Tente novamente.',
+            erroAtualizarFixa: '❌ Erro ao atualizar despesa fixa. Tente novamente.',
+            // History
+            ate: 'Até',
+            semanaLabel: 'Esta Semana', mesLabel: 'Este Mês', anoLabel: 'Este Ano',
         },
         en: {
             dashboard: 'Dashboard', variavel: 'Variable', fixas: 'Fixed',
@@ -754,6 +792,44 @@
             futurosMeses: '↑ future · current month centred · past ↓',
             atual: 'CURRENT', futuro: 'future', rendimentoPlaceholder: 'Income...',
             mesesFuturos: '6 future months · current month · 12 past months',
+            // Dashboard
+            termometro: '🌡️ Monthly Spending Thermometer',
+            limiteMensalLabel: 'Monthly Limit', limiteDiario: 'Daily Limit',
+            restante: 'Remaining', disponivelLabel: 'Available', acima: 'Over',
+            gastoAtualLabel: 'Current spend', poderiaGastarLabel: 'Should have spent',
+            diferencaLabel: 'Difference', totalMes: '💰 Monthly Total',
+            fixasVariaveis: 'Fixed + Variable', totalGeral: '💰 Grand Total',
+            despesasFixasCard: '💳 Fixed Expenses', despesasVariaveisCard: '💸 Variable',
+            doLimite: 'OF LIMIT', deHoje: 'OF TODAY',
+            diasPassados: 'days elapsed', diasRestantes: 'days remaining',
+            diaPassado: 'day elapsed', diaRestante: 'day remaining',
+            carregando: '⏳ Loading data...',
+            // Variable
+            coleOSMS: 'PASTE BANK SMS:', observacaoLabel: 'NOTES (OPTIONAL):',
+            selecioneCatLabel: 'SELECT A CATEGORY:',
+            exPlaceholder: 'Ex: Gift, Split with friends...',
+            colado: '✅ Pasted!', erroPermissao: '❌ Error',
+            erroClipboard: '⚠️ Could not access clipboard.\n\nPlease paste manually using Ctrl+V (or Command+V).',
+            // Fixed
+            copiarMesAnteriorBtn: '📋 Copy from Previous Month',
+            adicionarFixaMonthly: '➕ Add Fixed Expense',
+            erroMesAnterior: '❌ Previous month has no fixed expenses.',
+            erroJaPossui: '❌ This month already has fixed expenses. Delete them first if you want to copy from the previous month.',
+            confirmarCopiar: 'Are you sure you want to copy fixed expenses from',
+            para: 'to',
+            fixaCopiada: '✅ Fixed expenses copied successfully!',
+            erroCopiar: '❌ Error copying fixed expenses.',
+            fixaAdicionada: '✅ Fixed expense added!',
+            fixaAtualizada: '✅ Fixed expense updated successfully!',
+            fixaExcluida: '✅ Fixed expense deleted successfully!',
+            confirmarExcluirFixa: 'Are you sure you want to delete this fixed expense for this month?',
+            erroPreencha: 'Please fill in all fields!',
+            erroJaExiste: '⚠️ This fixed expense already exists for this month!',
+            erroExcluirFixa: '❌ Error deleting fixed expense. Please try again.',
+            erroAtualizarFixa: '❌ Error updating fixed expense. Please try again.',
+            // History
+            ate: 'To',
+            semanaLabel: 'This Week', mesLabel: 'This Month', anoLabel: 'This Year',
         }
     };
 
@@ -2368,7 +2444,7 @@
                 // ✅ OTIMIZAÇÃO: Inserir fixa localmente sem recarregar tudo
                 state.fixedExpenses.push(fixedExpense);
                 updateCache();
-                alert('✅ Despesa fixa adicionada!');
+                alert(t('fixaAdicionada'));
                 
                 // Limpar campos
                 document.getElementById('fixedName').value = '';
@@ -2417,7 +2493,7 @@
             const result = await response.json();
             
             if (result.success) {
-                alert('✅ Despesa fixa atualizada!');
+                alert(t('fixaAtualizada'));
                 state.editingFixed = null;
                 await loadData(true); // ← FORÇAR REFRESH
                 
@@ -2507,7 +2583,7 @@
         const category = state.selectedCategory;
         
         if (!name || !amount || !day || !category) {
-            alert('Por favor, preencha todos os campos!');
+            alert(t('erroPreencha'));
             return;
         }
         
@@ -2542,10 +2618,10 @@
         );
         
         if (exists) {
-            alert('⚠️ Esta despesa fixa já existe neste mês!');
+            alert(t('erroJaExiste'));
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '➕ Adicionar Despesa Fixa';
+                btn.innerHTML = ('➕ ' + t('adicionarFixaMonthly').replace('➕ ',''));
                 btn.style.opacity = '1';
             }
             return;
@@ -2580,7 +2656,7 @@
             alert('❌ Erro ao adicionar despesa fixa. Tente novamente.');
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '➕ Adicionar Despesa Fixa';
+                btn.innerHTML = ('➕ ' + t('adicionarFixaMonthly').replace('➕ ',''));
                 btn.style.opacity = '1';
             }
         }
@@ -2616,7 +2692,7 @@
         const category = state.selectedCategory;
         
         if (!name || !amount || !day || !category) {
-            alert('Por favor, preencha todos os campos!');
+            alert(t('erroPreencha'));
             return;
         }
         
@@ -2643,15 +2719,15 @@
                 state.selectedCategory = null;
                 updateCache();
                 render();
-                alert('✅ Despesa fixa atualizada com sucesso!');
+                alert(t('fixaAtualizada'));
             } else {
-                alert('❌ Erro ao atualizar despesa fixa. Tente novamente.');
+                alert(t('erroAtualizarFixa'));
             }
         }
     }
     
     async function deleteMonthlyFixedExpense(id) {
-        if (!confirm('Tem certeza que deseja excluir esta despesa fixa deste mês?')) {
+        if (!confirm(t('confirmarExcluirFixa'))) {
             return;
         }
         
@@ -2665,11 +2741,11 @@
         if (success) {
             updateCache();
             render();
-            alert('✅ Despesa fixa excluída com sucesso!');
+            alert(t('fixaExcluida'));
         } else {
             // Reverter se falhou
             state.monthlyFixedExpenses[state.selectedFixedMonth] = originalList;
-            alert('❌ Erro ao excluir despesa fixa. Tente novamente.');
+            alert(t('erroExcluirFixa'));
         }
     }
     
@@ -2680,12 +2756,12 @@
         const previousMonth = `${previousMonthNum}/${previousYearNum}`;
         
         if (!state.monthlyFixedExpenses[previousMonth] || state.monthlyFixedExpenses[previousMonth].length === 0) {
-            alert('❌ Mês anterior não possui despesas fixas cadastradas.');
+            alert(t('erroMesAnterior'));
             return;
         }
         
         if (state.monthlyFixedExpenses[state.selectedFixedMonth] && state.monthlyFixedExpenses[state.selectedFixedMonth].length > 0) {
-            alert('❌ Este mês já possui despesas fixas cadastradas. Delete-as primeiro se quiser copiar do mês anterior.');
+            alert(t('erroJaPossui'));
             return;
         }
         
@@ -2699,7 +2775,7 @@
         if (success) {
             // Recarregar fixas do mês atual
             await loadMonthlyFixed(state.selectedFixedMonth);
-            alert('✅ Despesas fixas copiadas com sucesso!');
+            alert(t('fixaCopiada'));
         }
     }
     
@@ -2714,7 +2790,7 @@
             // Mostrar feedback visual
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '✅ Colado!';
+            btn.innerHTML = t('colado');
             btn.style.background = 'rgba(34, 197, 94, 0.2)';
             btn.style.color = '#22c55e';
             
@@ -2730,7 +2806,7 @@
             // Se der erro (permissão negada), mostrar mensagem
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '❌ Erro';
+            btn.innerHTML = t('erroPermissao');
             btn.style.background = 'rgba(239, 68, 68, 0.2)';
             btn.style.color = '#ef4444';
             
@@ -2740,7 +2816,7 @@
                 btn.style.color = 'rgba(255,255,255,0.7)';
             }, 1500);
             
-            alert('⚠️ Não foi possível acessar a área de transferência.\n\nPor favor, cole manualmente usando Ctrl+V (ou Command+V).');
+            alert(t('erroClipboard'));
         }
     }
 
@@ -3649,8 +3725,13 @@
         
         const app = document.getElementById('app');
 
+        // Actualizar título e h1 dinamicamente com o idioma actual
+        document.title = t('appTitle');
+        const titleEl = document.getElementById('appTitle');
+        if (titleEl) titleEl.innerHTML = '💰 ' + t('appTitle');
+
         if (state.loading) {
-            app.innerHTML = '<div class="loading">⏳ Carregando dados...</div>';
+            app.innerHTML = ('<div class="loading">' + t('carregando') + '</div>');
             return;
         }
 
@@ -3730,7 +3811,7 @@
                 <!-- Card do Termômetro de Ritmo -->
                 <div class="ritmo-card">
                     <div class="ritmo-header">
-                        <div class="ritmo-title">🌡️ Termômetro de Gastos do Mês</div>
+                        <div class="ritmo-title">${t('termometro')}</div>
                     </div>
                     
                     <div class="ritmo-gauge">
@@ -3770,7 +3851,7 @@
                             <div class="ritmo-detail-value">${state.currency || 'AED'} ${ritmo.poderiaGastar.toFixed(0)}</div>
                         </div>
                         <div class="ritmo-detail-item">
-                            <div class="ritmo-detail-label">Diferença</div>
+                            <div class="ritmo-detail-label">${t('diferencaLabel')}</div>
                             <div class="ritmo-detail-value" style="color: ${ritmo.diferenca > 0 ? '#ef4444' : '#22c55e'}">
                                 ${ritmo.diferenca > 0 ? '+' : ''}${ritmo.diferenca.toFixed(0)} ${state.currency || 'AED'}
                             </div>
@@ -3826,7 +3907,7 @@
                 
                 <!-- Card de Limite -->
                 <div class="card">
-                    <div style="text-align:center; font-size:0.9rem; opacity:0.9;">Limite Mensal</div>
+                    <div style="text-align:center; font-size:0.9rem; opacity:0.9;">${t('limiteMensalLabel')}</div>
                     <div class="balance">${formatAEDShort(state.goal)}</div>
                     <div class="progress-bar">
                         <div class="progress-fill ${progressClass}" style="width: ${Math.min(percent, 100)}%"></div>
@@ -3846,7 +3927,7 @@
                             </div>
                         </div>
                         <div class="meta-item">
-                            <div class="meta-label">Restante</div>
+                            <div class="meta-label">${t('restante')}</div>
                             <div class="meta-value" style="color: ${remaining < 0 ? '#fca5a5' : '#86efac'}">
                                 ${formatAEDShort(remaining)}
                             </div>
@@ -3878,7 +3959,7 @@
                     </div>
                 </div>
                 
-                <!-- Card Resumo: Fixas + Variáveis -->
+                <!-- Card Resumo: ${t('fixasVariaveis')} -->
                 <div class="card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
                         📊 Resumo do Mês
@@ -3919,7 +4000,7 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
-                                        💳 Despesas Fixas
+                                        ${t('despesasFixasCard')}
                                     </div>
                                     <div style="font-size: 0.75rem; opacity: 0.6;">
                                         ${monthlyFixed.length} despesas fixas
@@ -3943,10 +4024,10 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
-                                        💰 Total do Mês
+                                        ${t('totalMes')}
                                     </div>
                                     <div style="font-size: 0.75rem; opacity: 0.7;">
-                                        Fixas + Variáveis
+                                        ${t('fixasVariaveis')}
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
@@ -4009,7 +4090,7 @@
                                             "></div>
                                         </div>
                                         <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 3px; text-align: right;">
-                                            ${percentVariaveis.toFixed(1)}% • ${disponivelVariaveis >= 0 ? 'Disponível' : 'Acima'}: ${formatAED(Math.abs(disponivelVariaveis))}
+                                            ${percentVariaveis.toFixed(1)}% • ${disponivelVariaveis >= 0 ? t('disponivelLabel') : t('acima')}: ${formatAED(Math.abs(disponivelVariaveis))}
                                         </div>
                                     </div>
                                     
@@ -4036,7 +4117,7 @@
                                             "></div>
                                         </div>
                                         <div style="font-size: 0.7rem; opacity: 0.6; margin-top: 3px; text-align: right;">
-                                            ${percentFixas.toFixed(1)}% • ${disponivelFixas >= 0 ? 'Disponível' : 'Acima'}: ${formatAED(Math.abs(disponivelFixas))}
+                                            ${percentFixas.toFixed(1)}% • ${disponivelFixas >= 0 ? t('disponivelLabel') : t('acima')}: ${formatAED(Math.abs(disponivelFixas))}
                                         </div>
                                     </div>
                                     
@@ -4046,7 +4127,7 @@
                                         padding-top: 15px;
                                     ">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                            <span style="font-size: 0.85rem; font-weight: 600;">💰 Total Geral</span>
+                                            <span style="font-size: 0.85rem; font-weight: 600;">${t('totalGeral')}</span>
                                             <span style="font-size: 0.8rem; font-weight: 600;">
                                                 ${formatAED(totalGeral)} / ${formatAED(limiteTotal)}
                                             </span>
@@ -4522,7 +4603,7 @@
             
             // Limite diário
             // Se é o último dia do mês, pode gastar TODO o restante
-            // Se não, divide pelos dias restantes
+            // Se não, divide pelos ${t('diasRestantes')}
             const dailyLimit = monthDays.isLastDay ? remaining : (monthDays.remaining > 0 ? remaining / monthDays.remaining : 0);
             const todayRemaining = dailyLimit - todayTotal;
             const todayPercent = dailyLimit > 0 ? (todayTotal / dailyLimit) * 100 : 0;
@@ -4610,7 +4691,7 @@
                             </div>
                         </div>
                         <div style="min-width: 0;">
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Restante</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">${t('restante')}</div>
                             <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(remaining)}</div>
                             <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 ${monthDays.isLastDay ? '💰 Tudo hoje' : (monthDays.remaining > 0 ? `💰 ${formatNumberShort(dailyLimit)}/d` : '💰 0/d')}
@@ -4730,7 +4811,7 @@
                     
                     <div class="input-group">
                         <label class="label">Observação (opcional):</label>
-                        <input type="text" id="obsInput" class="input-field" placeholder="Ex: Presente, Dividido com amigos..." value="${state.obs}" oninput="state.obs=this.value">
+                        <input type="text" id="obsInput" class="input-field" placeholder="${t('exPlaceholder')}" value="${state.obs}" oninput="state.obs=this.value">
                     </div>
                     
                     <div class="input-group">
