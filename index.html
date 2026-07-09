@@ -3235,7 +3235,7 @@
         // Tabela de resumo
         doc.autoTable({
             startY: yPos,
-            head: [[state.lang==='en'?'Description':'Descrição', `Valor (${state.currency || 'AED'})`]],
+            head: [[state.lang==='en'?'Description':'Descrição', (state.lang==='en'?'Amount':'Valor') + ' (' + (state.currency || 'AED') + ')']],
             body: [
                 [state.lang==='en'?'Total Income':'Total de Rendimentos', `${totalIncome.toFixed(2)}`],
                 [t('totalDespesasFixas'), `${totalFixedExpenses.toFixed(2)}`],
@@ -4095,7 +4095,7 @@
                             <div class="meta-label">${t('gastoLabel')}</div>
                             <div class="meta-value">${formatAEDShort(total)}</div>
                             <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
-                                📅 ${monthDays.passed} ${monthDays.passed === 1 ? 'dia' : 'dias'} passado${monthDays.passed === 1 ? '' : 's'}
+                                📅 ${monthDays.passed} ${monthDays.passed === 1 ? t('diaPassado') : t('diasPassados')}
                             </div>
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: #fbbf24;">
                                 ${monthDays.passed > 0 ? `💸 ${formatAEDShort(total / monthDays.passed)}${t('porDia')}` : '💸 ' + (state.currency || 'AED') + ' 0' + t('porDia')}
@@ -4107,7 +4107,7 @@
                                 ${formatAEDShort(remaining)}
                             </div>
                             <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
-                                ${monthDays.isLastDay ? '📅 Último dia!' : `📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? 'dia' : 'dias'} restante${monthDays.remaining === 1 ? '' : 's'}`}
+                                ${monthDays.isLastDay ? (state.lang==='en'?'📅 Last day!':'📅 Último dia!') : `📅 ${monthDays.remaining} ${monthDays.remaining === 1 ? t('diaRestante') : t('diasRestantes')}`}
                             </div>
                             <div style="font-size: 0.7rem; opacity: 0.7; margin-top: 2px; color: ${remaining < 0 ? '#fca5a5' : '#86efac'};">
                                 ${monthDays.isLastDay ? (state.lang==='en'?'💰 All today':'💰 Tudo hoje') : (monthDays.remaining > 0 ? `💰 ${formatAEDShort(remaining / monthDays.remaining)}${t('porDia')}` : '💰 ' + (state.currency || 'AED') + ' 0' + t('porDia'))}
