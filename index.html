@@ -759,6 +759,10 @@
             diasPassados: 'dias passados', diasRestantes: 'dias restantes',
             diaPassado: 'dia passado', diaRestante: 'dia restante',
             carregando: '⏳ Carregando dados...',
+            atual: 'Atual', despesasVariaveisCat: '💸 Despesas Variáveis por Categoria',
+            gastosPorCat: '📊 Gastos por Categoria', distribuicaoCat: '🍕 Distribuição por Categoria',
+            totalGeralVariaveis: 'Total Geral de Despesas Variáveis',
+            transacoesEm: 'transações em', estabelecimentos: 'estabelecimentos', transacoesLabel: 'transações',
             ritmoIdeal: 'Você está no ritmo ideal!',
             poderiaGastarLabel: 'Poderia Gastar',
             progressoMes: 'Progresso do Mês',
@@ -904,6 +908,10 @@
             diasPassados: 'days elapsed', diasRestantes: 'days remaining',
             diaPassado: 'day elapsed', diaRestante: 'day remaining',
             carregando: '⏳ Loading data...',
+            atual: 'Current', despesasVariaveisCat: '💸 Variable Expenses by Category',
+            gastosPorCat: '📊 Spending by Category', distribuicaoCat: '🍕 Distribution by Category',
+            totalGeralVariaveis: 'Total Variable Expenses',
+            transacoesEm: 'transactions in', estabelecimentos: 'merchants', transacoesLabel: 'transactions',
             ritmoIdeal: 'You are on track!',
             poderiaGastarLabel: 'Should Spend',
             progressoMes: 'Month Progress',
@@ -3766,7 +3774,7 @@
                     <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; text-align: center;">Total da Categoria</div>
                     <div style="font-size: 1.8rem; font-weight: 700; text-align: center;">${state.currency || 'AED'} ${totalCategory.toFixed(2)}</div>
                     <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px; text-align: center;">
-                        ${categoryExpenses.length} transações em ${sortedMerchants.length} estabelecimentos
+                        ${categoryExpenses.length} ${t('transacoesEm')} ${sortedMerchants.length} ${t('estabelecimentos')}
                     </div>
                     
                     <!-- Estatísticas adicionais -->
@@ -5432,7 +5440,7 @@
                         color: white;
                         opacity: 0.95;
                     ">
-                        💸 Despesas Variáveis por Categoria
+                        ${t('despesasVariaveisCat')}
                     </h2>
                 </div>
                 
@@ -5483,7 +5491,7 @@
                                     >
                                         <div>${statusIcon} ${monthNames[month - 1]} ${year}</div>
                                         <div style="font-size: 0.7rem; opacity: 0.8; margin-top: 3px;">
-                                            ${isCurrent ? 'Atual • ' : ''}${state.currency || 'AED'} ${monthTotal.toFixed(0)}
+                                            ${isCurrent ? t('atual') + ' • ' : ''}${state.currency || 'AED'} ${monthTotal.toFixed(0)}
                                         </div>
                                     </button>
                                 `;
@@ -5494,7 +5502,7 @@
                 
                 <div class="card">
                     <h3 style="margin-bottom: 20px;">
-                        📊 Gastos por Categoria
+                        ${t('gastosPorCat')}
                         ${selectedMonth ? (() => {
                             const [m, y] = selectedMonth.split('/').map(Number);
                             return `<span style="font-size: 0.85rem; opacity: 0.8; font-weight: 400;"> - ${monthNames[m - 1]} ${y}</span>`;
@@ -5529,7 +5537,7 @@
                 <!-- Gráfico de Pizza - Total Geral -->
                 <div class="card">
                     <h3 style="margin-bottom: 20px;">
-                        🍕 Distribuição por Categoria
+                        ${t('distribuicaoCat')}
                         ${selectedMonth ? (() => {
                             const [m, y] = selectedMonth.split('/').map(Number);
                             return `<span style="font-size: 0.85rem; opacity: 0.8; font-weight: 400;"> - ${monthNames[m - 1]} ${y}</span>`;
@@ -5665,9 +5673,9 @@
                                 
                                 <!-- Resumo -->
                                 <div style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
-                                    <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px;">Total Geral de Despesas Variáveis</div>
+                                    <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 5px;">${t('totalGeralVariaveis')}</div>
                                     <div style="font-size: 1.5rem; font-weight: 700;">${state.currency || 'AED'} ${grandTotal.toFixed(2)}</div>
-                                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">${state.expenses.length} transações</div>
+                                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">${state.expenses.length} ${t('transacoesLabel')}</div>
                                 </div>
                             </div>
                         `;
