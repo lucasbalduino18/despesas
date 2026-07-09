@@ -4539,7 +4539,7 @@
                                         color: ${remaining > 0 ? '#fbbf24' : '#22c55e'};
                                         text-align: right;
                                     ">
-                                        ${remaining > 0 ? 'Faltam' : 'Superou em'}: ${formatAED(Math.abs(remaining))}
+                                        ${remaining > 0 ? t('faltam') : t('superouEm2')}: ${formatAED(Math.abs(remaining))}
                                     </div>
                                 </div>
                             </div>
@@ -5536,10 +5536,10 @@
                                     statusTooltip = `Gastou acima do limite\\nExcedeu em ${state.currency || 'AED'} ${Math.abs(remaining).toFixed(2)} (${percentOfGoal.toFixed(1)}%)`;
                                 } else if (monthTotal > state.goal * 0.9) {
                                     statusIcon = '🟡';
-                                    statusTooltip = `Gastou próximo do limite\\nFaltam ${state.currency || 'AED'} ${remaining.toFixed(2)} (${percentOfGoal.toFixed(1)}%)`;
+                                    statusTooltip = t('gastouProximo') + '\n' + t('faltam') + ' ' + (state.currency || 'AED') + ' ' + remaining.toFixed(2) + ' (' + percentOfGoal.toFixed(1) + '%)';
                                 } else {
                                     statusIcon = '🟢';
-                                    statusTooltip = `Gastou abaixo do limite\\nDisponível ${state.currency || 'AED'} ${remaining.toFixed(2)} (${percentOfGoal.toFixed(1)}%)`;
+                                    statusTooltip = t('gastouAbaixo') + '\n' + t('disponivel') + ' ' + (state.currency || 'AED') + ' ' + remaining.toFixed(2) + ' (' + percentOfGoal.toFixed(1) + '%)';
                                 }
                                 
                                 return `
@@ -5999,11 +5999,11 @@
                         } else if (totalMonthWithFixed === totalLimitForStatus) {
                             statusIcon = '🟡';
                             statusColor = '#fbbf24';
-                            statusTitle = 'No limite';
+                            statusTitle = t('noLimite');
                         } else {
                             statusIcon = '🔴';
                             statusColor = '#ef4444';
-                            statusTitle = 'Acima do limite';
+                            statusTitle = t('acimaLimite');
                         }
                         
                         // Calcular economia para o badge
