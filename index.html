@@ -759,6 +759,24 @@
             diasPassados: 'dias passados', diasRestantes: 'dias restantes',
             diaPassado: 'dia passado', diaRestante: 'dia restante',
             carregando: '⏳ Carregando dados...',
+            ritmoIdeal: 'Você está no ritmo ideal!',
+            poderiaGastarLabel: 'Poderia Gastar',
+            progressoMes: 'Progresso do Mês',
+            visualizarMes: '📅 Visualizar Mês:',
+            usado: 'usado', transacoes: 'Transações',
+            mediaLabel: 'Média', maiorLabel: 'Maior',
+            resumoMes: '📊 Resumo do Mês',
+            despesasVariaveisCard2: '💸 Despesas Variáveis',
+            transacoesMes: 'transações este mês',
+            transacaoMes: 'transação este mês',
+            doLimiteTotal: 'do limite total',
+            comparacaoLimites: '📊 Comparação com Limites',
+            variaveis: '💸 Variáveis', fixasLabel: '💳 Fixas',
+            relatorioAnual: '📄 Relatório Anual em PDF',
+            selecioneAno: '📅 Selecione o Ano:',
+            gerarRelatorio2: '📥 Gerar Relatório PDF',
+            dica: '💡 Dica:', evolucaoDespesas: '📈 Evolução de Despesas',
+            mediaLabel2: 'Média', mediaMensalLabel: 'Média Mensal',
             limiteLabel: 'Limite', gastoLabel: 'Gasto',
             ritmoLabel: 'Ritmo', smsPlaceholder: 'Cole aqui o SMS...',
             coleSMS: 'COLE O SMS DO BANCO:', colar: 'Colar',
@@ -886,6 +904,24 @@
             diasPassados: 'days elapsed', diasRestantes: 'days remaining',
             diaPassado: 'day elapsed', diaRestante: 'day remaining',
             carregando: '⏳ Loading data...',
+            ritmoIdeal: 'You are on track!',
+            poderiaGastarLabel: 'Should Spend',
+            progressoMes: 'Month Progress',
+            visualizarMes: '📅 View Month:',
+            usado: 'used', transacoes: 'Transactions',
+            mediaLabel: 'Average', maiorLabel: 'Highest',
+            resumoMes: '📊 Month Summary',
+            despesasVariaveisCard2: '💸 Variable Expenses',
+            transacoesMes: 'transactions this month',
+            transacaoMes: 'transaction this month',
+            doLimiteTotal: 'of total limit',
+            comparacaoLimites: '📊 Limit Comparison',
+            variaveis: '💸 Variable', fixasLabel: '💳 Fixed',
+            relatorioAnual: '📄 Annual PDF Report',
+            selecioneAno: '📅 Select Year:',
+            gerarRelatorio2: '📥 Generate PDF Report',
+            dica: '💡 Tip:', evolucaoDespesas: '📈 Expense Evolution',
+            mediaLabel2: 'Average', mediaMensalLabel: 'Monthly Average',
             limiteLabel: 'Limit', gastoLabel: 'Spent',
             ritmoLabel: 'Pace', smsPlaceholder: 'Paste SMS here...',
             coleSMS: 'PASTE BANK SMS:', colar: 'Paste',
@@ -2283,7 +2319,7 @@
         html += '<div style="padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); ';
         html += 'display: flex; justify-content: space-between; align-items: center;">';
         html += '<div>';
-        html += '<h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em;">💰 Gerir Rendimentos</h3>';
+        html += '<h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.04em;">'+t('gerirRendimentos')+'</h3>';
         html += '<div style="font-size: 0.72rem; color: #4E627A; margin-top: 3px;">'+ t('futurosMeses') +'</div>';
         html += '</div>';
         html += '<button onclick="this.closest(' + "'.modal-overlay').remove()" + '" ';
@@ -3750,11 +3786,11 @@
                             
                             return `
                                 <div style="text-align: center;">
-                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">Média</div>
+                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">${t('mediaLabel')}</div>
                                     <div style="font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums;">${state.currency || 'AED'} ${avgAmount.toFixed(2)}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">Maior</div>
+                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">${t('maiorLabel')}</div>
                                     <div style="font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #EF4444;">${state.currency || 'AED'} ${maxAmount.toFixed(2)}</div>
                                 </div>
                                 <div style="text-align: center;">
@@ -3973,7 +4009,7 @@
                         <div class="ritmo-status-text" style="color: ${ritmo.cor}">${ritmo.status}</div>
                         <div class="ritmo-status-desc">
                             ${ritmo.ritmo < 80 ? 'Você está gastando BEM MENOS que poderia!' :
-                              ritmo.ritmo < 100 ? 'Você está no ritmo ideal!' :
+                              ritmo.ritmo < 100 ? t('ritmoIdeal') :
                               ritmo.ritmo < 110 ? 'Levemente acima do esperado' :
                               ritmo.ritmo < 120 ? 'Você está gastando mais que poderia' :
                               'Gastos MUITO acima do esperado!'}
@@ -3986,7 +4022,7 @@
                             <div class="ritmo-detail-value">${state.currency || 'AED'} ${ritmo.gastoReal.toFixed(0)}</div>
                         </div>
                         <div class="ritmo-detail-item">
-                            <div class="ritmo-detail-label">Poderia Gastar</div>
+                            <div class="ritmo-detail-label">${t('poderiaGastarLabel')}</div>
                             <div class="ritmo-detail-value">${state.currency || 'AED'} ${ritmo.poderiaGastar.toFixed(0)}</div>
                         </div>
                         <div class="ritmo-detail-item">
@@ -3996,7 +4032,7 @@
                             </div>
                         </div>
                         <div class="ritmo-detail-item">
-                            <div class="ritmo-detail-label">Progresso do Mês</div>
+                            <div class="ritmo-detail-label">${t('progressoMes')}</div>
                             <div class="ritmo-detail-value">${ritmo.progressoMes.toFixed(1)}%</div>
                         </div>
                     </div>
@@ -4015,7 +4051,7 @@
                     flex-wrap: wrap;
                 ">
                     <div style="font-weight: 600; font-size: 0.9rem; opacity: 0.9;">
-                        📅 Visualizar Mês:
+                        ${t('visualizarMes')}
                     </div>
                     <select 
                         id="dashMonthSelect"
@@ -4052,7 +4088,7 @@
                         <div class="progress-fill ${progressClass}" style="width: ${Math.min(percent, 100)}%"></div>
                     </div>
                     <div style="text-align:center; font-size:0.9rem; margin-top:10px;">
-                        ${percent.toFixed(1)}% usado
+                        ${percent.toFixed(1)}% ${t('usado')}
                     </div>
                     <div class="meta">
                         <div class="meta-item">
@@ -4081,15 +4117,15 @@
                 </div>
                 <div class="stats">
                     <div class="stat-card">
-                        <div class="stat-label">Transações</div>
+                        <div class="stat-label">${t('transacoes')}</div>
                         <div class="stat-value">${monthExpenses.length}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Média</div>
+                        <div class="stat-label">${t('mediaLabel')}</div>
                         <div class="stat-value">${formatAEDShort(avg)}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Maior</div>
+                        <div class="stat-label">${t('maiorLabel')}</div>
                         <div class="stat-value">${formatAEDShort(largest)}</div>
                     </div>
                     <div class="stat-card">
@@ -4101,7 +4137,7 @@
                 <!-- Card Resumo: ${t('fixasVariaveis')} -->
                 <div class="card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        📊 Resumo do Mês
+                        ${t('resumoMes')}
                     </h3>
                     
                     <div style="display: grid; gap: 15px;">
@@ -4115,10 +4151,10 @@
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
-                                        💸 Despesas Variáveis
+                                        ${t('despesasVariaveisCard2')}
                                     </div>
                                     <div style="font-size: 0.75rem; opacity: 0.6;">
-                                        ${monthExpenses.length} transações este mês
+                                        ${monthExpenses.length} ${monthExpenses.length !== 1 ? t('transacoesMes') : t('transacaoMes')}
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
@@ -4174,7 +4210,7 @@
                                         ${formatAED(total + totalFixed)}
                                     </div>
                                     <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px;">
-                                        ${(((total + totalFixed) / (state.goal + state.goalFixed)) * 100).toFixed(1)}% do limite total
+                                        ${(((total + totalFixed) / (state.goal + state.goalFixed)) * 100).toFixed(1)}% ${t('doLimiteTotal')}
                                     </div>
                                 </div>
                             </div>
@@ -4203,13 +4239,13 @@
                                     border: 1px solid rgba(255,255,255,0.1);
                                 ">
                                     <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; opacity: 0.9;">
-                                        📊 Comparação com Limites
+                                        ${t('comparacaoLimites')}
                                     </div>
                                     
                                     <!-- Variáveis -->
                                     <div style="margin-bottom: 15px;">
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                            <span style="font-size: 0.8rem; opacity: 0.7;">💸 Variáveis</span>
+                                            <span style="font-size: 0.8rem; opacity: 0.7;">${t('variaveis')}</span>
                                             <span style="font-size: 0.75rem; opacity: 0.6;">
                                                 ${formatAED(totalVariaveis)} / ${formatAED(state.goal)}
                                             </span>
@@ -4291,7 +4327,7 @@
                                             margin-top: 8px;
                                         ">
                                             <span style="font-size: 0.8rem; opacity: 0.7;">
-                                                ${percentGeral.toFixed(1)}% usado
+                                                ${percentGeral.toFixed(1)}% ${t('usado')}
                                             </span>
                                             <span style="
                                                 font-size: 0.9rem;
@@ -4468,7 +4504,7 @@
                                     </div>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                         <div>
-                                            <div style="font-size: 0.75rem; opacity: 0.7;">Média Mensal</div>
+                                            <div style="font-size: 0.75rem; opacity: 0.7;">${t('mediaMensalLabel')}</div>
                                             <div style="font-size: 1.1rem; font-weight: 700;">
                                                 ${formatAED(yearlyEconomy / monthsWithData.length)}
                                             </div>
@@ -4489,7 +4525,7 @@
                 <!-- Card de Relatório Anual -->
                 <div class="card" style="margin-top: 20px;">
                     <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                        📄 Relatório Anual em PDF
+                        ${t('relatorioAnual')}
                     </h3>
                     
                     <div style="
@@ -4505,7 +4541,7 @@
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 200px;">
                                 <label style="display: block; font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">
-                                    📅 Selecione o Ano:
+                                    ${t('selecioneAno')}
                                 </label>
                                 <select 
                                     id="reportYearSelect"
@@ -4554,7 +4590,7 @@
                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,212,170,0.35)'"
                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
                             >
-                                📥 Gerar Relatório PDF
+                                ${t('gerarRelatorio2')}
                             </button>
                         </div>
                         
@@ -4566,7 +4602,7 @@
                             border-left: 3px solid #3b82f6;
                         ">
                             <div style="font-size: 0.8rem; opacity: 0.9;">
-                                💡 <strong>Dica:</strong> ${t('dicaRelatorio')}
+                                ${t('dica')} ${t('dicaRelatorio')}
                             </div>
                         </div>
                     </div>
@@ -4609,7 +4645,7 @@
                     if (catAnnualTotals.length === 0) {
                         return `
                             <div class="card" style="margin-top: 20px;">
-                                <h3 style="margin-bottom: 10px;">📈 Evolução de Despesas ${currentYear}</h3>
+                                <h3 style="margin-bottom: 10px;">${t('evolucaoDespesas')} ${currentYear}</h3>
                                 <div style="text-align:center; opacity:0.6; padding: 40px 0; font-size:0.9rem;">
                                     Nenhuma despesa registrada em ${currentYear}
                                 </div>
@@ -4702,7 +4738,7 @@
                     return `
                         <div class="card" style="margin-top: 20px;">
                             <h3 style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;">
-                                📈 Evolução de Despesas ${currentYear}
+                                ${t('evolucaoDespesas')} ${currentYear}
                                 <span style="font-size:0.75rem; font-weight:400; opacity:0.65;">${t('topCategorias')} · ${nActive} ${nActive===1 ? t('mesComDespesas') : t('mesesComDespesas')}</span>
                             </h3>
                             <div style="overflow-x: auto;">
@@ -4896,7 +4932,7 @@
                     ${!state.manualEntry ? `
                         <div class="input-group">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <label class="label" style="margin: 0;">Cole o SMS do banco:</label>
+                                <label class="label" style="margin: 0;">${t('coleOSMS')}</label>
                                 <button 
                                     onclick="pasteFromClipboard()"
                                     style="
@@ -4949,12 +4985,12 @@
                     `}
                     
                     <div class="input-group">
-                        <label class="label">Observação (opcional):</label>
+                        <label class="label">${t('observacaoLabel')}</label>
                         <input type="text" id="obsInput" class="input-field" placeholder="${t('exPlaceholder')}" value="${state.obs}" oninput="state.obs=this.value">
                     </div>
                     
                     <div class="input-group">
-                        <label class="label">Selecione a categoria:</label>
+                        <label class="label">${t('selecioneCatLabel')}</label>
                         <div class="category-list">
                             ${CATEGORIES.map(cat => `
                                 <div class="category-item ${state.selectedCategory === cat.id ? 'selected' : ''}" 
@@ -5008,7 +5044,7 @@
                         html += '<div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">';
                         html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 0.82rem; margin-bottom: 10px;">';
                         html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">💰 Rendimento</div><div style="font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + currentIncome.toFixed(0) + '</div></div>';
-                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">💸 Variáveis</div><div style="font-weight: 700; color: #ef4444; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + total.toFixed(0) + '</div></div>';
+                        html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">'+t('variaveis')+'</div><div style="font-weight: 700; color: #ef4444; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + total.toFixed(0) + '</div></div>';
                         html += '<div><div style="color: #94A3B8; margin-bottom: 2px;">🔒 Fixas</div><div style="font-weight: 700; color: #f59e0b; font-variant-numeric: tabular-nums;">' + (state.currency || 'AED') + ' ' + fixedTotal.toFixed(0) + '</div></div>';
                         html += '</div>';
                         html += '<div style="padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; justify-content: space-between; align-items: center;">';
@@ -6017,7 +6053,7 @@
                                             html += '<div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">' + (state.currency || 'AED') + ' ' + monthIncome.toFixed(0) + '</div></div>';
                                             
                                             // Despesas Variáveis
-                                            html += '<div><div style="opacity: 0.8;">💸 Variáveis</div>';
+                                            html += '<div><div style="opacity: 0.8;">'+t('variaveis')+'</div>';
                                             html += '<div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">' + (state.currency || 'AED') + ' ' + totalMonth.toFixed(0) + '</div></div>';
                                             
                                             // Despesas Fixas
@@ -6083,7 +6119,7 @@
                             </div>
                             
                             <div class="input-group">
-                                <label class="label">Observação (opcional):</label>
+                                <label class="label">${t('observacaoLabel')}</label>
                                 <input type="text" class="input-field" placeholder="Ex: Presente, Dividido..." value="${state.editingExpense.obs || ''}" 
                                        onchange="state.editingExpense.obs = this.value">
                             </div>
