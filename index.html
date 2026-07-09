@@ -1085,6 +1085,7 @@
                 state.goalFixed  = (m.metaFixed  != null && m.metaFixed  !== '') ? Number(m.metaFixed)  : (state.goalFixed  || 0);
                 state.yearlyGoal = (m.yearlyGoal != null && m.yearlyGoal !== '') ? Number(m.yearlyGoal) : (state.yearlyGoal || 0);
                 if (m.currency && m.currency.trim().length >= 2) state.currency = m.currency.trim().toUpperCase();
+                if (m.lang && (m.lang === 'pt' || m.lang === 'en')) state.lang = m.lang;
             } else {
                 console.error('❌ Meta falhou após retries — mantendo valores actuais');
             }
@@ -1200,7 +1201,7 @@
     }
 
     async function updateGoalInSheets(valor) {
-        const url = `${SHEETS_URL}?action=setMeta&goal=${valor}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(state.currency || 'AED')}`;
+        const url = `${SHEETS_URL}?action=setMeta&goal=${valor}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(state.currency || 'AED')}&lang=${encodeURIComponent(state.lang || 'pt')}`;
         
         try {
             const response = await fetch(url);
@@ -1213,7 +1214,7 @@
     }
     
     async function updateGoalFixedInSheets(valor) {
-        const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${valor}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(state.currency || 'AED')}`;
+        const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${valor}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(state.currency || 'AED')}&lang=${encodeURIComponent(state.lang || 'pt')}`;
         
         try {
             const response = await fetch(url);
@@ -1226,7 +1227,7 @@
     }
     
     async function updateYearlyGoalInSheets(valor) {
-        const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${valor}&currency=${encodeURIComponent(state.currency || 'AED')}`;
+        const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${valor}&currency=${encodeURIComponent(state.currency || 'AED')}&lang=${encodeURIComponent(state.lang || 'pt')}`;
         
         try {
             const response = await fetch(url);
@@ -1448,11 +1449,24 @@
         showToast(t('backupBaixado') + ' ' + filename);
     }
 
-    function updateLang(lang) {
+    async function updateLang(lang) {
         state.lang = lang;
         updateCache();
         render();
-        showToast(t('idiomaAlterado') + ' ' + (lang === 'pt' ? 'Português 🇧🇷' : 'English 🇬🇧'));
+
+        // Guardar na planilha via setMeta
+        try {
+            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(state.currency || 'AED')}&lang=${encodeURIComponent(lang)}`;
+            const response = await fetch(url);
+            const result = await response.json();
+            if (result.success) {
+                showToast(t('idiomaAlterado') + ' ' + (lang === 'pt' ? 'Português 🇧🇷' : 'English 🇬🇧'));
+            } else {
+                showToast(t('idiomaAlterado') + ' ' + (lang === 'pt' ? 'Português 🇧🇷' : 'English 🇬🇧'));
+            }
+        } catch (e) {
+            showToast(t('idiomaAlterado') + ' ' + (lang === 'pt' ? 'Português 🇧🇷' : 'English 🇬🇧'));
+        }
     }
 
     async function updateCurrency(value) {
@@ -1467,7 +1481,7 @@
 
         // Guardar na planilha via setMeta
         try {
-            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(cur)}`;
+            const url = `${SHEETS_URL}?action=setMeta&goal=${state.goal}&goalFixed=${state.goalFixed}&yearlyGoal=${state.yearlyGoal}&currency=${encodeURIComponent(cur)}&lang=${encodeURIComponent(state.lang || 'pt')}`;
             const response = await fetch(url);
             const result = await response.json();
             if (result.success) {
