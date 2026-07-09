@@ -525,7 +525,7 @@
 <body>
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h1 style="margin: 0;">💰 Minhas Despesas</h1>
+            <h1 style="margin: 0;">💰 ' + t('appTitle') + '</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <button onclick="openSettings()" title="Configurações" style="
                     background: rgba(255,255,255,0.04);
@@ -588,6 +588,181 @@
     ];
 
     // Função para formatar valores em AED com centavos
+    // ============================================
+    // INTERNACIONALIZAÇÃO (i18n)
+    // ============================================
+    const I18N = {
+        pt: {
+            // Tabs
+            dashboard: 'Dashboard', variavel: 'Variável', fixas: 'Fixas',
+            categorias: 'Categorias', historico: 'Histórico',
+            // Header
+            appTitle: 'Minhas Despesas',
+            // Dashboard
+            saldoMes: 'Gasto este mês', limiteMensal: 'Limite Mensal',
+            gastoHoje: 'Gasto hoje', limiteHoje: 'Limite hoje',
+            disponivelHoje: 'Disponível hoje', gastoAtual: 'Gasto atual',
+            poderiaGastar: 'Poderia gastar', diferenca: 'Diferença',
+            economiaAnual: 'Economia Anual', metaAnual: 'Meta Anual',
+            economizado: 'Economizado', faltam: 'Faltam', superouEm: 'Superou em',
+            mediaMensal: 'Média Mensal', acima: 'acima', abaixo: 'abaixo',
+            disponivelMes: 'Disponível no mês', gastasFixas: 'Gastas (Fixas)',
+            gastasVariaveis: 'Gastas (Variáveis)',
+            // Variável tab
+            inserirViaSMS: 'Inserção via SMS', inserirManual: 'Inserção Manual',
+            colarSMS: '📋 Colar SMS', extrairAdicionar: 'Extrair e Adicionar',
+            adicionarManualmente: 'Adicionar Manualmente', salvando: 'Salvando...',
+            estabelecimento: 'Estabelecimento', valor: 'Valor', data: 'Data',
+            hora: 'Hora', observacao: 'Observação (opcional)',
+            selecioneCategoria: 'Selecione uma Categoria',
+            rendimentoMensal: '💰 Rendimento Mensal', gerirTodos: '📋 Gerir Todos',
+            salvar: '💾 Salvar',
+            // Fixas tab
+            despesasFixas: 'Despesas Fixas', adicionarFixa: 'Adicionar Nova Despesa Fixa',
+            nome: 'Nome', diaVencimento: 'Dia Vencimento', editar: 'Editar',
+            cancelar: 'Cancelar', salvarFixa: 'Salvar', adicionarFixaBtn: '➕ Adicionar Despesa Fixa',
+            copiarMesAnterior: '📋 Copiar do Mês Anterior', nomeFixa: 'Nome da despesa fixa',
+            // Categorias tab
+            todasCategorias: 'Todas', semDespesas: 'Sem despesas neste período',
+            // Histórico tab
+            filtrarPeriodo: '📅 Filtrar por Período', de: 'De', ate: 'Até',
+            hoje: 'Hoje', semana: 'Semana', mes: 'Mês', ano: 'Ano', limpar: 'Limpar',
+            expandirTodos: '📂 Expandir Todos', colapsarTodos: '📁 Colapsar Todos',
+            resumo: '📊 Resumo', dias: 'dias', dia: 'dia', meses: 'meses',
+            despesas: 'despesas', totalVariaveis: '💸 Total Variáveis',
+            media: 'Média', porDia: '/dia', porMes: '/mês',
+            nenhumaDespesa: 'Nenhuma despesa neste período',
+            nenhumaDespesaAinda: 'Nenhuma despesa ainda',
+            // Settings
+            configuracoes: '⚙️ Configurações', limitesMensais: 'Limites Mensais',
+            despesasVariaveis: '💸 Despesas Variáveis', despesasFixasLabel: '💳 Despesas Fixas',
+            metaEconomiaAnual: '🎯 Meta de Economia Anual',
+            mercadoRestaurante: 'Mercado, restaurante, transporte, etc.',
+            aluguelContas: 'Aluguel, contas, assinaturas, etc.',
+            quantoEconomizar: 'Quanto deseja economizar este ano?',
+            limiteTotalMensal: '🗓️ Limite Total Mensal', moeda: 'Moeda',
+            moedaSistema: '💱 Moeda do Sistema', afetaTodos: 'Afeta todos os valores exibidos no app',
+            idioma: 'Idioma', idiomaLabel: '🌐 Idioma do Sistema',
+            dados: 'Dados', downloadBackup: '💾 Download Backup (XLSX)',
+            // Toasts & alerts
+            despesaSalva: '✅ Despesa salva no Google Sheets!',
+            erroSalvar: '❌ Erro ao salvar. Tente novamente.',
+            despesaAtualizada: '✅ Despesa atualizada com sucesso!',
+            erroAtualizar: '❌ Erro ao atualizar. Tente novamente.',
+            erroDeletar: '❌ Erro ao deletar. Tente novamente.',
+            confirmarExcluir: 'Excluir esta despesa?',
+            erroExtract: '❌ Não consegui extrair os dados. Verifique o formato do SMS.',
+            erroCategoria: '❌ Por favor, selecione uma categoria para a despesa.',
+            erroCampos: '⚠️ Preencha todos os campos obrigatórios',
+            erroSelecionarCategoria: '⚠️ Selecione uma categoria',
+            rendimentoNegativo: '⚠️ O rendimento não pode ser negativo',
+            rendimentoSalvo: '✅ Rendimento de',
+            rendimentoSalvoSufixo: 'salvo com sucesso!',
+            moedaAlterada: '✅ Moeda alterada para',
+            idiomaAlterado: '✅ Idioma alterado para',
+            backupPreparando: '⏳ Preparando backup...',
+            backupBaixado: '✅ Backup baixado:',
+            erroPDF: '❌ Erro ao carregar gerador de PDF',
+            // Month names
+            monthNames: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+            monthNamesFull: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+            // Category names
+            mercado: 'Mercado', restaurante: 'Restaurante', transporte: 'Transporte',
+            saude: 'Saúde', educacao: 'Educação', lazer: 'Lazer',
+            vestuario: 'Vestuário', outros: 'Outros', moradia: 'Moradia',
+            viagem: 'Viagem', beleza: 'Beleza', tecnologia: 'Tecnologia',
+            // Ritmo
+            excelente: 'Excelente', bom: 'Bom', atencao: 'Atenção',
+            cuidado: 'Cuidado', critico: 'Crítico',
+            // Income manager
+            gerirRendimentos: '💰 Gerir Rendimentos',
+            futurosMeses: '↑ futuros · mês actual ao centro · passados ↓',
+            atual: 'ATUAL', futuro: 'futuro', rendimentoPlaceholder: 'Rendimento...',
+            mesesFuturos: '6 meses futuros · mês actual · 12 meses passados',
+        },
+        en: {
+            dashboard: 'Dashboard', variavel: 'Variable', fixas: 'Fixed',
+            categorias: 'Categories', historico: 'History',
+            appTitle: 'My Expenses',
+            saldoMes: 'Spent this month', limiteMensal: 'Monthly Limit',
+            gastoHoje: 'Spent today', limiteHoje: "Today's limit",
+            disponivelHoje: 'Available today', gastoAtual: 'Current spend',
+            poderiaGastar: 'Should have spent', diferenca: 'Difference',
+            economiaAnual: 'Annual Savings', metaAnual: 'Annual Goal',
+            economizado: 'Saved', faltam: 'Remaining', superouEm: 'Exceeded by',
+            mediaMensal: 'Monthly Average', acima: 'above', abaixo: 'below',
+            disponivelMes: 'Available this month', gastasFixas: 'Spent (Fixed)',
+            gastasVariaveis: 'Spent (Variable)',
+            inserirViaSMS: 'Add via SMS', inserirManual: 'Manual Entry',
+            colarSMS: '📋 Paste SMS', extrairAdicionar: 'Extract & Add',
+            adicionarManualmente: 'Add Manually', salvando: 'Saving...',
+            estabelecimento: 'Merchant', valor: 'Amount', data: 'Date',
+            hora: 'Time', observacao: 'Notes (optional)',
+            selecioneCategoria: 'Select a Category',
+            rendimentoMensal: '💰 Monthly Income', gerirTodos: '📋 Manage All',
+            salvar: '💾 Save',
+            despesasFixas: 'Fixed Expenses', adicionarFixa: 'Add New Fixed Expense',
+            nome: 'Name', diaVencimento: 'Due Day', editar: 'Edit',
+            cancelar: 'Cancel', salvarFixa: 'Save', adicionarFixaBtn: '➕ Add Fixed Expense',
+            copiarMesAnterior: '📋 Copy from Previous Month', nomeFixa: 'Fixed expense name',
+            todasCategorias: 'All', semDespesas: 'No expenses in this period',
+            filtrarPeriodo: '📅 Filter by Period', de: 'From', ate: 'To',
+            hoje: 'Today', semana: 'Week', mes: 'Month', ano: 'Year', limpar: 'Clear',
+            expandirTodos: '📂 Expand All', colapsarTodos: '📁 Collapse All',
+            resumo: '📊 Summary', dias: 'days', dia: 'day', meses: 'months',
+            despesas: 'expenses', totalVariaveis: '💸 Total Variable',
+            media: 'Avg', porDia: '/day', porMes: '/month',
+            nenhumaDespesa: 'No expenses in this period',
+            nenhumaDespesaAinda: 'No expenses yet',
+            configuracoes: '⚙️ Settings', limitesMensais: 'Monthly Limits',
+            despesasVariaveis: '💸 Variable Expenses', despesasFixasLabel: '💳 Fixed Expenses',
+            metaEconomiaAnual: '🎯 Annual Savings Goal',
+            mercadoRestaurante: 'Groceries, restaurants, transport, etc.',
+            aluguelContas: 'Rent, bills, subscriptions, etc.',
+            quantoEconomizar: 'How much do you want to save this year?',
+            limiteTotalMensal: '🗓️ Total Monthly Limit', moeda: 'Currency',
+            moedaSistema: '💱 System Currency', afetaTodos: 'Affects all values shown in the app',
+            idioma: 'Language', idiomaLabel: '🌐 System Language',
+            dados: 'Data', downloadBackup: '💾 Download Backup (XLSX)',
+            despesaSalva: '✅ Expense saved!',
+            erroSalvar: '❌ Error saving. Please try again.',
+            despesaAtualizada: '✅ Expense updated successfully!',
+            erroAtualizar: '❌ Error updating. Please try again.',
+            erroDeletar: '❌ Error deleting. Please try again.',
+            confirmarExcluir: 'Delete this expense?',
+            erroExtract: '❌ Could not extract data. Please check the SMS format.',
+            erroCategoria: '❌ Please select a category for the expense.',
+            erroCampos: '⚠️ Please fill in all required fields',
+            erroSelecionarCategoria: '⚠️ Please select a category',
+            rendimentoNegativo: '⚠️ Income cannot be negative',
+            rendimentoSalvo: '✅ Income of',
+            rendimentoSalvoSufixo: 'saved successfully!',
+            moedaAlterada: '✅ Currency changed to',
+            idiomaAlterado: '✅ Language changed to',
+            backupPreparando: '⏳ Preparing backup...',
+            backupBaixado: '✅ Backup downloaded:',
+            erroPDF: '❌ Error loading PDF generator',
+            monthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            monthNamesFull: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+            mercado: 'Groceries', restaurante: 'Restaurant', transporte: 'Transport',
+            saude: 'Health', educacao: 'Education', lazer: 'Leisure',
+            vestuario: 'Clothing', outros: 'Others', moradia: 'Housing',
+            viagem: 'Travel', beleza: 'Beauty', tecnologia: 'Technology',
+            excelente: 'Excellent', bom: 'Good', atencao: 'Attention',
+            cuidado: 'Caution', critico: 'Critical',
+            gerirRendimentos: '💰 Manage Income',
+            futurosMeses: '↑ future · current month centred · past ↓',
+            atual: 'CURRENT', futuro: 'future', rendimentoPlaceholder: 'Income...',
+            mesesFuturos: '6 future months · current month · 12 past months',
+        }
+    };
+
+    // Função de tradução
+    function t(key) {
+        const lang = state ? (state.lang || 'pt') : 'pt';
+        return (I18N[lang] && I18N[lang][key]) || I18N['pt'][key] || key;
+    }
+
     // Locales recomendados por moeda
     const CURRENCY_LOCALES = { AED: 'en-AE', BRL: 'pt-BR', USD: 'en-US', EUR: 'de-DE', GBP: 'en-GB', CHF: 'de-CH', CAD: 'en-CA', AUD: 'en-AU', JPY: 'ja-JP', CNY: 'zh-CN' };
 
@@ -664,7 +839,8 @@
         saving: false,  // Lock para evitar duplo envio
         currency: 'AED',  // Moeda do sistema
         histDateStart: '',  // Filtro data início histórico
-        histDateEnd: ''     // Filtro data fim histórico
+        histDateEnd: '',    // Filtro data fim histórico
+        lang: 'pt'          // Idioma: 'pt' ou 'en'
     };
 
     // Carregar dados do Google Sheets
@@ -741,6 +917,7 @@
                 state.goalFixed = cached.goalFixed || 0;
                 state.yearlyGoal = cached.yearlyGoal || 0;
                 state.currency = cached.currency || 'AED';
+                state.lang = cached.lang || 'pt';
                 state.fixedExpenses = cached.fixedExpenses || [];
                 
                 // Filtrar fixas mensais inválidas do cache
@@ -858,6 +1035,7 @@
                 goalFixed: state.goalFixed,
                 yearlyGoal: state.yearlyGoal,
                 currency: state.currency,
+                lang: state.lang,
                 monthlyIncome: state.monthlyIncome
             });
 
@@ -1071,7 +1249,7 @@
     }
 
     async function downloadBackup() {
-        showToast('⏳ Preparando backup...', 'success');
+        showToast(t('backupPreparando'));
 
         const now = new Date();
         const dd = String(now.getDate()).padStart(2,'0');
@@ -1173,7 +1351,14 @@
 
         // Download
         XLSX.writeFile(wb, filename);
-        showToast('✅ Backup baixado: ' + filename);
+        showToast(t('backupBaixado') + ' ' + filename);
+    }
+
+    function updateLang(lang) {
+        state.lang = lang;
+        updateCache();
+        render();
+        showToast(t('idiomaAlterado') + ' ' + (lang === 'pt' ? 'Português 🇧🇷' : 'English 🇬🇧'));
     }
 
     async function updateCurrency(value) {
@@ -1349,7 +1534,7 @@
                 <div style="padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.07);
                             display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">⚙️ Configurações</h3>
+                        <h3 style="margin: 0; color: #F0F4FF; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">' + t('configuracoes') + '</h3>
                     </div>
                     <button onclick="this.closest('.modal-overlay').remove()" style="
                         background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
@@ -1363,13 +1548,13 @@
                     <!-- Secção Limites -->
                     <div>
                         <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">Limites Mensais</div>
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">' + t('limitesMensais') + '</div>
 
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💸 Despesas Variáveis (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
+                                    ${t('despesasVariaveis')} (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalInput" value="${state.goal}"
@@ -1394,13 +1579,13 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Mercado, restaurante, transporte, etc.</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('mercadoRestaurante') + '</div>
                             </div>
 
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    💳 Despesas Fixas (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
+                                    ${t('despesasFixasLabel')} (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsGoalFixedInput" value="${state.goalFixed}"
@@ -1421,13 +1606,13 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Aluguel, contas, assinaturas, etc.</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('aluguelContas') + '</div>
                             </div>
 
                             <div>
                                 <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                               margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                                    🎯 Meta de Economia Anual (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
+                                    ${t('metaEconomiaAnual')} (<span class="settings-currency-label">${state.currency || 'AED'}</span>)
                                 </label>
                                 <div style="display: flex; gap: 8px;">
                                     <input type="number" id="settingsYearlyGoalInput" value="${state.yearlyGoal}"
@@ -1448,7 +1633,7 @@
                                              border-radius: 8px; color: #94A3B8; font-size: 0.8rem; font-weight: 700;
                                              cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                                 </div>
-                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">Quanto deseja economizar este ano?</div>
+                                <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">' + t('quantoEconomizar') + '</div>
                             </div>
 
                             <!-- Total -->
@@ -1472,7 +1657,7 @@
                                     letter-spacing: 0.08em; margin-bottom: 12px;">Moeda</div>
                         <label style="display: block; font-size: 0.78rem; color: #94A3B8;
                                       margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
-                            💱 Moeda do Sistema
+                            ${t('moedaSistema')}
                         </label>
                         <div style="display: flex; gap: 8px;">
                             <select id="settingsCurrencySelect" style="
@@ -1501,7 +1686,38 @@
                                      cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0;">💾</button>
                         </div>
                         <div style="font-size: 0.72rem; color: #4E627A; margin-top: 4px;">
-                            Afeta todos os valores exibidos no app
+                            ' + t('afetaTodos') + '
+                        </div>
+                    </div>
+
+                    <!-- Separador -->
+                    <div style="border-top: 1px solid rgba(255,255,255,0.07);"></div>
+
+                    <!-- Secção Idioma -->
+                    <div>
+                        <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">${t('idioma')}</div>
+                        <label style="display: block; font-size: 0.78rem; color: #94A3B8;
+                                      margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            ' + t('idiomaLabel') + '
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="updateLang('pt'); this.closest('.modal-overlay').remove();"
+                                style="flex: 1; padding: 11px 14px; border-radius: 8px; cursor: pointer;
+                                       font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
+                                       ${state.lang === 'pt'
+                                           ? 'background: rgba(0,212,170,0.15); border: 1px solid rgba(0,212,170,0.5); color: #00D4AA;'
+                                           : 'background: #162035; border: 1px solid rgba(255,255,255,0.1); color: #94A3B8;'}">
+                                🇧🇷 Português
+                            </button>
+                            <button onclick="updateLang('en'); this.closest('.modal-overlay').remove();"
+                                style="flex: 1; padding: 11px 14px; border-radius: 8px; cursor: pointer;
+                                       font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
+                                       ${state.lang === 'en'
+                                           ? 'background: rgba(0,212,170,0.15); border: 1px solid rgba(0,212,170,0.5); color: #00D4AA;'
+                                           : 'background: #162035; border: 1px solid rgba(255,255,255,0.1); color: #94A3B8;'}">
+                                🇬🇧 English
+                            </button>
                         </div>
                     </div>
 
@@ -1511,7 +1727,7 @@
                     <!-- Secção Backup -->
                     <div>
                         <div style="font-size: 0.72rem; color: #4E627A; text-transform: uppercase;
-                                    letter-spacing: 0.08em; margin-bottom: 12px;">Dados</div>
+                                    letter-spacing: 0.08em; margin-bottom: 12px;">' + t('dados') + '</div>
                         <button onclick="this.closest('.modal-overlay').remove(); downloadBackup();"
                                 style="width: 100%; padding: 13px; background: transparent;
                                        border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
@@ -1520,7 +1736,7 @@
                                        display: flex; align-items: center; justify-content: center; gap: 8px;"
                                 onmouseover="this.style.borderColor='rgba(0,212,170,0.4)'; this.style.color='#00D4AA';"
                                 onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#94A3B8';">
-                            💾 Download Backup (XLSX)
+                            ' + t('downloadBackup') + '
                         </button>
                     </div>
 
@@ -1653,12 +1869,12 @@
         const parsed = parseSMS(state.sms);
         if (!parsed) {
             state.saving = false;
-            alert('❌ Não consegui extrair os dados. Verifique o formato do SMS.');
+            alert(t('erroExtract'));
             return;
         }
         if (!state.selectedCategory) {
             state.saving = false;
-            alert('❌ Por favor, selecione uma categoria para a despesa.');
+            alert(t('erroCategoria'));
             return;
         }
 
@@ -1669,13 +1885,13 @@
         parsed.obs = state.obs || '';
 
         const btn = document.querySelector('.btn-add-expense');
-        if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+        if (btn) { btn.disabled = true; btn.textContent = t('salvando'); }
 
         const success = await addExpenseToSheets(parsed);
 
         // Sempre reabilitar o botão e liberar o lock
         state.saving = false;
-        if (btn) { btn.disabled = false; btn.textContent = 'Extrair e Adicionar'; }
+        if (btn) { btn.disabled = false; btn.textContent = t('extrairAdicionar'); }
 
         if (success) {
             // ✅ OTIMIZAÇÃO: Atualizar state localmente sem recarregar
@@ -1685,14 +1901,14 @@
             state.obs = '';
             state.selectedCategory = null;
             render();
-            showToast('✅ Despesa salva no Google Sheets!');
+            showToast(t('despesaSalva'));
         } else {
-            showToast('❌ Erro ao salvar. Tente novamente.', 'error');
+            showToast(t('erroSalvar'), 'error');
         }
     }
 
     async function deleteExpense(id) {
-        if (confirm('Excluir esta despesa?')) {
+        if (confirm(t('confirmarExcluir'))) {
             const success = await deleteExpenseFromSheets(id);
             
             if (success) {
@@ -1731,9 +1947,9 @@
             updateCache();
             state.editingExpense = null;
             render();
-            showToast('✅ Despesa atualizada com sucesso!');
+            showToast(t('despesaAtualizada'));
         } else {
-            showToast('❌ Erro ao atualizar. Tente novamente.', 'error');
+            showToast(t('erroAtualizar'), 'error');
         }
     }
 
@@ -1794,7 +2010,7 @@
         
         const value = parseFloat(input.value) || 0;
         if (value < 0) {
-            showToast('⚠️ O rendimento não pode ser negativo', 'error');
+            showToast(t('rendimentoNegativo'), 'error');
             return;
         }
         
@@ -1853,7 +2069,7 @@
             animation: fadeIn 0.2s;
         `;
         
-        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const monthNames = t('monthNames');
         const now = new Date();
         const currentKey = `${now.getMonth() + 1}/${now.getFullYear()}`;
 
@@ -1917,7 +2133,7 @@
             
             html += '<div style="display: flex; gap: 8px;">';
             html += '<input type="number" id="income_' + month.key.replace('/', '_') + '" ';
-            html += 'placeholder="Rendimento..." value="' + (month.value || '') + '" ';
+            html += 'placeholder="' + t('rendimentoPlaceholder') + '" value="' + (month.value || '') + '" ';
             html += 'style="flex: 1; padding: 9px 12px; border: 1px solid rgba(255,255,255,0.1); ';
             html += 'border-radius: 7px; background: rgba(255,255,255,0.05); color: #F0F4FF; font-size: 0.9rem;" />';
             html += '<button onclick="saveIncomeForMonth(' + "'" + month.key + "'" + ')" ';
@@ -1933,7 +2149,7 @@
         // Footer
         html += '<div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.07); ';
         html += 'text-align: center; font-size: 0.75rem; color: #4E627A;">';
-        html += '6 meses futuros · mês actual · 12 meses passados';
+        html += t('mesesFuturos');
         html += '</div>';
         
         html += '</div>';
@@ -1965,7 +2181,7 @@
         
         const value = parseFloat(input.value) || 0;
         if (value < 0) {
-            showToast('⚠️ O rendimento não pode ser negativo', 'error');
+            showToast(t('rendimentoNegativo'), 'error');
             return;
         }
 
@@ -1992,7 +2208,7 @@
                     if (btn) { btn.innerHTML = originalText; btn.style.background = '#22c55e'; btn.disabled = false; }
                 }, 1500);
 
-                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                const monthNames = t('monthNames');
                 const [m, y] = monthKey.split('/');
                 showToast(`✅ Rendimento de ${monthNames[parseInt(m)-1]} ${y} salvo: ${state.currency || 'AED'} ${value.toFixed(0)}`);
             } else {
@@ -2303,7 +2519,7 @@
         
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '⏳ Salvando...';
+            btn.innerHTML = '⏳ ' + t('salvando');
             btn.style.opacity = '0.6';
         }
         
@@ -2535,12 +2751,12 @@
         const time = document.getElementById('manualTime').value;
         
         if (!merchant || !amount || !date || !time) {
-            alert('⚠️ Preencha todos os campos obrigatórios');
+            alert(t('erroCampos'));
             return;
         }
         
         if (!state.selectedCategory) {
-            alert('⚠️ Selecione uma categoria');
+            alert(t('erroSelecionarCategoria'));
             return;
         }
         
@@ -2549,7 +2765,7 @@
         if (state.saving) return;
         state.saving = true;
         btn.disabled = true;
-        btn.textContent = 'Salvando...';
+        btn.textContent = t('salvando');
         
         const expense = {
             id: Date.now(),
@@ -2566,7 +2782,7 @@
         // Sempre reabilitar o botão e liberar o lock, independente do resultado
         state.saving = false;
         btn.disabled = false;
-        btn.textContent = 'Adicionar Manualmente';
+        btn.textContent = t('adicionarManualmente');
 
         if (success) {
             // ✅ OTIMIZAÇÃO: Atualizar state localmente sem recarregar tudo do servidor
@@ -2581,9 +2797,9 @@
             state.obs = '';
             state.selectedCategory = null;
             render();
-            showToast('✅ Despesa salva no Google Sheets!');
+            showToast(t('despesaSalva'));
         } else {
-            showToast('❌ Erro ao salvar. Tente novamente.', 'error');
+            showToast(t('erroSalvar'), 'error');
         }
     }
 
@@ -2620,23 +2836,23 @@
         let emoji = '';
         
         if (ritmo < 80) {
-            status = 'Excelente';
+            status = t('excelente');
             cor = '#22c55e'; // Verde escuro
             emoji = '🟢';
         } else if (ritmo < 100) {
-            status = 'Bom';
+            status = t('bom');
             cor = '#84cc16'; // Verde claro
             emoji = '🟢';
         } else if (ritmo < 110) {
-            status = 'Atenção';
+            status = t('atencao');
             cor = '#fbbf24'; // Amarelo
             emoji = '🟡';
         } else if (ritmo < 120) {
-            status = 'Cuidado';
+            status = t('cuidado');
             cor = '#fb923c'; // Laranja
             emoji = '🟠';
         } else {
-            status = 'Crítico';
+            status = t('critico');
             cor = '#f87171'; // Vermelho suave
             emoji = '🔴';
         }
@@ -2701,7 +2917,7 @@
     }
 
     async function generateAnnualReport(year) {
-        try { await loadJsPDF(); } catch(e) { showToast('❌ Erro ao carregar gerador de PDF', 'error'); return; }
+        try { await loadJsPDF(); } catch(e) { showToast(t('erroPDF'), 'error'); return; }
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             orientation: 'landscape',
@@ -3204,7 +3420,7 @@
     function formatMonthYear(monthYear) {
         if (!monthYear) return '';
         const [month, year] = monthYear.split('/').map(Number);
-        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const monthNames = t('monthNames');
         return `${monthNames[month - 1]} ${year}`;
     }
 
@@ -3499,16 +3715,16 @@
             return monthB - monthA;
         });
         
-        const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const monthNames = t('monthNames');
         
         if (state.tab === 'dash') {
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab active" onclick="state.tab='dash'; render()">Dashboard</button>
-                    <button class="tab" onclick="state.tab='add'; render()">Variável</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                    <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    <button class="tab active" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
+                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
+                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
                 </div>
                 
                 <!-- Card do Termômetro de Ritmo -->
@@ -3657,7 +3873,7 @@
                         <div class="stat-value">${formatAEDShort(largest)}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Categorias</div>
+                        <div class="stat-label">' + t('categorias') + '</div>
                         <div class="stat-value">${Object.values(getCategoryStats()).filter(s => s.count > 0).length}</div>
                     </div>
                 </div>
@@ -3920,7 +4136,7 @@
                     const remaining = state.yearlyGoal - yearlyEconomy;
                     const isOnTrack = yearlyEconomy >= 0;
                     
-                    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                    const monthNames = t('monthNames');
                     
                     // Usar quantidade de meses COM RENDIMENTO ao invés de meses decorridos
                     const monthsWithIncome = monthsWithData.length;
@@ -4327,11 +4543,11 @@
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
-                    <button class="tab active" onclick="state.tab='add'; render()">Variável</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                    <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
+                    <button class="tab active" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
+                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
                 </div>
                 <div class="card">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -4404,7 +4620,7 @@
                             </div>
                         </div>
                         <div style="min-width: 0;">
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Hoje</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">' + t('hoje') + '</div>
                             <div style="font-size: 1.05rem; font-weight: 700; color: ${remaining < 0 ? '#fca5a5' : '#86efac'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 ${monthDays.isLastDay ? formatNumberShort(Math.max(0, remaining)) : formatNumberShort(Math.max(0, todayRemaining))}
                             </div>
@@ -4439,7 +4655,7 @@
                 </div>
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <label class="label" style="margin: 0;">${state.manualEntry ? '✏️ Inserção Manual' : '📱 Inserção via SMS'}</label>
+                        <label class="label" style="margin: 0;">${state.manualEntry ? t('inserirManual') : t('inserirViaSMS')}</label>
                         <button 
                             onclick="toggleManualEntry()"
                             style="
@@ -4491,22 +4707,22 @@
                         </div>
                     ` : `
                         <div class="input-group">
-                            <label class="label">Estabelecimento:</label>
+                            <label class="label">' + t('estabelecimento') + ':</label>
                             <input type="text" id="manualMerchant" class="input-field" placeholder="Ex: Carrefour, Subway..." />
                         </div>
                         
                         <div class="input-group">
-                            <label class="label">${state.currency || 'AED'} — Valor:</label>
+                            <label class="label">${t('valor')} (${state.currency || 'AED'}):</label>
                             <input type="number" id="manualAmount" class="input-field" placeholder="Ex: 150.50" step="0.01" />
                         </div>
                         
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <div class="input-group">
-                                <label class="label">Data:</label>
+                                <label class="label">' + t('data') + ':</label>
                                 <input type="date" id="manualDate" class="input-field" />
                             </div>
                             <div class="input-group">
-                                <label class="label">Hora:</label>
+                                <label class="label">${t('hora')}:</label>
                                 <input type="time" id="manualTime" class="input-field" />
                             </div>
                         </div>
@@ -4531,7 +4747,7 @@
                     </div>
                     
                     <button class="btn btn-add-expense" onclick="${state.manualEntry ? 'addManualExpense()' : 'addExpense()'}">
-                        ${state.manualEntry ? '✅ Adicionar Manualmente' : '📱 Extrair e Adicionar'}
+                        ${state.manualEntry ? '✅ ' + t('adicionarManualmente') : '📱 ' + t('extrairAdicionar')}
                     </button>
                 </div>
                 
@@ -4546,8 +4762,8 @@
 
                     let html = '<div style="margin-top: 16px; padding: 20px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15); border-radius: 12px; border-left: 3px solid #22c55e;">';
                     html += '<div style="font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">';
-                    html += '<span style="color: #F0F4FF;">💰 Rendimento Mensal</span>';
-                    html += '<button onclick="toggleIncomeManager()" style="padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94A3B8; font-weight: 600; cursor: pointer; font-size: 0.8rem;">📋 Gerir Todos</button>';
+                    html += '<span style="color: #F0F4FF;">' + t('rendimentoMensal') + '</span>';
+                    html += '<button onclick="toggleIncomeManager()" style="padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: #94A3B8; font-weight: 600; cursor: pointer; font-size: 0.8rem;">' + t('gerirTodos') + '</button>';
                     html += '</div>';
                     html += '<label style="display: block; font-size: 0.78rem; color: #94A3B8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">';
                     html += 'Rendimento de ' + monthNames[now.getMonth()] + ' ' + now.getFullYear();
@@ -4657,7 +4873,7 @@
             const totalFixed = currentMonthFixed.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
             
             // Nomes dos meses
-            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const monthNames = t('monthNames');
             
             // Calcular mês anterior (com validação)
             let currentMonthNum, currentYearNum, previousMonthNum, previousYearNum, previousMonth, hasPreviousMonth;
@@ -4683,11 +4899,11 @@
             
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
-                    <button class="tab" onclick="state.tab='add'; render()">Variável</button>
-                    <button class="tab active" onclick="state.tab='fixed'; render()">Fixas</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                    <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
+                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
+                    <button class="tab active" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
+                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
                 </div>
                 
                 <!-- Seletor de Mês -->
@@ -4732,7 +4948,7 @@
                     
                     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
                         <div class="input-group">
-                            <label class="label">${state.currency || 'AED'} — Valor:</label>
+                            <label class="label">' + t('valor') + ' (${state.currency || 'AED'}):</label>
                             <input type="number" id="fixedAmount" class="input-field" placeholder="Ex: 150.00" step="0.01" />
                         </div>
                         <div class="input-group">
@@ -4937,15 +5153,15 @@
                 .sort((a, b) => b.total - a.total);
             
             const maxTotal = sortedStats.length > 0 ? sortedStats[0].total : 1;
-            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const monthNames = t('monthNames');
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
-                    <button class="tab" onclick="state.tab='add'; render()">Variável</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                    <button class="tab active" onclick="state.tab='categories'; render()">Categorias</button>
-                    <button class="tab" onclick="state.tab='list'; render()">Histórico</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
+                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
+                    <button class="tab active" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
+                    <button class="tab" onclick="state.tab='list'; render()">' + t('historico') + '</button>
                 </div>
                 
                 <!-- Título da Seção -->
@@ -5101,7 +5317,7 @@
                             .sort((a, b) => b.total - a.total);
                         
                         if (allSortedStats.length === 0) {
-                            return '<div class="empty">📦<br>Nenhuma despesa ainda</div>';
+                            return '<div class="empty">📦<br>' + t('nenhumaDespesaAinda') + '</div>';
                         }
                         
                         const grandTotal = allSortedStats.reduce((sum, s) => sum + s.total, 0);
@@ -5327,32 +5543,32 @@
                 return monthB - monthA;
             });
 
-            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const monthNames = t('monthNames');
 
             app.innerHTML = `
                 <div class="tabs">
-                    <button class="tab" onclick="state.tab='dash'; render()">Dashboard</button>
-                    <button class="tab" onclick="state.tab='add'; render()">Variável</button>
-                    <button class="tab" onclick="state.tab='fixed'; render()">Fixas</button>
-                    <button class="tab" onclick="state.tab='categories'; render()">Categorias</button>
-                    <button class="tab active" onclick="state.tab='list'; render()">Histórico</button>
+                    <button class="tab" onclick="state.tab='dash'; render()">' + t('dashboard') + '</button>
+                    <button class="tab" onclick="state.tab='add'; render()">' + t('variavel') + '</button>
+                    <button class="tab" onclick="state.tab='fixed'; render()">' + t('fixas') + '</button>
+                    <button class="tab" onclick="state.tab='categories'; render()">' + t('categorias') + '</button>
+                    <button class="tab active" onclick="state.tab='list'; render()">' + t('historico') + '</button>
                 </div>
                 ${state.expenses.length === 0 ? 
-                    '<div class="card"><div class="empty">📊<br>Nenhuma despesa ainda</div></div>' :
+                    '<div class="card"><div class="empty">📊<br>' + t('nenhumaDespesaAinda') + '</div></div>' :
                     `<!-- Card de Filtro de Período -->
                     <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden;">
                         <div style="position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: var(--amber); border-radius: 0 3px 3px 0; opacity: 0.7;"></div>
-                        <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">📅 Filtrar por Período</div>
+                        <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">' + t('filtrarPeriodo') + '</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                             <div>
-                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">De</label>
+                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">${t('de')}</label>
                                 <input type="date" id="histDateStart"
                                     value="${state.histDateStart}"
                                     onchange="state.histDateStart = this.value; render();"
                                     style="width: 100%; padding: 9px 10px; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: var(--radius-sm); color: var(--text-1); font-size: 0.85rem; font-family: inherit; color-scheme: dark;">
                             </div>
                             <div>
-                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">Até</label>
+                                <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">' + t('ate') + '</label>
                                 <input type="date" id="histDateEnd"
                                     value="${state.histDateEnd}"
                                     onchange="state.histDateEnd = this.value; render();"
@@ -5366,31 +5582,31 @@
                                 state.histDateStart = s(n); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">Hoje</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('hoje') + '</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 const day = n.getDay(); const mon = new Date(n); mon.setDate(n.getDate() - (day === 0 ? 6 : day - 1));
                                 state.histDateStart = s(mon); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">Semana</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('semana') + '</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 const first = new Date(n.getFullYear(), n.getMonth(), 1);
                                 state.histDateStart = s(first); state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">Mês</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('mes') + '</button>
                             <button onclick="
                                 const n = new Date(); const s = d => d.toISOString().split('T')[0];
                                 state.histDateStart = n.getFullYear() + '-01-01'; state.histDateEnd = s(n); render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='var(--teal)'; this.style.color='var(--teal)';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">Ano</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('ano') + '</button>
                             <button onclick="state.histDateStart = ''; state.histDateEnd = ''; render();"
                                 style="flex: 1; min-width: 60px; padding: 7px 4px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-2); font-size: 0.7rem; cursor: pointer; transition: all 0.2s;"
                                 onmouseover="this.style.borderColor='#ef4444'; this.style.color='#ef4444';"
-                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">Limpar</button>
+                                onmouseout="this.style.borderColor='var(--border)'; this.style.color='var(--text-2)';">' + t('limpar') + '</button>
                         </div>
                     </div>
 
@@ -5399,8 +5615,8 @@
 
                     ${(state.histDateStart || state.histDateEnd) ? '' :
                     '<div class="expand-controls">' +
-                        '<button onclick="expandAllMonths()">📂 Expandir Todos</button>' +
-                        '<button onclick="collapseAllMonths()">📁 Colapsar Todos</button>' +
+                        '<button onclick="expandAllMonths()">' + t('expandirTodos') + '</button>' +
+                        '<button onclick="collapseAllMonths()">' + t('colapsarTodos') + '</button>' +
                     '</div>'}
                     ` +
                     ((state.histDateStart || state.histDateEnd) ? [] : months).filter(monthYear => {
@@ -5623,13 +5839,13 @@
                             <div class="modal-header">✏️ Editar Despesa</div>
                             
                             <div class="input-group">
-                                <label class="label">Estabelecimento:</label>
+                                <label class="label">' + t('estabelecimento') + ':</label>
                                 <input type="text" class="input-field" value="${state.editingExpense.merchant}" 
                                        onchange="state.editingExpense.merchant = this.value">
                             </div>
                             
                             <div class="input-group">
-                                <label class="label">${state.currency || 'AED'} — Valor:</label>
+                                <label class="label">${t('valor')} (${state.currency || 'AED'}):</label>
                                 <input type="number" step="0.01" class="input-field" value="${state.editingExpense.amount}" 
                                        onchange="state.editingExpense.amount = parseFloat(this.value)">
                             </div>
