@@ -574,18 +574,23 @@
     const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxVLkLhhtW9wsGJfHx07y6trLtjYZJvFbq4oriMQ6gnGCMC4rfhZIkNAbP7Y2vKY4q-4w/exec';
 
     // Categorias padrão
-    const CATEGORIES = [
-        { id: 'mercado', name: 'Mercado', icon: '🛒', color: '#10b981' },
-        { id: 'restaurante', name: 'Restaurante', icon: '🍽️', color: '#f59e0b' },
-        { id: 'transporte', name: 'Transporte', icon: '🚗', color: '#3b82f6' },
-        { id: 'lazer', name: 'Lazer', icon: '🎮', color: '#8b5cf6' },
-        { id: 'saude', name: 'Saúde', icon: '💊', color: '#ef4444' },
-        { id: 'educacao', name: 'Educação', icon: '📚', color: '#0ea5e9' },
-        { id: 'moradia', name: 'Moradia', icon: '🏠', color: '#6366f1' },
-        { id: 'viagem', name: 'Viagem', icon: '✈️', color: '#14b8a6' },
-        { id: 'compras', name: 'Compras', icon: '🛍️', color: '#ec4899' },
-        { id: 'outros', name: 'Outros', icon: '📦', color: '#6b7280' }
-    ];
+    // CATEGORIES é uma função para suportar tradução dinâmica
+    function getCategories() {
+        return [
+            { id: 'mercado',    name: t('mercado'),    icon: '🛒', color: '#10b981' },
+            { id: 'restaurante',name: t('restaurante'),icon: '🍽️', color: '#f59e0b' },
+            { id: 'transporte', name: t('transporte'), icon: '🚗', color: '#3b82f6' },
+            { id: 'lazer',      name: t('lazer'),      icon: '🎮', color: '#8b5cf6' },
+            { id: 'saude',      name: t('saude'),      icon: '💊', color: '#ef4444' },
+            { id: 'educacao',   name: t('educacao'),   icon: '📚', color: '#0ea5e9' },
+            { id: 'moradia',    name: t('moradia'),    icon: '🏠', color: '#6366f1' },
+            { id: 'viagem',     name: t('viagem'),     icon: '✈️', color: '#14b8a6' },
+            { id: 'compras',    name: t('compras'),    icon: '🛍️', color: '#ec4899' },
+            { id: 'outros',     name: t('outros'),     icon: '📦', color: '#6b7280' },
+        ];
+    }
+    // Alias para compatibilidade com código existente
+    Object.defineProperty(window, 'CATEGORIES', { get: getCategories });
 
     // Função para formatar valores em AED com centavos
     // ============================================
@@ -679,7 +684,7 @@
             mercado: 'Mercado', restaurante: 'Restaurante', transporte: 'Transporte',
             saude: 'Saúde', educacao: 'Educação', lazer: 'Lazer',
             vestuario: 'Vestuário', outros: 'Outros', moradia: 'Moradia',
-            viagem: 'Viagem', beleza: 'Beleza', tecnologia: 'Tecnologia',
+            viagem: 'Viagem', compras: 'Compras', beleza: 'Beleza', tecnologia: 'Tecnologia',
             // Ritmo
             excelente: 'Excelente', bom: 'Bom', atencao: 'Atenção',
             cuidado: 'Cuidado', critico: 'Crítico',
@@ -700,6 +705,11 @@
             diasPassados: 'dias passados', diasRestantes: 'dias restantes',
             diaPassado: 'dia passado', diaRestante: 'dia restante',
             carregando: '⏳ Carregando dados...',
+            limiteLabel: 'Limite', gastoLabel: 'Gasto',
+            ritmoLabel: 'Ritmo', smsPlaceholder: 'Cole aqui o SMS...',
+            coleSMS: 'COLE O SMS DO BANCO:', colar: 'Colar',
+            manual: 'Manual', observacaoPlaceholder: 'Ex: Presente, Dividido com amigos...',
+            topCatMeses: 'meses com despesas', topCatMes: 'mês com despesas',
             // Variavel
             coleOSMS: 'COLE O SMS DO BANCO:', observacaoLabel: 'OBSERVAÇÃO (OPCIONAL):',
             selecioneCatLabel: 'SELECIONE A CATEGORIA:',
@@ -803,7 +813,7 @@
             mercado: 'Groceries', restaurante: 'Restaurant', transporte: 'Transport',
             saude: 'Health', educacao: 'Education', lazer: 'Leisure',
             vestuario: 'Clothing', outros: 'Others', moradia: 'Housing',
-            viagem: 'Travel', beleza: 'Beauty', tecnologia: 'Technology',
+            viagem: 'Travel', compras: 'Shopping', beleza: 'Beauty', tecnologia: 'Technology',
             excelente: 'Excellent', bom: 'Good', atencao: 'Attention',
             cuidado: 'Caution', critico: 'Critical',
             gerirRendimentos: '💰 Manage Income',
@@ -822,6 +832,11 @@
             diasPassados: 'days elapsed', diasRestantes: 'days remaining',
             diaPassado: 'day elapsed', diaRestante: 'day remaining',
             carregando: '⏳ Loading data...',
+            limiteLabel: 'Limit', gastoLabel: 'Spent',
+            ritmoLabel: 'Pace', smsPlaceholder: 'Paste SMS here...',
+            coleSMS: 'PASTE BANK SMS:', colar: 'Paste',
+            manual: 'Manual', observacaoPlaceholder: 'Ex: Gift, Split with friends...',
+            topCatMeses: 'months with expenses', topCatMes: 'month with expenses',
             // Variable
             coleOSMS: 'PASTE BANK SMS:', observacaoLabel: 'NOTES (OPTIONAL):',
             selecioneCatLabel: 'SELECT A CATEGORY:',
@@ -2943,7 +2958,7 @@
         // Quanto poderia ter gastado até agora (proporcional aos dias)
         const poderiaGastar = (state.goal * monthDays.passed) / monthDays.total;
         
-        // Ritmo: gasto real / poderia gastar * 100
+        // ${t('ritmoLabel')}: gasto real / poderia gastar * 100
         const ritmo = poderiaGastar > 0 ? (total / poderiaGastar * 100) : 0;
         
         // Determinar status e cor
@@ -3886,7 +3901,7 @@
                     
                     <div class="ritmo-details">
                         <div class="ritmo-detail-item">
-                            <div class="ritmo-detail-label">Gasto Real</div>
+                            <div class="ritmo-detail-label">${t('gastoAtualLabel')}</div>
                             <div class="ritmo-detail-value">${state.currency || 'AED'} ${ritmo.gastoReal.toFixed(0)}</div>
                         </div>
                         <div class="ritmo-detail-item">
@@ -3960,7 +3975,7 @@
                     </div>
                     <div class="meta">
                         <div class="meta-item">
-                            <div class="meta-label">Gasto</div>
+                            <div class="meta-label">${t('gastoLabel')}</div>
                             <div class="meta-value">${formatAEDShort(total)}</div>
                             <div style="font-size: 0.75rem; opacity: 0.8; margin-top: 4px;">
                                 📅 ${monthDays.passed} ${monthDays.passed === 1 ? 'dia' : 'dias'} passado${monthDays.passed === 1 ? '' : 's'}
@@ -4692,7 +4707,7 @@
                                 </div>
                             </div>
                             <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
-                                📅 Limite Mensal
+                                📅 ${t('limiteMensalLabel')}
                             </div>
                         </div>
                         
@@ -4713,18 +4728,18 @@
                                 </div>
                             </div>
                             <div style="text-align: center; font-size: 0.75rem; opacity: 0.8; margin-top: 8px;">
-                                📆 Limite Diário
+                                📆 ${t('limiteDiario')}
                             </div>
                         </div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center;">
                         <div style="min-width: 0;">
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Limite</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">${t('limiteLabel')}</div>
                             <div style="font-size: 1.05rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(state.goal)}</div>
                         </div>
                         <div style="min-width: 0;">
-                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">Gasto</div>
+                            <div style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 4px;">${t('gastoLabel')}</div>
                             <div style="font-size: 1.05rem; font-weight: 700; color: ${percent > 90 ? '#fca5a5' : '#fff'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${formatNumberShort(total)}</div>
                             <div style="font-size: 0.6rem; opacity: 0.7; margin-top: 2px; color: #fbbf24; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 ${monthDays.passed > 0 ? `💸 ${formatNumberShort(total / monthDays.passed)}/d` : '💸 0/d'}
@@ -4758,7 +4773,7 @@
                     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div style="font-size: 0.85rem; opacity: 0.9;">
-                                🌡️ Ritmo: <strong style="color: ${ritmo.cor}">${ritmo.ritmo.toFixed(1)}%</strong>
+                                🌡️ ${t('ritmoLabel')}: <strong style="color: ${ritmo.cor}">${ritmo.ritmo.toFixed(1)}%</strong>
                             </div>
                             <div style="font-size: 0.75rem; opacity: 0.8;">
                                 ${ritmo.emoji} ${ritmo.status}
