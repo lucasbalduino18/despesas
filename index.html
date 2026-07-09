@@ -759,6 +759,10 @@
             diasPassados: 'dias passados', diasRestantes: 'dias restantes',
             diaPassado: 'dia passado', diaRestante: 'dia restante',
             carregando: '⏳ Carregando dados...',
+            totalDaCategoria: 'Total da Categoria', menorLabel: 'Menor',
+            estabelecimentosLabel: '🏪 Estabelecimentos', vezLabel: 'vez', vezesLabel: 'vezes',
+            doTotalLabel: 'do total', abaixoLimite: 'Abaixo do limite',
+            guardouTooltip: 'Guardou', deficitTooltip: 'Déficit',
             as: 'às', rendimentoLabel: '💰 Rendimento',
             fixasLabel2: '🔒 Fixas', totalDespesasLabel: '📊 Total Despesas',
             economiaLabel: 'Economia', guardouRendimento: 'Você guardou',
@@ -912,6 +916,10 @@
             diasPassados: 'days elapsed', diasRestantes: 'days remaining',
             diaPassado: 'day elapsed', diaRestante: 'day remaining',
             carregando: '⏳ Loading data...',
+            totalDaCategoria: 'Category Total', menorLabel: 'Lowest',
+            estabelecimentosLabel: '🏪 Merchants', vezLabel: 'time', vezesLabel: 'times',
+            doTotalLabel: 'of total', abaixoLimite: 'Below limit',
+            guardouTooltip: 'Saved', deficitTooltip: 'Deficit',
             as: 'at', rendimentoLabel: '💰 Income',
             fixasLabel2: '🔒 Fixed', totalDespesasLabel: '📊 Total Expenses',
             economiaLabel: 'Savings', guardouRendimento: 'You saved',
@@ -3833,7 +3841,7 @@
                     padding: 15px;
                     margin-bottom: 20px;
                 ">
-                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; text-align: center;">Total da Categoria</div>
+                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px; text-align: center;">${t('totalDaCategoria')}</div>
                     <div style="font-size: 1.8rem; font-weight: 700; text-align: center;">${state.currency || 'AED'} ${totalCategory.toFixed(2)}</div>
                     <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px; text-align: center;">
                         ${categoryExpenses.length} ${t('transacoesEm')} ${sortedMerchants.length} ${t('estabelecimentos')}
@@ -3864,7 +3872,7 @@
                                     <div style="font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #EF4444;">${state.currency || 'AED'} ${maxAmount.toFixed(2)}</div>
                                 </div>
                                 <div style="text-align: center;">
-                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">Menor</div>
+                                    <div style="font-size: 0.68rem; color: #94A3B8; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;">${t('menorLabel')}</div>
                                     <div style="font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #00D4AA;">${state.currency || 'AED'} ${minAmount.toFixed(2)}</div>
                                 </div>
                             `;
@@ -3873,7 +3881,7 @@
                 </div>
                 
                 <h4 style="margin-bottom: 12px; font-size: 0.78rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.07em;">
-                    🏪 Estabelecimentos
+                    ${t('estabelecimentosLabel')}
                 </h4>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -3895,7 +3903,7 @@
                                             ${state.currency || 'AED'} ${merchant.total.toFixed(2)}
                                         </div>
                                         <div style="font-size: 0.72rem; color: #94A3B8;">
-                                            ${merchant.count} ${merchant.count === 1 ? 'vez' : 'vezes'}
+                                            ${merchant.count} ${merchant.count === 1 ? t('vezLabel') : t('vezesLabel')}
                                         </div>
                                     </div>
                                 </div>
@@ -3918,7 +3926,7 @@
                                 </div>
                                 
                                 <div style="font-size: 0.7rem; color: #4E627A; text-align: right;">
-                                    ${percentage.toFixed(1)}% do total
+                                    ${percentage.toFixed(1)}% ${t('doTotalLabel')}
                                 </div>
                             </div>
                         `;
@@ -5108,7 +5116,7 @@
                         const economy = currentIncome - totalWithFixed;
                         const spentPercent = (totalWithFixed / currentIncome * 100);
                         let statusColor, statusIcon, statusText;
-                        if (spentPercent < 100) { statusColor = '#22c55e'; statusIcon = '🎉'; statusText = 'Guardou ' + (100 - spentPercent).toFixed(1) + '% do rendimento'; }
+                        if (spentPercent < 100) { statusColor = '#22c55e'; statusIcon = '🎉'; statusText = t('guardouTooltip') + ' ' + (100 - spentPercent).toFixed(1) + '% ' + t('doSeuRendimento'); }
                         else if (spentPercent === 100) { statusColor = '#f59e0b'; statusIcon = '⚠️'; statusText = 'Gastou exactamente 100% do rendimento'; }
                         else { statusColor = '#ef4444'; statusIcon = '🚨'; statusText = (state.currency || 'AED') + ' ' + Math.abs(economy).toFixed(0) + ' a mais (' + spentPercent.toFixed(1) + '%)'; }
                         html += '<div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px;">';
@@ -5985,7 +5993,7 @@
                         if (totalMonthWithFixed < totalLimitForStatus) {
                             statusIcon = '🟢';
                             statusColor = '#22c55e';
-                            statusTitle = 'Abaixo do limite';
+                            statusTitle = t('abaixoLimite');
                         } else if (totalMonthWithFixed === totalLimitForStatus) {
                             statusIcon = '🟡';
                             statusColor = '#fbbf24';
@@ -6050,7 +6058,7 @@
                                                 display: flex;
                                                 align-items: center;
                                                 gap: 4px;
-                                            " title="${economyForBadge > 0 ? 'Guardou' : 'Déficit'} ${state.currency || 'AED'} ${Math.abs(economyForBadge).toFixed(0)} (${Math.abs(economyPercent).toFixed(1)}% do rendimento)">
+                                            " title="${economyForBadge > 0 ? t('guardouTooltip') : t('deficitTooltip')} ${state.currency || 'AED'} ${Math.abs(economyForBadge).toFixed(0)} (${Math.abs(economyPercent).toFixed(1)}% do rendimento)">
                                                 ${badgeIcon}
                                                 ${economyForBadge > 0 ? '+' : ''}${(economyForBadge / 1000).toFixed(1)}K
                                             </span>
@@ -6133,7 +6141,7 @@
                                             // Total e Economia
                                             html += '<div style="grid-column: 1 / -1; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.2);">';
                                             html += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
-                                            html += '<div style="opacity: 0.8;">📊 Total Despesas</div>';
+                                            html += '<div style="opacity: 0.8;">' + t('totalDespesasLabel') + '</div>';
                                             html += '<div style="font-weight: 700;">' + (state.currency || 'AED') + ' ' + totalMonthWithFixed.toFixed(0) + '</div>';
                                             html += '</div>';
                                             html += '<div style="opacity: 0.8;">' + (isPositive ? '🎉' : '⚠️') + ' ' + t('economiaLabel') + '</div>';
