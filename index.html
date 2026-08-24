@@ -694,6 +694,10 @@
             todasCategorias: 'Todas', semDespesas: 'Sem despesas neste período',
             // Histórico tab
             filtrarPeriodo: '📅 Filtrar por Período', de: 'De', ate: 'Até',
+            gerarRelatorioPeriodo: '📄 PDF', relatorioHistorico: 'Relatório de Despesas',
+            periodoLabel: 'Período', totalLabel: 'Total', categoriaLabel2: 'Categoria',
+            estabelecimentoLabel: 'Estabelecimento', valorLabel: 'Valor', obsLabel: 'Obs.',
+            dataLabel: 'Data', semObs: '—', totalPorCategoria: 'Total por Categoria',
             hoje: 'Hoje', semana: 'Semana', mes: 'Mês', ano: 'Ano', limpar: 'Limpar',
             expandirTodos: '📂 Expandir Todos', colapsarTodos: '📁 Colapsar Todos',
             resumo: '📊 Resumo', dias: 'dias', dia: 'dia', meses: 'meses',
@@ -862,6 +866,10 @@
             copiarMesAnterior: '📋 Copy from Previous Month', nomeFixa: 'Fixed expense name',
             todasCategorias: 'All', semDespesas: 'No expenses in this period',
             filtrarPeriodo: '📅 Filter by Period', de: 'From', ate: 'To',
+            gerarRelatorioPeriodo: '📄 PDF', relatorioHistorico: 'Expense Report',
+            periodoLabel: 'Period', totalLabel: 'Total', categoriaLabel2: 'Category',
+            estabelecimentoLabel: 'Merchant', valorLabel: 'Amount', obsLabel: 'Notes',
+            dataLabel: 'Date', semObs: '—', totalPorCategoria: 'Total by Category',
             hoje: 'Today', semana: 'Week', mes: 'Month', ano: 'Year', limpar: 'Clear',
             expandirTodos: '📂 Expand All', colapsarTodos: '📁 Collapse All',
             resumo: '📊 Summary', dias: 'days', dia: 'day', meses: 'months',
@@ -3279,6 +3287,214 @@
             s1.onerror = () => reject(new Error('Erro ao carregar jsPDF'));
             document.head.appendChild(s1);
         });
+    }
+
+    async function generatePeriodReport() {
+        // Load jsPDF lazily
+        try { await loadJsPDF(); } catch(e) { showToast('❌ Erro ao carregar gerador de PDF', 'error'); return; }
+        const { jsPDF } = window.jspdf;
+
+        showToast('⏳ Gerando relatório...', 'success');
+
+        const cur = state.currency || 'AED';
+        const lang = state.lang || 'pt';
+        const monthNames = t('monthNamesFull');
+
+        // ── Collect filtered expenses ────────────────────────────────────
+        function toISO(d) {
+            if (!d) return '';
+            const p = d.split('/');
+            return p.length === 3 ? p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0') : '';
+        }
+
+        const filtered = state.expenses.filter(e => {
+            const iso = toISO(e.date);
+            if (!iso) return false;
+            const a = !state.histDateStart || iso >= state.histDateStart;
+            const b = !state.histDateEnd   || iso <= state.histDateEnd;
+            return a && b;
+        }).sort((a, b) => {
+            const da = toISO(a.date) + (a.time||'');
+            const db = toISO(b.date) + (b.time||'');
+            return da.localeCompare(db);
+        });
+
+        if (filtered.length === 0) {
+            showToast('⚠️ Nenhuma despesa no período seleccionado.', 'error');
+            return;
+        }
+
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const W = 210, margin = 14;
+        let y = 0;
+
+        // ── Page 1: Expense list ─────────────────────────────────────────
+        // Header
+        doc.setFillColor(8, 13, 26);
+        doc.rect(0, 0, W, 30, 'F');
+        doc.setTextColor(0, 212, 170);
+        doc.setFontSize(16); doc.setFont('helvetica','bold');
+        doc.text(t('relatorioHistorico'), W/2, 12, {align:'center'});
+        doc.setTextColor(180, 180, 200);
+        doc.setFontSize(9); doc.setFont('helvetica','normal');
+        const periodStr = (state.histDateStart || '?') + ' → ' + (state.histDateEnd || '?');
+        doc.text(t('periodoLabel') + ': ' + periodStr, W/2, 20, {align:'center'});
+        doc.text(filtered.length + ' ' + t('despesas') + ' · ' + cur + ' ' + filtered.reduce((s,e)=>s+(parseFloat(e.amount)||0),0).toFixed(2), W/2, 26, {align:'center'});
+
+        y = 36;
+
+        // Table
+        const cols = [
+            { header: t('dataLabel'),             w: 22 },
+            { header: t('estabelecimentoLabel'),   w: 58 },
+            { header: t('categoriaLabel2'),        w: 28 },
+            { header: t('valorLabel'),             w: 26 },
+            { header: t('obsLabel'),               w: 52 },
+        ];
+        const rowH = 7;
+        const colX = [];
+        let cx = margin;
+        cols.forEach(c => { colX.push(cx); cx += c.w; });
+
+        // Table header
+        function drawTableHeader() {
+            doc.setFillColor(20, 30, 50);
+            doc.rect(margin, y, W - 2*margin, rowH, 'F');
+            doc.setTextColor(0, 212, 170);
+            doc.setFontSize(7); doc.setFont('helvetica','bold');
+            cols.forEach((c, i) => {
+                doc.text(c.header, colX[i] + 1.5, y + 4.8);
+            });
+            y += rowH;
+        }
+
+        drawTableHeader();
+
+        // Rows
+        let grandTotal = 0;
+        const catTotals = {};
+
+        filtered.forEach((e, idx) => {
+            if (y > 270) {
+                doc.addPage();
+                y = 16;
+                drawTableHeader();
+            }
+            const amount = parseFloat(e.amount) || 0;
+            grandTotal += amount;
+            const cat = e.category || 'outros';
+            catTotals[cat] = (catTotals[cat] || 0) + amount;
+
+            const bg = idx % 2 === 0 ? [15, 22, 38] : [12, 18, 32];
+            doc.setFillColor(...bg);
+            doc.rect(margin, y, W - 2*margin, rowH, 'F');
+            doc.setTextColor(220, 225, 240);
+            doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+
+            const catObj = getCategories().find(c => c.id === cat);
+            const catName = catObj ? catObj.name : cat;
+            const obs = (e.obs || t('semObs')).substring(0, 35);
+            const merchant = (e.merchant || '').substring(0, 32);
+            const dateStr = e.date || '';
+
+            doc.text(dateStr,    colX[0]+1.5, y+4.8);
+            doc.text(merchant,   colX[1]+1.5, y+4.8);
+            doc.text(catName,    colX[2]+1.5, y+4.8);
+            doc.setFont('helvetica','bold');
+            doc.text(cur+' '+amount.toFixed(2), colX[3]+1.5, y+4.8);
+            doc.setFont('helvetica','normal');
+            doc.text(obs,        colX[4]+1.5, y+4.8);
+            y += rowH;
+        });
+
+        // Total row
+        if (y > 270) { doc.addPage(); y = 16; }
+        doc.setFillColor(0, 80, 60);
+        doc.rect(margin, y, W - 2*margin, rowH+1, 'F');
+        doc.setTextColor(0, 212, 170);
+        doc.setFontSize(8); doc.setFont('helvetica','bold');
+        doc.text(t('totalLabel'), colX[0]+1.5, y+5.5);
+        doc.text(cur+' '+grandTotal.toFixed(2), colX[3]+1.5, y+5.5);
+        y += rowH + 1;
+
+        // ── Page 2: Pie chart by category ────────────────────────────────
+        doc.addPage();
+        doc.setFillColor(8, 13, 26);
+        doc.rect(0, 0, W, 20, 'F');
+        doc.setTextColor(0, 212, 170);
+        doc.setFontSize(14); doc.setFont('helvetica','bold');
+        doc.text(t('totalPorCategoria'), W/2, 13, {align:'center'});
+
+        // Draw pie chart manually
+        const entries = Object.entries(catTotals).sort((a,b) => b[1]-a[1]);
+        const colors = [
+            [0,212,170],[239,68,68],[245,158,11],[59,130,246],[168,85,247],
+            [236,72,153],[20,184,166],[251,146,60],[132,204,22],[99,102,241]
+        ];
+
+        const cx2 = W/2, cy2 = 100, radius = 55;
+        let startAngle = -Math.PI/2;
+
+        entries.forEach(([cat, val], i) => {
+            const slice = (val / grandTotal) * 2 * Math.PI;
+            const endAngle = startAngle + slice;
+            const color = colors[i % colors.length];
+
+            // Draw pie slice
+            doc.setFillColor(...color);
+            const steps = Math.max(8, Math.round(slice * 20));
+            const points = [[cx2, cy2]];
+            for (let s = 0; s <= steps; s++) {
+                const a = startAngle + (slice * s / steps);
+                points.push([cx2 + Math.cos(a)*radius, cy2 + Math.sin(a)*radius]);
+            }
+            doc.triangle(
+                points[0][0], points[0][1],
+                points[1][0], points[1][1],
+                points[2][0], points[2][1], 'F'
+            );
+            for (let s = 1; s < steps; s++) {
+                doc.triangle(
+                    points[0][0], points[0][1],
+                    points[s][0], points[s][1],
+                    points[s+1][0], points[s+1][1], 'F'
+                );
+            }
+            startAngle = endAngle;
+        });
+
+        // Centre circle (donut effect)
+        doc.setFillColor(8, 13, 26);
+        doc.circle(cx2, cy2, radius*0.42, 'F');
+        doc.setTextColor(0, 212, 170);
+        doc.setFontSize(7); doc.setFont('helvetica','bold');
+        doc.text(cur, cx2, cy2-2, {align:'center'});
+        doc.text(grandTotal.toFixed(0), cx2, cy2+5, {align:'center'});
+
+        // Legend
+        let ly = 170;
+        const lx1 = 20, lx2 = 115;
+        doc.setFontSize(7.5);
+        entries.forEach(([cat, val], i) => {
+            const catObj = getCategories().find(c => c.id === cat);
+            const catName = catObj ? catObj.name : cat;
+            const pct = (val/grandTotal*100).toFixed(1);
+            const color = colors[i % colors.length];
+            const col = i < Math.ceil(entries.length/2) ? 0 : 1;
+            const lx = col === 0 ? lx1 : lx2;
+            const localY = col === 0 ? ly + i*8 : ly + (i - Math.ceil(entries.length/2))*8;
+
+            doc.setFillColor(...color);
+            doc.rect(lx, localY-3, 5, 5, 'F');
+            doc.setTextColor(220, 225, 240);
+            doc.setFont('helvetica','normal');
+            doc.text(catName + '  ' + cur + ' ' + val.toFixed(2) + '  (' + pct + '%)', lx+7, localY+1);
+        });
+
+        // Save
+        const dateTag = new Date().toISOString().split('T')[0];
+        doc.save('despesas_' + (state.histDateStart||'') + '_' + (state.histDateEnd||dateTag) + '.pdf');
+        showToast('✅ Relatório gerado!');
     }
 
     async function generateAnnualReport(year) {
@@ -5959,7 +6175,17 @@
                     `<!-- Card de Filtro de Período -->
                     <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden;">
                         <div style="position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; background: var(--amber); border-radius: 0 3px 3px 0; opacity: 0.7;"></div>
-                        <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">${t('filtrarPeriodo')}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div style="font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em;">${t('filtrarPeriodo')}</div>
+                            ${(state.histDateStart || state.histDateEnd) ? `
+                            <button onclick="generatePeriodReport()" style="
+                                padding: 5px 10px; background: rgba(0,212,170,0.1);
+                                border: 1px solid rgba(0,212,170,0.3); border-radius: 6px;
+                                color: #00D4AA; font-size: 0.72rem; font-weight: 600;
+                                cursor: pointer; letter-spacing: 0.04em;">
+                                ${t('gerarRelatorioPeriodo')}
+                            </button>` : ''}
+                        </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
                             <div>
                                 <label style="font-size: 0.72rem; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px;">${t('de')}</label>
